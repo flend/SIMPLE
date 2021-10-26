@@ -12,7 +12,7 @@ def get_environment(env_name):
             from sushigo.envs.sushigo import SushiGoEnv
             return SushiGoEnv
         elif env_name in ('gonutsfordonuts'):
-            from gonutsfordonuts.env.gonutsfordonuts import GoNutsForDonutsEnv
+            from gonutsfordonuts.envs.gonutsfordonuts import GoNutsForDonutsEnv
             return GoNutsForDonutsEnv
         elif env_name in ('butterfly'):
             from butterfly.envs.butterfly import ButterflyEnv
