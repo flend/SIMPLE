@@ -11,6 +11,9 @@ def get_environment(env_name):
         elif env_name in ('sushigo'):
             from sushigo.envs.sushigo import SushiGoEnv
             return SushiGoEnv
+        elif env_name in ('gonutsfordonuts'):
+            from gonutsfordonuts.env.gonutsfordonuts import GoNutsForDonutsEnv
+            return GoNutsForDonutsEnv
         elif env_name in ('butterfly'):
             from butterfly.envs.butterfly import ButterflyEnv
             return ButterflyEnv
@@ -39,6 +42,9 @@ def get_network_arch(env_name):
         return CustomPolicy
     elif env_name in ('sushigo'):
         from models.sushigo.models import CustomPolicy
+        return CustomPolicy
+    elif env_name in ('gonutsfordonuts'):
+        from models.gonutsfordonuts.models import CustomPolicy
         return CustomPolicy
     elif env_name in ('butterfly'):
         from models.butterfly.models import CustomPolicy
