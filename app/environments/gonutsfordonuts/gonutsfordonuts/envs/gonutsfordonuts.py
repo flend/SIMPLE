@@ -1,5 +1,5 @@
 
-from app.environments.gonutsfordonuts.gonutsfordonuts.envs.classes import ChocolateFrosted, DonutHoles, Eclair, FrenchCruller, Glazed, JellyFilled, MapleBar, Plain, Powdered
+from app.environments.gonutsfordonuts.gonutsfordonuts.envs.classes import ChocolateFrosted, DonutDeckPosition, DonutHoles, Eclair, FrenchCruller, Glazed, JellyFilled, MapleBar, Plain, Powdered
 import gym
 import numpy as np
 import math
@@ -19,13 +19,14 @@ class GoNutsForDonutsEnv(gym.Env):
         self.manual = manual
         
         self.n_players = 3
+        self.no_donut_decks = self.n_players + 1
         #self.cards_per_player = 9
-        #self.card_types = 12
+        self.card_types = 9
         
         self.n_rounds = 1
         self.max_score = 200 # to normalise current scores to [0, 1] interval
         
-        # player positions / choices / discards
+        # player positions / last_choices / discards
         self.total_positions = self.n_players + 2
 
         self.contents = [
@@ -42,8 +43,14 @@ class GoNutsForDonutsEnv(gym.Env):
 
         self.total_cards = sum([x['count'] for x in self.contents])
 
-        #TODO review both spaces
-        self.action_space = gym.spaces.Discrete(self.card_types + self.card_types * self.card_types)
+        # sushi action space - play any card type (that you have in hand) or any 2 card types (chopsticks)
+        # 2 choices for donuts action space - play any card type (that's available in the choices) or play any card_id
+        # that's available in the choices; although the latter is degenerate in theory an opponent would always picks
+        # the lower-numbered copy of duplicate cards would break this symmetry and make it worth modelling
+        # OR we pick a (type, [0..5]) tuple pair
+        # Let's go for card_types and model the tuple separately...
+        # self.action_space = gym.spaces.Discrete(self.card_types + self.card_types * self.card_types)
+        self.action_space = gym.spaces.Discrete(self.card_types)
         # total positions (see above) / player scores / legal actions
         self.observation_space = gym.spaces.Box(0, 1, (self.total_cards * self.total_positions + self.n_players + self.action_space.n ,))
         self.verbose = verbose
@@ -60,27 +67,30 @@ class GoNutsForDonutsEnv(gym.Env):
         # cause the model to be non-generalisable to different player counts
         for i in range(self.n_players):
             player = self.players[player_num]
- 
+
             # Each player's current position (tableau)
             for card in player.position.cards:
                 obs[i][card.id] = 1
 
             player_num = (player_num + 1) % self.n_players
 
-        # The donut choices
-        for card in self.choices.cards:
-            obs[self.n_players][card.id] = 1
-
         # The discard deck
         for card in self.discard.cards:
-            obs[self.n_players + 1][card.id] = 1
-        
+            obs[self.n_players][card.id] = 1
+
+        # The donut choices picked by the players last time
+        # TODO: Make relative to current player
+        # Although players pick type, for convenience we observe the card ID they took
+        if self.turns_taken >= 1:
+            for card in self.choices_taken:
+                obs[self.n_players + 1][card.id] = 1
+
         # Current player scores [to guide to which players to target]
         ret = obs.flatten()
         for p in self.players: # TODO this should be from reference point of the current_player
             ret = np.append(ret, p.score / self.max_score)
 
-        # Legal actions, I'm not yet sure why
+        # Legal actions, representing the donut choices
         ret = np.append(ret, self.legal_actions)
 
         return ret
@@ -88,7 +98,11 @@ class GoNutsForDonutsEnv(gym.Env):
     @property
     def legal_actions(self):
         legal_actions = np.zeros(self.action_space.n)
-        hand = self.current_player.hand.cards
+
+        # Action space - all card ids masked by the 1 to 5 available?
+        # Players pick a card id and may duplicate
+
+
 
         for i in range(len(hand)):
             legal_actions[hand[i].order] = 1
@@ -270,55 +284,71 @@ class GoNutsForDonutsEnv(gym.Env):
             reward[self.current_player_num] = -1
             done = True
 
-        #play the card(s)
+        # pick a card
         else:
             self.action_bank.append(action)
 
             if len(self.action_bank) == self.n_players:
                 logger.debug(f'\nThe chosen cards are now played simultaneously')
+                
                 for i, action in enumerate(self.action_bank):
                     player = self.players[i]
 
-                    pickup_chopsticks, first_card, second_card = self.convert_action(action)
+                    # Look for duplicates
+
+                    # Non-duplicate players play_card()
+
+
+                    #pickup_chopsticks, first_card, second_card = self.convert_action(action)
                     self.play_card(first_card, player)
 
-                    if pickup_chopsticks:
-                        self.pickup_chopsticks(player)
-                        self.play_card(second_card, player)
-
                 self.action_bank = []
-                self.switch_hands()
+                self.reset_turn()
             
             self.current_player_num = (self.current_player_num + 1) % self.n_players
 
             if self.current_player_num == 0:
                 self.turns_taken += 1
 
-            if self.turns_taken == self.cards_per_player:
-                self.score_round()
+            # Check end-of-game condition (no donuts less than no of spaces)
+            if self.remaining_donuts < self.no_of_donuts_to_select:
 
-                if self.round >= self.n_rounds:
-                    self.score_puddings()
-                    reward = self.score_game()
-                    done = True
-                else:
-                    self.render()
-                    self.reset_round()
+                reward = self.score_game()
+                done = True
+            else:
+                self.render()
+                self.reset_round()
 
         self.done = done
 
         return self.observation, reward, done, {}
 
+    def reset_turn(self):
+        logger.debug(f'\nResetting turn...')
+        
+        # Setup donut decks for the first time
+        if not self.turns_taken:
+            self.donut_decks = []
+            for i in range (0, self.no_donut_decks):
+                self.donut_decks[i] = DonutDeckPosition(self.deck.draw(1))        
+        
+        # Redraw and discard any used decks
+        for i in range(0, self.no_donut_decks):
+            if self.donut_decks[i].taken:
+                # Already added to player's position
+                logger.debug(f'Filling deck position {i}')
+                self.donut_decks[i] = DonutDeckPosition(self.deck.draw(1))
+                break
+            if self.donut_decks[i].to_discard:
+                logger.debug(f'Filling and discarding deck position {i}')
+                self.discard.add([self.donut_decks[i].card])
+                self.donut_decks[i] = DonutDeckPosition(self.deck.draw(1))
+                break
+            # Otherwise the card stays in position
+
     def reset_round(self):
 
-        for p in self.players:
-            self.discard.add([x for x in p.position.cards if x.type != 'pudding'])
-            puddings = [x for x in p.position.cards if x.type == 'pudding']
-            p.position = Position()
-            p.position.add(puddings)
-            p.hand.add(self.deck.draw(self.cards_per_player))
-
-        
+        self.reset_turn()
         self.round += 1
         self.turns_taken = 0
 

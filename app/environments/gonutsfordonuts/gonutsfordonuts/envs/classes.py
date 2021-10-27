@@ -110,6 +110,18 @@ class Deck():
     def size(self):
         return len(self.cards)
 
+class DonutDeckPosition():
+    def __init__(self, card):
+        self.card = card
+
+    def get_card_type(self):
+        return self.card.type
+
+    def set_taken(self):
+        self.taken = True
+    
+    def set_to_discard(self):
+        self.to_discard = True
 
 class Hand():
     def __init__(self):
