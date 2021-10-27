@@ -1,6 +1,8 @@
 
+from app.environments.gonutsfordonuts.gonutsfordonuts.envs.classes import ChocolateFrosted, DonutHoles, Eclair, FrenchCruller, Glazed, JellyFilled, MapleBar, Plain, Powdered
 import gym
 import numpy as np
+import math
 
 import config
 
@@ -17,66 +19,68 @@ class GoNutsForDonutsEnv(gym.Env):
         self.manual = manual
         
         self.n_players = 3
-        self.cards_per_player = 9
-        self.card_types = 12
+        #self.cards_per_player = 9
+        #self.card_types = 12
         
-        self.n_rounds = 3
-        self.max_score = 100
+        self.n_rounds = 1
+        self.max_score = 200 # to normalise current scores to [0, 1] interval
         
-        self.total_positions = self.n_players * 2 + 2
+        # player positions / choices / discards
+        self.total_positions = self.n_players + 2
 
         self.contents = [
-          {'card': Tempura, 'info': {'name': 'tempura'}, 'count': 14}  #0 
-           ,  {'card': Sashimi, 'info': {'name': 'sashimi'}, 'count':  14} #1 
-        ,  {'card': Dumpling, 'info': {'name': 'dumpling'}, 'count':  14}  #2   
-          ,  {'card': Maki, 'info': {'name': 'maki2', 'value': 2}, 'count':  12}  #3 
-          ,  {'card': Maki, 'info': {'name': 'maki3','value': 3}, 'count':  8} #4  
-           ,  {'card': Maki, 'info': {'name': 'maki1','value': 1}, 'count':  6} #5 
-           ,  {'card': Nigiri,  'info': {'name': 'salmon', 'value': 2}, 'count':  10} #6 
-           ,  {'card': Nigiri, 'info': {'name': 'squid', 'value': 3}, 'count':  5} #7 
-          ,  {'card': Nigiri, 'info': {'name': 'egg', 'value': 1}, 'count':  5}  #8 
-          ,  {'card': Pudding, 'info': {'name': 'pudding',}, 'count':  10} #9  
-          ,  {'card': Wasabi, 'info': {'name': 'wasabi',}, 'count':  6} #10  
-            ,  {'card': Chopsticks, 'info': {'name': 'chopsticks',}, 'count':  4} #11
+          {'card': ChocolateFrosted, 'info': {}, 'count': 3}  #0 
+           ,  {'card': DonutHoles, 'info': {}, 'count':  6} #1 
+        ,  {'card': Eclair, 'info': {}, 'count':  3}  #2   
+          ,  {'card': Glazed, 'info': {}, 'count':  5} #3  
+           ,  {'card': JellyFilled, 'info': {}, 'count':  6} #4 
+           ,  {'card': MapleBar,  'info': {}, 'count':  2} #5 
+           ,  {'card': Plain, 'info': {}, 'count':  7} #6 
+          ,  {'card': Powdered, 'info': {}, 'count':  4}  #7 
+          ,  {'card': FrenchCruller, 'info': {}, 'count':  math.min(self.n_players - 1, 4)}  #8 (last due to variability) 
         ]
 
         self.total_cards = sum([x['count'] for x in self.contents])
 
+        #TODO review both spaces
         self.action_space = gym.spaces.Discrete(self.card_types + self.card_types * self.card_types)
+        # total positions (see above) / player scores / legal actions
         self.observation_space = gym.spaces.Box(0, 1, (self.total_cards * self.total_positions + self.n_players + self.action_space.n ,))
         self.verbose = verbose
 
         
     @property
     def observation(self):
+        # Each player may have each individual card
         obs = np.zeros(([self.total_positions, self.total_cards]))
         player_num = self.current_player_num
-        hands_seen = 0
 
+        # Note that tidying the observations to card_id strongly couples the model to the exact
+        # composition of the original deck. e.g. increasing the number of FCs due to player count may
+        # cause the model to be non-generalisable to different player counts
         for i in range(self.n_players):
             player = self.players[player_num]
-
-            if self.turns_taken >= hands_seen:
-                for card in player.hand.cards:
-                    obs[i*2][card.id] = 1
-                
+ 
+            # Each player's current position (tableau)
             for card in player.position.cards:
-                obs[i*2+1][card.id] = 1
+                obs[i][card.id] = 1
 
             player_num = (player_num + 1) % self.n_players
-            hands_seen += 1
 
-        if self.turns_taken >= self.n_players - 1:
-            for card in self.deck.cards:
-                obs[6][card.id] = 1
+        # The donut choices
+        for card in self.choices.cards:
+            obs[self.n_players][card.id] = 1
 
+        # The discard deck
         for card in self.discard.cards:
-            obs[7][card.id] = 1
+            obs[self.n_players + 1][card.id] = 1
         
+        # Current player scores [to guide to which players to target]
         ret = obs.flatten()
         for p in self.players: # TODO this should be from reference point of the current_player
             ret = np.append(ret, p.score / self.max_score)
 
+        # Legal actions, I'm not yet sure why
         ret = np.append(ret, self.legal_actions)
 
         return ret

@@ -13,72 +13,68 @@ class Card():
         self.order = order
         self.name = name
         
-class Tempura(Card):
-    def __init__(self, id, order, name):
-        super(Tempura, self).__init__(id, order, name)
-        self.colour = 'purple'
-        self.type = 'tempura'
-        self.symbol = 'TEM'
-
-class Sashimi(Card):
-    def __init__(self, id, order, name):
-        super(Sashimi, self).__init__(id, order, name)
+class ChocolateFrosted(Card):
+    def __init__(self, id, order):
+        super(ChocolateFrosted, self).__init__(id, order, 'chocolate_frosted')
         self.colour = 'green'
-        self.type = 'sashimi'
-        self.symbol = 'SAS'
+        self.type = self.name
+        self.symbol = 'CF'
+
+class DonutHoles(Card):
+    def __init__(self, id, order):
+        super(DonutHoles, self).__init__(id, order, 'donut_holes')
+        self.colour = 'green'
+        self.type = self.name
+        self.symbol = 'DH'
         
-class Dumpling(Card):
-    def __init__(self, id, order, name):
-        super(Dumpling, self).__init__(id, order, name)
-        self.colour = 'blue'
-        self.type = 'dumpling'
-        self.symbol = 'DUM'
+class Eclair(Card):
+    def __init__(self, id, order):
+        super(Eclair, self).__init__(id, order, 'eclair')
+        self.colour = 'green'
+        self.type = self.name
+        self.symbol = 'ECL'
 
-class Maki(Card):
-    def __init__(self, id, order, name, value):
-        super(Maki, self).__init__(id, order, name)
-        self.colour = 'red'
-        self.type = 'maki'
-        self.value = value
-        self.symbol = f'MA{value}'
-        
-class Nigiri(Card):
-    def __init__(self, id, order, name, value):
-        super(Nigiri, self).__init__(id, order, name)
-        self.colour = 'yellow'
-        self.type = 'nigiri'
-        self.value = value
-        self.played_on_wasabi = False
+class FrenchCruller(Card):
+    def __init__(self, id, order):
+        super(FrenchCruller, self).__init__(id, order, 'french_cruller')
+        self.colour = 'green'
+        self.type = self.name
+        self.symbol = 'FC'
 
-    @property
-    def symbol(self):
-        return f"N{self.value}{'W' if self.played_on_wasabi else '-'}"
+class Glazed(Card):
+    def __init__(self, id, order):
+        super(Glazed, self).__init__(id, order, 'glazed')
+        self.colour = 'green'
+        self.type = self.name
+        self.symbol = 'GZ'
 
-class Pudding(Card):
-    def __init__(self, id, order, name):
-        super(Pudding, self).__init__(id, order, name)
-        self.colour = 'pink'
-        self.type = 'pudding'
-        self.symbol = f'PUD'
+class JellyFilled(Card):
+    def __init__(self, id, order):
+        super(JellyFilled, self).__init__(id, order, 'jelly_filled')
+        self.colour = 'green'
+        self.type = self.name
+        self.symbol = 'JF'
 
-class Wasabi(Card):
-    def __init__(self, id, order, name):
-        super(Wasabi, self).__init__(id, order, name)
-        self.colour = 'yellow'
-        self.type = 'wasabi'
-        self.played_upon = False
-    
-    @property
-    def symbol(self):
-        return f"WA{'X' if self.played_upon else '-'}"
+class MapleBar(Card):
+    def __init__(self, id, order):
+        super(MapleBar, self).__init__(id, order, 'maple_bar')
+        self.colour = 'green'
+        self.type = self.name
+        self.symbol = 'MB'
 
-class Chopsticks(Card):
-    def __init__(self, id, order, name):
-        super(Chopsticks, self).__init__(id, order, name)
-        self.colour = 'lightblue'
-        self.type = 'chopsticks'
-        self.symbol = f'CHO'
-        
+class Plain(Card):
+    def __init__(self, id, order):
+        super(Plain, self).__init__(id, order, 'plain')
+        self.colour = 'green'
+        self.type = self.name
+        self.symbol = 'P'
+
+class Powdered(Card):
+    def __init__(self, id, order):
+        super(Powdered, self).__init__(id, order, 'powdered')
+        self.colour = 'green'
+        self.type = self.name
+        self.symbol = 'PWDR'        
        
 class Deck():
     def __init__(self, contents):
@@ -140,6 +136,12 @@ class Discard():
     def add(self, cards):
         for card in cards:
             self.cards.append(card)
+    
+    def draw(self, n):
+        drawn = []
+        for x in range(n):
+            drawn.append(self.cards.pop())
+        return drawn
     
     def size(self):
         return len(self.cards)
