@@ -107,6 +107,12 @@ Install [Docker](https://github.com/davidADSP/SIMPLE/issues) and [Docker Compose
    ```
 
 ---
+## Running tests
+   ```sh
+   docker-compose exec app pytest test/gonutsfordonuts/testgonutsfordonuts.py
+   ```
+
+---
 <!-- TUTORIAL -->
 ## Tutorial
 
