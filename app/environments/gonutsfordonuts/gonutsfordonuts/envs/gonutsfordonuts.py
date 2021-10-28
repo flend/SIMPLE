@@ -16,28 +16,41 @@ class GoNutsGame:
     def __init__(self, n_players):
         self.n_players = n_players
 
-    def setup_game(self):
+    def setup_game(self, deck_contents=None, shuffle=True):
         self.no_donut_decks = self.n_players + 1
         self.card_types = 9
         
         self.max_score = 200 # to normalise current scores to [0, 1] interval
 
-        self.setup_deck()
-        self.reset_game()
+        print("thinking about using override deck")
 
-    def reset_game(self):
+        if deck_contents:
+            self.contents = deck_contents
+            print("using override deck")
+        else:
+            self.contents = self.standard_deck_contents()
+
+        self.total_cards = sum([x['count'] for x in self.contents])
+
+        self.reset_game(shuffle)
+
+    def reset_game(self, shuffle=True):
         self.deck = Deck(self.contents)
+        if shuffle:
+            self.deck.shuffle()
+        
         self.discard = Discard()
         self.players = []
+        self.turns_taken = 0
 
         player_id = 1
         for p in range(self.n_players):
             self.players.append(Player(str(player_id)))
             player_id += 1
 
-    def setup_deck(self):
+    def standard_deck_contents(self):
 
-        self.contents = [
+        return [
           {'card': ChocolateFrosted, 'info': {}, 'count': 3}  #0 
            ,  {'card': DonutHoles, 'info': {}, 'count':  6} #1 
         ,  {'card': Eclair, 'info': {}, 'count':  3}  #2   
@@ -46,21 +59,23 @@ class GoNutsGame:
            ,  {'card': MapleBar,  'info': {}, 'count':  2} #5 
            ,  {'card': Plain, 'info': {}, 'count':  7} #6 
           ,  {'card': Powdered, 'info': {}, 'count':  4}  #7 
-          ,  {'card': FrenchCruller, 'info': {}, 'count':  math.min(self.n_players - 1, 4)}  #8 (last due to variability) 
+          ,  {'card': FrenchCruller, 'info': {}, 'count':  min(self.n_players - 1, 4)}  #8 (last due to variability) 
         ]
-
-        self.total_cards = sum([x['count'] for x in self.contents])
     
     def deck_for_card_id(self, card_id):
         for deck in self.donut_decks:
             if deck.card_id == card_id:
                 return deck
 
-        logger.debug(f'Cannot find deck for card_id {card_id}, returning 0')
-        return self.donut_decks[0]
+        logger.debug(f'Cannot find deck for card_id {card_id}')
+        raise Exception(f'Cannot find deck for card_id {card_id}')
 
     def pick_cards(self, cards_ids_picked):
         
+        if len(cards_ids_picked) != self.n_players:
+            logger.debug('pick_cards() called with wrong number of card_ids')
+            raise Exception('pick_cards() called with wrong number of card_ids')
+
         for i, card_id in enumerate(cards_ids_picked):
         
             card_ids_counter = Counter(cards_ids_picked)
@@ -81,11 +96,11 @@ class GoNutsGame:
         if not self.turns_taken:
             self.donut_decks = []
             for i in range (0, self.no_donut_decks):
-                self.donut_decks[i] = DonutDeckPosition(self.deck.draw(1))
+                self.donut_decks.append(DonutDeckPosition(self.deck.draw_one()))
 
         # Check end of game
-        decks_to_discard = sum(1 for x in self.donut_decks[i] if self.donut_decks[i].to_discard)
-        decks_taken = sum(1 for x in self.donut_decks[i] if self.donut_decks[i].taken)
+        decks_to_discard = sum(1 for d in self.donut_decks if d.to_discard)
+        decks_taken = sum(1 for d in self.donut_decks if d.taken)
 
         decks_to_refill = decks_to_discard + decks_taken
         if decks_to_refill > self.deck.size():
@@ -96,12 +111,12 @@ class GoNutsGame:
                 if self.donut_decks[i].taken:
                     # Already added to player's position
                     logger.debug(f'Filling deck position {i}')
-                    self.donut_decks[i] = DonutDeckPosition(self.deck.draw(1))
+                    self.donut_decks[i] = DonutDeckPosition(self.deck.draw_one())
                     break
                 if self.donut_decks[i].to_discard:
                     logger.debug(f'Filling and discarding deck position {i}')
                     self.discard.add([self.donut_decks[i].card])
-                    self.donut_decks[i] = DonutDeckPosition(self.deck.draw(1))
+                    self.donut_decks[i] = DonutDeckPosition(self.deck.draw_one())
                     break
                 # Otherwise the card stays in position
         

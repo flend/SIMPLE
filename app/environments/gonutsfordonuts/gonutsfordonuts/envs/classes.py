@@ -90,6 +90,9 @@ class Deck():
             drawn.append(self.cards.pop())
         return drawn
     
+    def draw_one(self):
+        return self.cards.pop()
+    
     def add(self, cards):
         for card in cards:
             self.cards.append(card)
@@ -104,15 +107,15 @@ class Deck():
                 x['info']['id'] = card_id
                 self.add([x['card'](**x['info'])])
                 card_id += 1
-                
-        self.shuffle()
-                
+                                
     def size(self):
         return len(self.cards)
 
 class DonutDeckPosition():
     def __init__(self, card):
         self.card = card
+        self.taken = False
+        self.to_discard = False
 
     def get_card_type(self):
         return self.card.type
