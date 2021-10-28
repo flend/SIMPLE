@@ -22,11 +22,8 @@ class GoNutsGame:
         
         self.max_score = 200 # to normalise current scores to [0, 1] interval
 
-        print("thinking about using override deck")
-
         if deck_contents:
             self.contents = deck_contents
-            print("using override deck")
         else:
             self.contents = self.standard_deck_contents()
 
