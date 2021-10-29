@@ -61,7 +61,7 @@ class GoNutsGame:
     
     def deck_for_card_id(self, card_id):
         for deck in self.donut_decks:
-            if deck.card_id == card_id:
+            if deck.card.id == card_id:
                 return deck
 
         logger.debug(f'Cannot find deck for card_id {card_id}')
@@ -78,13 +78,13 @@ class GoNutsGame:
             card_ids_counter = Counter(cards_ids_picked)
 
             player = self.players[i]
-            deck_id = self.deck_for_card_id(card_id)
+            deck = self.deck_for_card_id(card_id)
 
             if card_ids_counter[card_id] > 1:
-                self.donut_decks[deck_id].set_to_discard()
+                deck.set_to_discard()
             else:
-                player.position.add(self.donut_decks[deck_id].card)
-                self.donut_decks[deck_id].set_taken()
+                player.position.add_one(deck.card)
+                deck.set_taken()
 
     def reset_turn(self):
         logger.debug(f'\nResetting turn...')
@@ -109,12 +109,10 @@ class GoNutsGame:
                     # Already added to player's position
                     logger.debug(f'Filling deck position {i}')
                     self.donut_decks[i] = DonutDeckPosition(self.deck.draw_one())
-                    break
-                if self.donut_decks[i].to_discard:
+                elif self.donut_decks[i].to_discard:
                     logger.debug(f'Filling and discarding deck position {i}')
                     self.discard.add([self.donut_decks[i].card])
                     self.donut_decks[i] = DonutDeckPosition(self.deck.draw_one())
-                    break
                 # Otherwise the card stays in position
         
         self.turns_taken += 1

@@ -74,7 +74,7 @@ class Powdered(Card):
         super(Powdered, self).__init__(id, order, 'powdered')
         self.colour = 'green'
         self.type = self.name
-        self.symbol = 'PWDR'        
+        self.symbol = 'POW'        
        
 class Deck():
     def __init__(self, contents):
@@ -168,6 +168,9 @@ class Position():
     def add(self, cards):
         for card in cards:
             self.cards.append(card)
+
+    def add_one(self, card):
+        self.cards.append(card)
     
     def size(self):
         return len(self.cards)
