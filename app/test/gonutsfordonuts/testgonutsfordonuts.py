@@ -37,6 +37,40 @@ class TestGoNutsForDonutsScorer:
         position.add([FrenchCruller(1,1), FrenchCruller(2,1)])
 
         assert GoNutsScorer.score_french_cruller(position) == 4
+    
+    def test_score_two_powdered(self):
+        position = Position()
+        position.add([Powdered(1,1), Powdered(2,1)])
+
+        assert GoNutsScorer.score_powdered(position) == 6 
+
+    def test_score_maple_bar_with_six_types(self):
+        position = Position()
+        position.add([Powdered(1,1), Glazed(2,1), Eclair(3,1), ChocolateFrosted(4,1), ChocolateFrosted(5,1),
+        DonutHoles(6,1), MapleBar(7,1)])
+
+        assert GoNutsScorer.score_maple_bar(position) == 0
+    
+    def test_score_maple_bar_with_seven_types(self):
+        position = Position()
+        position.add([Powdered(1,1), Glazed(2,1), Eclair(3,1), ChocolateFrosted(4,1), ChocolateFrosted(5,1),
+        DonutHoles(6,1), FrenchCruller(7,1), MapleBar(8,1)])
+
+        assert GoNutsScorer.score_maple_bar(position) == 3
+
+    def test_score_two_maple_bars_with_seven_types(self):
+        position = Position()
+        position.add([Powdered(1,1), Glazed(2,1), Eclair(3,1), ChocolateFrosted(4,1), ChocolateFrosted(5,1),
+        DonutHoles(6,1), FrenchCruller(7,1), MapleBar(8,1), MapleBar(9,1)])
+
+        assert GoNutsScorer.score_maple_bar(position) == 6
+    
+    def test_score_zero_maple_bars_with_seven_types(self):
+        position = Position()
+        position.add([Powdered(1,1), Glazed(2,1), Eclair(3,1), ChocolateFrosted(4,1), ChocolateFrosted(5,1),
+        DonutHoles(6,1), FrenchCruller(7,1), JellyFilled(8,1)])
+
+        assert GoNutsScorer.score_maple_bar(position) == 0
 
 class TestGoNutsForDonuts:
     

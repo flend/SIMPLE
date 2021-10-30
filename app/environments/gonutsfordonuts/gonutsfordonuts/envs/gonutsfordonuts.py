@@ -25,6 +25,8 @@ class GoNutsScorer:
             player_scores[p] += GoNutsScorer.score_french_cruller(position)
             player_scores[p] += GoNutsScorer.score_maple_bar(position)
             player_scores[p] += GoNutsScorer.score_powdered(position)
+        
+        # TODO: score plain
 
     @staticmethod
     def score_donut_holes(position):
@@ -65,6 +67,20 @@ class GoNutsScorer:
         card_counter = Counter([ c.name for c in position.cards ])
         dn_count = card_counter["french_cruller"]
         return dn_count * 2
+
+    @staticmethod
+    def score_powdered(position):
+        card_counter = Counter([ c.name for c in position.cards ])
+        dn_count = card_counter["powdered"]
+        return dn_count * 3
+
+    @staticmethod
+    def score_maple_bar(position):
+        card_counter = Counter([ c.name for c in position.cards ])
+        types_of_cards = len(card_counter)
+        if types_of_cards > 6:
+            return card_counter["maple_bar"] * 3
+        return 0
 
 
 
