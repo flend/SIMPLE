@@ -1,5 +1,42 @@
-from gonutsfordonuts.envs.gonutsfordonuts import GoNutsGame
-from gonutsfordonuts.envs.classes import ChocolateFrosted, DonutDeckPosition, DonutHoles, Eclair, FrenchCruller, Glazed, JellyFilled, MapleBar, Plain, Powdered
+from gonutsfordonuts.envs.gonutsfordonuts import GoNutsGame, GoNutsScorer
+from gonutsfordonuts.envs.classes import ChocolateFrosted, DonutHoles, Eclair, FrenchCruller, Glazed, JellyFilled, MapleBar, Plain, Powdered
+from gonutsfordonuts.envs.classes import Position
+
+class TestGoNutsForDonutsScorer:
+
+    def test_score_zero_donut_holes(self):
+        position = Position()
+
+        assert GoNutsScorer.score_donut_holes(position) == 0
+
+    def test_score_three_donut_holes(self):
+        position = Position()
+        position.add([DonutHoles(1,1), DonutHoles(2,1), DonutHoles(3,1)])
+
+        assert GoNutsScorer.score_donut_holes(position) == 6
+
+    def test_score_zero_jelly_filled(self):
+        position = Position()
+
+        assert GoNutsScorer.score_jelly_filled(position) == 0
+
+    def test_score_three_jelly_filled(self):
+        position = Position()
+        position.add([JellyFilled(1,1), JellyFilled(2,1), JellyFilled(3,1)])
+
+        assert GoNutsScorer.score_jelly_filled(position) == 5
+
+    def test_score_three_glazed(self):
+        position = Position()
+        position.add([Glazed(1,1), Glazed(2,1), Glazed(3,1)])
+
+        assert GoNutsScorer.score_glazed(position) == 6
+
+    def test_score_two_french_cruller(self):
+        position = Position()
+        position.add([FrenchCruller(1,1), FrenchCruller(2,1)])
+
+        assert GoNutsScorer.score_french_cruller(position) == 4
 
 class TestGoNutsForDonuts:
     

@@ -7,9 +7,66 @@ import math
 import config
 
 from stable_baselines import logger
-from collections import Counter
+from collections import Counter, defaultdict
 
 from .classes import *
+
+class GoNutsScorer:
+    # Score turn as if it was the end of the game (so carry out EOG effects)
+    @staticmethod
+    def score_turn(positions):
+        
+        player_scores = np.zeros(len(positions))
+        
+        for p, position in enumerate(positions):
+            player_scores[p] += GoNutsScorer.score_donut_holes(position)
+            player_scores[p] += GoNutsScorer.score_glazed(position)
+            player_scores[p] += GoNutsScorer.score_jelly_filled(position)
+            player_scores[p] += GoNutsScorer.score_french_cruller(position)
+            player_scores[p] += GoNutsScorer.score_maple_bar(position)
+            player_scores[p] += GoNutsScorer.score_powdered(position)
+
+    @staticmethod
+    def score_donut_holes(position):
+        card_counter = Counter([ c.name for c in position.cards ])
+        dh_count = card_counter["donut_holes"]
+        if dh_count == 1:
+            return 1
+        if dh_count == 2:
+            return 3
+        if dh_count == 3:
+            return 6
+        if dh_count == 4:
+            return 10
+        if dh_count == 5:
+            return 15
+
+        return 0
+
+    @staticmethod
+    def score_jelly_filled(position):
+        card_counter = Counter([ c.name for c in position.cards ])
+        dn_count = card_counter["jelly_filled"]
+        if dn_count == 2 or dn_count == 3:
+            return 5
+        if dn_count == 4 or dn_count == 5:
+            return 10
+
+        return 0
+
+    @staticmethod
+    def score_glazed(position):
+        card_counter = Counter([ c.name for c in position.cards ])
+        dn_count = card_counter["glazed"]
+        return dn_count * 2
+
+    @staticmethod
+    def score_french_cruller(position):
+        card_counter = Counter([ c.name for c in position.cards ])
+        dn_count = card_counter["french_cruller"]
+        return dn_count * 2
+
+
 
 class GoNutsGame:
 
