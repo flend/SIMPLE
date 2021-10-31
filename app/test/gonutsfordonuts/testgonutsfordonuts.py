@@ -238,5 +238,20 @@ class TestGoNutsForDonuts:
         assert test_game.donut_decks[3].card.id == 1
         assert test_game.donut_decks[3].card.symbol == 'POW'
 
+    def test_discard_pile_populated_with_contested_picks(self):
+
+        test_game = GoNutsGame(4)
+        test_game.setup_game(deck_contents=self.fixture_contents(), shuffle=False)
+
+        test_game.reset_turn()
+
+        test_game.pick_cards([8, 8, 7, 7])
+        test_game.reset_turn()
+
+        assert len(test_game.discard.cards) == 2
+        assert test_game.discard.cards[0].id == 8
+        assert test_game.discard.cards[1].id == 7
+
+
         
     
