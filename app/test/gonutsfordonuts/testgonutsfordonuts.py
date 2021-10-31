@@ -72,6 +72,33 @@ class TestGoNutsForDonutsScorer:
 
         assert GoNutsScorer.score_maple_bar(position) == 0
 
+    def test_score_plain_no_winners(self):
+        positions = [ Position(), Position(), Position()]
+        positions[0].add([Glazed(2,1)])
+        positions[1].add([])
+        positions[2].add([Glazed(5,1), Glazed(6,1)])
+
+        scores = GoNutsScorer.score_plain(positions)
+        assert (scores == [0, 0, 0]).all()
+
+    def test_score_plain_one_winner(self):
+        positions = [ Position(), Position(), Position()]
+        positions[0].add([Plain(1,1), Glazed(2,1)])
+        positions[1].add([Plain(3,1), Plain(4,1)])
+        positions[2].add([Glazed(5,1), Glazed(6,1)])
+
+        scores = GoNutsScorer.score_plain(positions)
+        assert (scores == [0, 3, 0]).all()
+
+    def test_score_plain_tied_winners(self):
+        positions = [ Position(), Position(), Position()]
+        positions[0].add([Plain(1,1), Glazed(2,1), Plain(7,1)])
+        positions[1].add([Plain(3,1), Plain(4,1)])
+        positions[2].add([Glazed(5,1), Glazed(6,1)])
+
+        scores = GoNutsScorer.score_plain(positions)
+        assert (scores == [1, 1, 0]).all()
+
 class TestGoNutsForDonuts:
     
     def fixture_contents(self):

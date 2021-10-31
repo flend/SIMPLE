@@ -26,7 +26,34 @@ class GoNutsScorer:
             player_scores[p] += GoNutsScorer.score_maple_bar(position)
             player_scores[p] += GoNutsScorer.score_powdered(position)
         
-        # TODO: score plain
+        np.add(player_scores, GoNutsScorer.score_plain(positions))
+
+        return player_scores
+
+    @staticmethod
+    def score_plain(positions):
+        
+        player_scores = np.zeros(len(positions))
+        total_plain = []
+        
+        for p, position in enumerate(positions):
+            card_counter = Counter([ c.name for c in position.cards ])
+            dn_count = card_counter["plain"]
+            total_plain.append((p, dn_count))
+        
+        max_plain = max(total_plain, key=lambda x: x[1])[1]
+        print(f'max_plain {max_plain}')
+        all_max_players = [ x for x in total_plain if x[1] == max_plain ]
+        print(f'max_players {all_max_players}')
+
+        if not max_plain == 0:
+            if len(all_max_players) == 1:
+                player_scores[all_max_players[0][0]] = 3
+            if len(all_max_players) > 1:
+                for t in all_max_players:
+                    player_scores[t[0]] = 1
+
+        return player_scores
 
     @staticmethod
     def score_donut_holes(position):
