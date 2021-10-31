@@ -157,6 +157,9 @@ class Discard():
         for x in range(n):
             drawn.append(self.cards.pop())
         return drawn
+
+    def draw_one(self):
+        return self.cards.pop()
     
     def size(self):
         return len(self.cards)

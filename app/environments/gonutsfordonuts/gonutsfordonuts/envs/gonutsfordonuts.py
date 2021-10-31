@@ -215,8 +215,27 @@ class GoNutsGame:
         
         return cards_picked
 
-    def do_card_special_effects(self, cards_ids_picked):
-        pass
+    def do_card_special_effects(self, cards_picked):
+        if len(cards_picked) != self.n_players:
+            logger.debug('do_card_special_effects() called with wrong number of card_ids')
+            raise Exception('do_card_special_effects() called with wrong number of card_ids')
+
+        for p, card in enumerate(cards_picked):
+            if card:
+                if card.name == "chocolate_frosted":
+                    self.card_action_chocolate_frosted(self, p)
+                elif card and card.name == "eclair":
+                    self.card_action_eclair(self, p)
+
+    def card_action_chocolate_frosted(self, player_no):
+        # Draw the top card from the draw deck
+        print(f'deck size {self.deck.size()}')
+        if self.deck.size() > 0:
+            self.players[player_no].position.add_one(self.deck.draw_one())
+
+    def card_action_eclair(self, player_no):
+        if self.discard.size() > 0:
+            self.players[player_no].position.add_one(self.deck.draw_one())
 
     def reset_turn(self):
         logger.debug(f'\nResetting turn...')

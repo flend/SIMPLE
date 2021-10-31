@@ -306,6 +306,32 @@ class TestGoNutsForDonuts:
         assert test_game.discard.cards[0].id == 8
         assert test_game.discard.cards[1].id == 7
 
+    def test_card_action_chocolate_frosted_draws_one_from_deck(self):
+
+        test_game = GoNutsGame(4)
+        test_game.setup_game(deck_contents=self.fixture_contents(), shuffle=False)
+        test_game.reset_turn() # deals top 5
+
+        test_game.card_action_chocolate_frosted(0)
+
+        # first from top of deck is card id 3
+        assert test_game.players[0].position.cards[0].id == 3
+
+    def test_card_action_chocolate_frosted_draws_none_from_empty_deck(self):
+
+        test_game = GoNutsGame(4)
+        test_game.setup_game(deck_contents=self.fixture_contents(), shuffle=False)
+        test_game.reset_turn()
+        # deck 9, deal 5, redeal 4, empty deck
+        test_game.pick_cards([8, 7, 6, 5])
+        test_game.reset_turn()
+
+        test_game.card_action_chocolate_frosted(0)
+
+        # Just the pick, not the additional CF action
+        assert test_game.players[0].position.size() == 1
+
+
 
         
     
