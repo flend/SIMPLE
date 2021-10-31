@@ -208,6 +208,9 @@ class GoNutsGame:
                 player.position.add_one(deck.card)
                 deck.set_taken()
 
+    def do_card_special_effects(self, cards_ids_picked):
+        pass
+
     def reset_turn(self):
         logger.debug(f'\nResetting turn...')
         
@@ -361,68 +364,6 @@ class GoNutsForDonutsEnv(gym.Env):
 
         return reward
 
-    def get_limits(self, counts, type):
-        counts = np.array(counts, dtype=np.float)
-        if type == 'max':
-            type_counts = np.nanmax(counts)
-        else:
-            type_counts = np.nanmin(counts)
-
-        counts_winners = []
-
-        for i, m in enumerate(counts):
-            if m == type_counts:
-                counts_winners.append(i)
-                
-        return counts_winners
-
-
-    def score_puddings(self):
-        logger.debug('\nPudding counts...')
-
-        puddings = []
-        for p in self.players:
-            puddings.append(len([card for card in p.position.cards if card.type == 'pudding']))
-        
-        logger.debug(f'Puddings: {puddings}')
-
-        pudding_winners = self.get_limits(puddings, 'max')
-
-        for i in pudding_winners:
-            self.players[i].score += 6 // len(pudding_winners)
-            logger.debug(f'Player {self.players[i].id} 1st place puddings: {6 // len(pudding_winners)}')
-        
-        pudding_losers = self.get_limits(puddings, 'min')
-
-        for i in pudding_losers:
-            self.players[i].score -= 6 // len(pudding_losers)
-            logger.debug(f'Player {self.players[i].id} last place puddings: {-6 // len(pudding_losers)}')
-
-
-
-    def score_maki(self, maki):
-        logger.debug('\nMaki counts...')
-        logger.debug(f'Maki: {maki}')
-
-        maki_winners = self.get_limits(maki, 'max')
-
-        for i in maki_winners:
-            self.players[i].score += 6 // len(maki_winners)
-            maki[i] = None #mask out the winners
-            logger.debug(f'Player {self.players[i].id} 1st place maki: {6 // len(maki_winners)}')
-        
-        if len(maki_winners) == 1:
-            #now get second place as winners are masked with None
-            maki_winners = self.get_limits(maki, 'max')
-
-            for i in maki_winners:
-                self.players[i].score += 3 // len(maki_winners)
-                logger.debug(f'Player {self.players[i].id} 2nd place maki: {3 // len(maki_winners)}')
-
-
-    
-
-
     @property
     def current_player(self):
         return self.game.players[self.current_player_num]
@@ -442,12 +383,19 @@ class GoNutsForDonutsEnv(gym.Env):
 
         # vote for a card; pick cards if all players have voted
         else:
+
+            # TODO: For modelling discard actions etc. we need to use a state machine here
+            # Currently only the 'pick-a-donut' state is modelled
+            # The actions are only: 'pick-card-id'
+
             self.action_bank.append(action)
 
             if len(self.action_bank) == self.n_players:
                 logger.debug(f'\nThe chosen cards are now competitively picked')
 
                 self.game.pick_cards(self.action_bank)
+                # TODO: Move to a new step in the state machine
+                self.game.do_card_special_effects(self.action_bank)
                 self.game.reset_turn()
 
                 # Per-turn scores are an observation for the agents
