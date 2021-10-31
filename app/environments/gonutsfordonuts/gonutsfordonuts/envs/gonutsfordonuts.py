@@ -7,9 +7,131 @@ import math
 import config
 
 from stable_baselines import logger
-from collections import Counter
+from collections import Counter, defaultdict
 
 from .classes import *
+
+class GoNutsScorer:
+    # Score turn as if it was the end of the game (so carry out EOG effects)
+    @staticmethod
+    def score_turn(positions):
+        
+        player_scores = np.zeros(len(positions))
+        
+        for p, position in enumerate(positions):
+            logger.debug(f'Scoring player: {p}')
+
+            score_dh = GoNutsScorer.score_donut_holes(position)
+            logger.debug(f'Donut Holes: {score_dh}')
+            player_scores[p] += score_dh
+            
+            score_gz = GoNutsScorer.score_glazed(position)
+            logger.debug(f'Glazed: {score_gz}')
+            player_scores[p] += score_gz
+
+            score_jf = GoNutsScorer.score_jelly_filled(position)
+            logger.debug(f'Jelly Filled: {score_jf}')
+            player_scores[p] += score_jf
+
+            score_fc = GoNutsScorer.score_french_cruller(position)
+            logger.debug(f'French Cruller: {score_fc}')            
+            player_scores[p] += score_fc
+
+            score_mb = GoNutsScorer.score_maple_bar(position)
+            logger.debug(f'Maple Bar: {score_mb}')
+            player_scores[p] += score_mb
+
+            score_pwdr = GoNutsScorer.score_powdered(position)
+            logger.debug(f'Powdered: {score_pwdr}')
+            player_scores[p] += score_pwdr
+        
+        logger.debug(f'All without plain (all players): {player_scores}')
+        score_plain = GoNutsScorer.score_plain(positions)
+        logger.debug(f'Plain (all players): {score_plain}')
+        player_scores = np.add(player_scores, score_plain)
+        logger.debug(f'Final score (all players): {player_scores}')
+
+        return player_scores
+
+    @staticmethod
+    def score_plain(positions):
+        
+        player_scores = np.zeros(len(positions))
+        total_plain = []
+        
+        for p, position in enumerate(positions):
+            card_counter = Counter([ c.name for c in position.cards ])
+            dn_count = card_counter["plain"]
+            player_scores[p] = 1 * dn_count
+            total_plain.append((p, dn_count))
+        
+        max_plain = max(total_plain, key=lambda x: x[1])[1]
+        all_max_players = [ x for x in total_plain if x[1] == max_plain ]
+
+        if not max_plain == 0:
+            if len(all_max_players) == 1:
+                player_scores[all_max_players[0][0]] += 3
+            if len(all_max_players) > 1:
+                for t in all_max_players:
+                    player_scores[t[0]] += 1
+
+        return player_scores
+
+    @staticmethod
+    def score_donut_holes(position):
+        card_counter = Counter([ c.name for c in position.cards ])
+        dh_count = card_counter["donut_holes"]
+        if dh_count == 1:
+            return 1
+        if dh_count == 2:
+            return 3
+        if dh_count == 3:
+            return 6
+        if dh_count == 4:
+            return 10
+        if dh_count == 5:
+            return 15
+
+        return 0
+
+    @staticmethod
+    def score_jelly_filled(position):
+        card_counter = Counter([ c.name for c in position.cards ])
+        dn_count = card_counter["jelly_filled"]
+        if dn_count == 2 or dn_count == 3:
+            return 5
+        if dn_count == 4 or dn_count == 5:
+            return 10
+
+        return 0
+
+    @staticmethod
+    def score_glazed(position):
+        card_counter = Counter([ c.name for c in position.cards ])
+        dn_count = card_counter["glazed"]
+        return dn_count * 2
+
+    @staticmethod
+    def score_french_cruller(position):
+        card_counter = Counter([ c.name for c in position.cards ])
+        dn_count = card_counter["french_cruller"]
+        return dn_count * 2
+
+    @staticmethod
+    def score_powdered(position):
+        card_counter = Counter([ c.name for c in position.cards ])
+        dn_count = card_counter["powdered"]
+        return dn_count * 3
+
+    @staticmethod
+    def score_maple_bar(position):
+        card_counter = Counter([ c.name for c in position.cards ])
+        types_of_cards = len(card_counter)
+        if types_of_cards > 6:
+            return card_counter["maple_bar"] * 3
+        return 0
+
+
 
 class GoNutsGame:
 
