@@ -254,6 +254,19 @@ class TestGoNutsForDonuts:
         assert len(test_game.players[2].position.cards) == 0
         assert len(test_game.players[3].position.cards) == 0
 
+    def test_cards_picked_or_None_returned_by_pick_cards(self):
+
+        test_game = GoNutsGame(4)
+        test_game.setup_game(deck_contents=self.fixture_contents(), shuffle=False)
+        test_game.reset_turn()
+
+        cards_picked = test_game.pick_cards([8, 8, 6, 5])
+
+        assert cards_picked[0] == None
+        assert cards_picked[1] == None
+        assert cards_picked[2].id == 6
+        assert cards_picked[3].id == 5
+
     def test_empty_decks_get_refilled_partial_picks(self):
 
         test_game = GoNutsGame(4)

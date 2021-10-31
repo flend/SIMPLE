@@ -192,6 +192,8 @@ class GoNutsGame:
 
     def pick_cards(self, cards_ids_picked):
         
+        cards_picked = []
+
         if len(cards_ids_picked) != self.n_players:
             logger.debug('pick_cards() called with wrong number of card_ids')
             raise Exception('pick_cards() called with wrong number of card_ids')
@@ -205,9 +207,13 @@ class GoNutsGame:
 
             if card_ids_counter[card_id] > 1:
                 deck.set_to_discard()
+                cards_picked.append(None)
             else:
                 player.position.add_one(deck.card)
+                cards_picked.append(deck.card)
                 deck.set_taken()
+        
+        return cards_picked
 
     def do_card_special_effects(self, cards_ids_picked):
         pass
@@ -394,9 +400,9 @@ class GoNutsForDonutsEnv(gym.Env):
             if len(self.action_bank) == self.n_players:
                 logger.debug(f'\nThe chosen cards are now competitively picked')
 
-                self.game.pick_cards(self.action_bank)
+                cards_picked = self.game.pick_cards(self.action_bank)
                 # TODO: Move to a new step in the state machine
-                self.game.do_card_special_effects(self.action_bank)
+                self.game.do_card_special_effects(cards_picked)
                 self.game.reset_turn()
 
                 # Per-turn scores are an observation for the agents
