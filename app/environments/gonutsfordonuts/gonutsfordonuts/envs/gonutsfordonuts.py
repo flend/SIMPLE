@@ -161,6 +161,7 @@ class GoNutsGame:
         self.discard = Discard()
         self.players = []
         self.turns_taken = 0
+        self.game_ends = False
 
         player_id = 1
         for p in range(self.n_players):

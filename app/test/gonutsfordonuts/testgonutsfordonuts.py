@@ -142,7 +142,6 @@ class TestGoNutsForDonuts:
 
         test_game = GoNutsGame(4)
         test_game.setup_game(deck_contents=self.fixture_contents(), shuffle=False)
-
         test_game.reset_turn()
 
         assert test_game.donut_decks[0].card.id == 8
@@ -164,7 +163,6 @@ class TestGoNutsForDonuts:
 
         test_game = GoNutsGame(4)
         test_game.setup_game(deck_contents=self.fixture_contents(), shuffle=False)
-
         test_game.reset_turn()
 
         test_game.pick_cards([8, 7, 6, 5])
@@ -174,15 +172,61 @@ class TestGoNutsForDonuts:
         assert test_game.players[2].position.cards[0].id == 6
         assert test_game.players[3].position.cards[0].id == 5
 
+    def test_2nd_round_picks_go_to_positions(self):
+
+        test_game = GoNutsGame(4)
+        test_game.setup_game(deck_contents=self.fixture_contents(), shuffle=False)
+        test_game.reset_turn()
+
+        test_game.pick_cards([8, 7, 6, 5])
+        test_game.reset_turn()
+
+        test_game.pick_cards([4, 3, 2, 1])
+
+        assert test_game.players[0].position.cards[1].id == 4
+        assert test_game.players[1].position.cards[1].id == 3
+        assert test_game.players[2].position.cards[1].id == 2
+        assert test_game.players[3].position.cards[1].id == 1
+
+    def test_game_ends_when_not_enough_donuts_to_refill_positions(self):
+
+        test_game = GoNutsGame(4)
+        test_game.setup_game(deck_contents=self.fixture_contents(), shuffle=False)
+        test_game.reset_turn()
+
+        # 5 out, 4 in deck
+        test_game.pick_cards([8, 8, 7, 7])
+        test_game.reset_turn()
+        # 2 removed, 5 out, 2 in deck
+        test_game.pick_cards([6, 5, 4, 4])
+        test_game.reset_turn()
+        # 3 removed, 5 out, -1 in deck
+
+        assert test_game.is_game_over() == True
+
+    def test_game_is_not_over_when_donuts_refilled_but_zero_draw_left(self):
+
+        test_game = GoNutsGame(4)
+        test_game.setup_game(deck_contents=self.fixture_contents(), shuffle=False)
+        test_game.reset_turn()
+
+        # 5 out, 4 in deck
+        test_game.pick_cards([8, 8, 7, 7])
+        test_game.reset_turn()
+        # 2 removed, 5 out, 2 in deck
+        test_game.pick_cards([6, 4, 4, 4])
+        test_game.reset_turn()
+        # 2 removed, 5 out, 0 in deck
+
+        assert test_game.is_game_over() == False
+
     def test_empty_decks_get_refilled(self):
 
         test_game = GoNutsGame(4)
         test_game.setup_game(deck_contents=self.fixture_contents(), shuffle=False)
-
         test_game.reset_turn()
 
         test_game.pick_cards([8, 7, 6, 5])
-
         test_game.reset_turn()
 
         assert test_game.donut_decks[0].card.id == 3
@@ -201,7 +245,6 @@ class TestGoNutsForDonuts:
 
         test_game = GoNutsGame(4)
         test_game.setup_game(deck_contents=self.fixture_contents(), shuffle=False)
-
         test_game.reset_turn()
 
         test_game.pick_cards([8, 8, 6, 6])
@@ -215,11 +258,9 @@ class TestGoNutsForDonuts:
 
         test_game = GoNutsGame(4)
         test_game.setup_game(deck_contents=self.fixture_contents(), shuffle=False)
-
         test_game.reset_turn()
 
         test_game.pick_cards([8, 8, 6, 5])
-
         test_game.reset_turn()
 
         # Deck 1 - 8 - discarded and refilled
