@@ -85,10 +85,10 @@ class TestGoNutsForDonutsScorer:
         positions = [ Position(), Position(), Position()]
         positions[0].add([Plain(1,1), Glazed(2,1)])
         positions[1].add([Plain(3,1), Plain(4,1)])
-        positions[2].add([Glazed(5,1), Glazed(6,1)])
+        positions[2].add([Glazed(5,1), Glazed(6,1), Plain(7,1)])
 
         scores = GoNutsScorer.score_plain(positions)
-        assert (scores == [0, 3, 0]).all()
+        assert (scores == [1, 5, 1]).all()
 
     def test_score_plain_tied_winners(self):
         positions = [ Position(), Position(), Position()]
@@ -97,7 +97,16 @@ class TestGoNutsForDonutsScorer:
         positions[2].add([Glazed(5,1), Glazed(6,1)])
 
         scores = GoNutsScorer.score_plain(positions)
-        assert (scores == [1, 1, 0]).all()
+        assert (scores == [3, 3, 0]).all()
+
+    def test_turn_scoring(self):
+        positions = [ Position(), Position(), Position()]
+        positions[0].add([Plain(1,1), Glazed(2,1), DonutHoles(3,1), DonutHoles(4,1), Plain(16,1)])
+        positions[1].add([Powdered(5,1), JellyFilled(6,1), FrenchCruller(7,1), Eclair(8,1), MapleBar(16,1)])
+        positions[2].add([Glazed(9,1), ChocolateFrosted(10,1), MapleBar(11,1), JellyFilled(12,1), DonutHoles(13,1), Powdered(14,1), Plain(15,1)])
+
+        scores = GoNutsScorer.score_turn(positions)
+        assert (scores == [10, 5, 10]).all()
 
 class TestGoNutsForDonuts:
     

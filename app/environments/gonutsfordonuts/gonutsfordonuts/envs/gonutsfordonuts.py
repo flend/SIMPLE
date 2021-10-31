@@ -19,14 +19,37 @@ class GoNutsScorer:
         player_scores = np.zeros(len(positions))
         
         for p, position in enumerate(positions):
-            player_scores[p] += GoNutsScorer.score_donut_holes(position)
-            player_scores[p] += GoNutsScorer.score_glazed(position)
-            player_scores[p] += GoNutsScorer.score_jelly_filled(position)
-            player_scores[p] += GoNutsScorer.score_french_cruller(position)
-            player_scores[p] += GoNutsScorer.score_maple_bar(position)
-            player_scores[p] += GoNutsScorer.score_powdered(position)
+            logger.debug(f'Scoring player: {p}')
+
+            score_dh = GoNutsScorer.score_donut_holes(position)
+            logger.debug(f'Donut Holes: {score_dh}')
+            player_scores[p] += score_dh
+            
+            score_gz = GoNutsScorer.score_glazed(position)
+            logger.debug(f'Glazed: {score_gz}')
+            player_scores[p] += score_gz
+
+            score_jf = GoNutsScorer.score_jelly_filled(position)
+            logger.debug(f'Jelly Filled: {score_jf}')
+            player_scores[p] += score_jf
+
+            score_fc = GoNutsScorer.score_french_cruller(position)
+            logger.debug(f'French Cruller: {score_fc}')            
+            player_scores[p] += score_fc
+
+            score_mb = GoNutsScorer.score_maple_bar(position)
+            logger.debug(f'Maple Bar: {score_mb}')
+            player_scores[p] += score_mb
+
+            score_pwdr = GoNutsScorer.score_powdered(position)
+            logger.debug(f'Powdered: {score_pwdr}')
+            player_scores[p] += score_pwdr
         
-        np.add(player_scores, GoNutsScorer.score_plain(positions))
+        logger.debug(f'All without plain (all players): {player_scores}')
+        score_plain = GoNutsScorer.score_plain(positions)
+        logger.debug(f'Plain (all players): {score_plain}')
+        player_scores = np.add(player_scores, score_plain)
+        logger.debug(f'Final score (all players): {player_scores}')
 
         return player_scores
 
@@ -39,19 +62,18 @@ class GoNutsScorer:
         for p, position in enumerate(positions):
             card_counter = Counter([ c.name for c in position.cards ])
             dn_count = card_counter["plain"]
+            player_scores[p] = 1 * dn_count
             total_plain.append((p, dn_count))
         
         max_plain = max(total_plain, key=lambda x: x[1])[1]
-        print(f'max_plain {max_plain}')
         all_max_players = [ x for x in total_plain if x[1] == max_plain ]
-        print(f'max_players {all_max_players}')
 
         if not max_plain == 0:
             if len(all_max_players) == 1:
-                player_scores[all_max_players[0][0]] = 3
+                player_scores[all_max_players[0][0]] += 3
             if len(all_max_players) > 1:
                 for t in all_max_players:
-                    player_scores[t[0]] = 1
+                    player_scores[t[0]] += 1
 
         return player_scores
 
