@@ -224,7 +224,7 @@ class GoNutsGame:
             if card:
                 if card.name == "chocolate_frosted":
                     self.card_action_chocolate_frosted(self, p)
-                elif card and card.name == "eclair":
+                elif card.name == "eclair":
                     self.card_action_eclair(self, p)
 
     def card_action_chocolate_frosted(self, player_no):
@@ -235,7 +235,7 @@ class GoNutsGame:
 
     def card_action_eclair(self, player_no):
         if self.discard.size() > 0:
-            self.players[player_no].position.add_one(self.deck.draw_one())
+            self.players[player_no].position.add_one(self.discard.draw_one())
 
     def reset_turn(self):
         logger.debug(f'\nResetting turn...')
