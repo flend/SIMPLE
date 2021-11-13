@@ -112,18 +112,18 @@ class TestGoNutsForDonuts:
     
     def fixture_contents(self):
         contents = [
-          {'card': ChocolateFrosted, 'info': {}, 'count': 1}  #0 
-           ,  {'card': DonutHoles, 'info': {}, 'count':  1} #1 
-        ,  {'card': Eclair, 'info': {}, 'count':  1}  #2   
-          ,  {'card': Glazed, 'info': {}, 'count':  1} #3  
-           ,  {'card': JellyFilled, 'info': {}, 'count':  1} #4 
-           ,  {'card': MapleBar,  'info': {}, 'count':  1} #5 
-           ,  {'card': Plain, 'info': {}, 'count':  1} #6 
-          ,  {'card': Powdered, 'info': {}, 'count':  1}  #7 
-          ,  {'card': FrenchCruller, 'info': {}, 'count': 1}  #8 (last due to variability) 
+          {'card': ChocolateFrosted, 'info': {}, 'count': 1}  #0 / card.id = 8
+           ,  {'card': DonutHoles, 'info': {}, 'count':  1} #1 / card.id = 7
+        ,  {'card': Eclair, 'info': {}, 'count':  1}  #2 / card.id = 6
+          ,  {'card': Glazed, 'info': {}, 'count':  1} #3 / card.id = 5
+           ,  {'card': JellyFilled, 'info': {}, 'count':  1} #4 / card.id = 4
+           ,  {'card': MapleBar,  'info': {}, 'count':  1} #5 / card.id = 3
+           ,  {'card': Plain, 'info': {}, 'count':  1} #6 / card.id = 2
+          ,  {'card': Powdered, 'info': {}, 'count':  1}  #7 / card.id = 1
+          ,  {'card': FrenchCruller, 'info': {}, 'count': 1}  #8 / card.id = 0 (last due to variability) 
         ]
         
-        contents.reverse() # (deck is a stack, so reverse so card_id = 1 is on top)
+        contents.reverse() # (deck is a stack, so reverse so card #0 is on top - note it gets card.id = 8)
         return contents
 
     def test_standard_deck_contents_size(self):
@@ -359,6 +359,25 @@ class TestGoNutsForDonuts:
         test_game.card_action_eclair(0)
 
         assert test_game.players[0].position.size() == 0
+
+    def test_full_game_scoring(self):
+
+        test_game = GoNutsGame(4)
+        test_game.setup_game(deck_contents=self.fixture_contents(), shuffle=False)
+        test_game.start_game() # deals top 5
+        # d1: 8 CF, d2: 7 DH, d3: 6 ECL, d4: 5 G, d5: 4 JF; draw: [3 MB, 2 P, 1 PWD, 0 FC]; discard: []
+        test_game.do_player_actions([8, 7, 7, 5])
+        # p1: [8 CF, 3 MB], p2: [], p3: [], p4: [5 G]; draw: [2 P, 1 PWD, 0 FC];
+        test_game.reset_turn()
+        # d1: 2 P, d2: 1 PWD, d3: 6 ECL, d4: 0 FC, d5: 4 JF; draw: []; discard: [7 DH]
+        test_game.do_player_actions([4, 2, 1, 6])
+        # p1: [8 CF, 3 MB, 4 JF], p2: [2 P], p3: [1 PWD], p4: [5 G, 6 ECL, 7 DH]; draw: []; discard: []
+        
+        assert test_game.is_game_over() == True
+        assert test_game.player_scores() == [ 0, 4, 3, 3 ]
+
+        test_game.reset_turn()
+    
 
 
 

@@ -100,6 +100,13 @@ class Deck():
     def create(self):
         self.cards = []
 
+        # card.id uniquely identifies the card in the deck
+        # this occurs before shuffling, so a particular card id is always of a particular type
+        # (if the deck construction does not change)
+        # card.order is a numeric identifier of card type but this is unnecessary
+        # since cards are objects that know what type they are anyway
+        # TODO: remove order unless there's a good reason for it
+        
         card_id = 0
         for order, x in enumerate(self.contents):
             x['info']['order'] = order

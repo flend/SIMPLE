@@ -168,6 +168,9 @@ class GoNutsGame:
             self.players.append(Player(str(player_id)))
             player_id += 1
 
+    def start_game(self):
+        self.reset_turn()
+
     def standard_deck_contents(self):
 
         return [
@@ -223,9 +226,9 @@ class GoNutsGame:
         for p, card in enumerate(cards_picked):
             if card:
                 if card.name == "chocolate_frosted":
-                    self.card_action_chocolate_frosted(self, p)
+                    self.card_action_chocolate_frosted(p)
                 elif card.name == "eclair":
-                    self.card_action_eclair(self, p)
+                    self.card_action_eclair(p)
 
     def card_action_chocolate_frosted(self, player_no):
         # Draw the top card from the draw deck
@@ -273,26 +276,25 @@ class GoNutsGame:
 
     def score_turn(self):
 
-        maki = [0] * self.n_players
+        player_scores = GoNutsScorer.score_turn([ p.position for p in self.players ])
         
         for i, p in enumerate(self.players):
-            count = {'tempura': 0, 'sashimi': 0, 'dumpling': 0}
-            for card in p.position.cards:
-                if card.type in ('tempura', 'sashimi', 'dumpling'):
-                    count[card.type] += 1
-                elif card.type == 'maki':
-                    maki[i] += card.value
-                elif card.type == 'nigiri':
-                    if card.played_on_wasabi:
-                        p.score += 3 * card.value
-                    else:
-                        p.score += card.value
+            p.score = player_scores[i]
 
-            p.score += (count['tempura'] // 2) * 5
-            p.score += (count['sashimi'] // 3) * 10
-            p.score += min(15, (count['dumpling'] * (count['dumpling'] + 1) ) // 2)
-        
-        self.score_maki(maki)
+    def do_player_actions(self, player_card_picks):
+
+        logger.debug(f'\nThe chosen cards are now competitively picked')
+
+        cards_picked = self.pick_cards(player_card_picks)
+        # TODO: Move to a new step in the state machine
+        self.do_card_special_effects(cards_picked)
+        self.reset_turn()
+
+        # Per-turn scores are an observation for the agents
+        self.score_turn()
+
+    def player_scores(self):
+        return [ p.score for p in self.players ]
 
 
 class GoNutsForDonutsEnv(gym.Env):
@@ -417,16 +419,8 @@ class GoNutsForDonutsEnv(gym.Env):
             self.action_bank.append(action)
 
             if len(self.action_bank) == self.n_players:
-                logger.debug(f'\nThe chosen cards are now competitively picked')
 
-                cards_picked = self.game.pick_cards(self.action_bank)
-                # TODO: Move to a new step in the state machine
-                self.game.do_card_special_effects(cards_picked)
-                self.game.reset_turn()
-
-                # Per-turn scores are an observation for the agents
-                self.game.score_turn()
-
+                self.game.do_player_actions(self.action_bank)
                 self.action_bank = []
             
             self.current_player_num = (self.current_player_num + 1) % self.n_players
