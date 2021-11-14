@@ -1,4 +1,6 @@
-from gonutsfordonuts.envs.gonutsfordonuts import GoNutsGame, GoNutsScorer
+import numpy as np
+
+from gonutsfordonuts.envs.gonutsfordonuts import GoNutsGame, GoNutsScorer, GoNutsGameGymTranslator
 from gonutsfordonuts.envs.classes import ChocolateFrosted, DonutHoles, Eclair, FrenchCruller, Glazed, JellyFilled, MapleBar, Plain, Powdered
 from gonutsfordonuts.envs.classes import Position
 
@@ -107,6 +109,37 @@ class TestGoNutsForDonutsScorer:
 
         scores = GoNutsScorer.score_turn(positions)
         assert (scores == [10, 5, 10]).all()
+
+class TestGoNutsForDonutsGymTranslator:
+
+    def fixture_contents(self):
+        contents = [
+          {'card': ChocolateFrosted, 'info': {}, 'count': 1}  #0 / card.id = 8
+           ,  {'card': DonutHoles, 'info': {}, 'count':  1} #1 / card.id = 7
+        ,  {'card': Eclair, 'info': {}, 'count':  1}  #2 / card.id = 6
+          ,  {'card': Glazed, 'info': {}, 'count':  1} #3 / card.id = 5
+           ,  {'card': JellyFilled, 'info': {}, 'count':  1} #4 / card.id = 4
+           ,  {'card': MapleBar,  'info': {}, 'count':  1} #5 / card.id = 3
+           ,  {'card': Plain, 'info': {}, 'count':  1} #6 / card.id = 2
+          ,  {'card': Powdered, 'info': {}, 'count':  1}  #7 / card.id = 1
+          ,  {'card': FrenchCruller, 'info': {}, 'count': 1}  #8 / card.id = 0 (last due to variability) 
+        ]
+        
+        contents.reverse() # (deck is a stack, so reverse so card #0 is on top - note it gets card.id = 8)
+        return contents
+
+    def test_legal_actions_have_only_donut_deck_picks(self):
+
+        test_game = GoNutsGame(4)
+        translator = GoNutsGameGymTranslator(test_game)
+
+        test_game.setup_game(deck_contents=self.fixture_contents(), shuffle=False)
+        test_game.start_game()
+
+        # 5 dealt cards in donut array
+        expected_legal_actions = np.array([0, 0, 0, 0, 1, 1, 1, 1, 1])
+        
+        assert (translator.get_legal_actions() == expected_legal_actions).all()
 
 class TestGoNutsForDonuts:
     
