@@ -141,6 +141,31 @@ class TestGoNutsForDonutsGymTranslator:
         
         assert (translator.get_legal_actions() == expected_legal_actions).all()
 
+    def test_observations_correct_for_started_game(self):
+
+        no_players = 4
+        test_game = GoNutsGame(no_players)
+        translator = GoNutsGameGymTranslator(test_game)
+
+        test_game.setup_game(deck_contents=self.fixture_contents(), shuffle=False)
+        test_game.start_game()
+
+        # Positions & discard
+        obs = np.zeros([no_players + 1, len(self.fixture_contents())])
+        ret = obs.flatten()
+
+        # Last moves
+        ret = np.append(ret, np.zeros(no_players))
+        # Scores
+        ret = np.append(ret, np.zeros(no_players))
+        # Legal actions
+        legal_actions = np.array([0, 0, 0, 0, 1, 1, 1, 1, 1])
+        ret = np.append(ret, legal_actions)
+
+        expected_observations = ret
+        
+        assert (translator.get_observations(0) == expected_observations).all()
+
 class TestGoNutsForDonuts:
     
     def fixture_contents(self):
@@ -175,7 +200,7 @@ class TestGoNutsForDonuts:
 
         test_game = GoNutsGame(4)
         test_game.setup_game(deck_contents=self.fixture_contents(), shuffle=False)
-        test_game.reset_turn()
+        test_game.start_game()
 
         assert test_game.donut_decks[0].card.id == 8
         assert test_game.donut_decks[0].card.symbol == 'CF'
@@ -196,7 +221,7 @@ class TestGoNutsForDonuts:
 
         test_game = GoNutsGame(4)
         test_game.setup_game(deck_contents=self.fixture_contents(), shuffle=False)
-        test_game.reset_turn()
+        test_game.start_game()
 
         test_game.pick_cards([8, 7, 6, 5])
 
@@ -209,7 +234,7 @@ class TestGoNutsForDonuts:
 
         test_game = GoNutsGame(4)
         test_game.setup_game(deck_contents=self.fixture_contents(), shuffle=False)
-        test_game.reset_turn()
+        test_game.start_game()
 
         test_game.pick_cards([8, 7, 6, 5])
         test_game.reset_turn()
@@ -225,7 +250,7 @@ class TestGoNutsForDonuts:
 
         test_game = GoNutsGame(4)
         test_game.setup_game(deck_contents=self.fixture_contents(), shuffle=False)
-        test_game.reset_turn()
+        test_game.start_game()
 
         # 5 out, 4 in deck
         test_game.pick_cards([8, 8, 7, 7])
@@ -241,7 +266,7 @@ class TestGoNutsForDonuts:
 
         test_game = GoNutsGame(4)
         test_game.setup_game(deck_contents=self.fixture_contents(), shuffle=False)
-        test_game.reset_turn()
+        test_game.start_game()
 
         # 5 out, 4 in deck
         test_game.pick_cards([8, 8, 7, 7])
@@ -257,7 +282,7 @@ class TestGoNutsForDonuts:
 
         test_game = GoNutsGame(4)
         test_game.setup_game(deck_contents=self.fixture_contents(), shuffle=False)
-        test_game.reset_turn()
+        test_game.start_game()
 
         test_game.pick_cards([8, 7, 6, 5])
         test_game.reset_turn()
@@ -278,7 +303,7 @@ class TestGoNutsForDonuts:
 
         test_game = GoNutsGame(4)
         test_game.setup_game(deck_contents=self.fixture_contents(), shuffle=False)
-        test_game.reset_turn()
+        test_game.start_game()
 
         test_game.pick_cards([8, 8, 6, 6])
 
@@ -291,7 +316,7 @@ class TestGoNutsForDonuts:
 
         test_game = GoNutsGame(4)
         test_game.setup_game(deck_contents=self.fixture_contents(), shuffle=False)
-        test_game.reset_turn()
+        test_game.start_game()
 
         cards_picked = test_game.pick_cards([8, 8, 6, 5])
 
@@ -304,7 +329,7 @@ class TestGoNutsForDonuts:
 
         test_game = GoNutsGame(4)
         test_game.setup_game(deck_contents=self.fixture_contents(), shuffle=False)
-        test_game.reset_turn()
+        test_game.start_game()
 
         test_game.pick_cards([8, 8, 6, 5])
         test_game.reset_turn()
@@ -330,7 +355,7 @@ class TestGoNutsForDonuts:
         test_game = GoNutsGame(4)
         test_game.setup_game(deck_contents=self.fixture_contents(), shuffle=False)
 
-        test_game.reset_turn()
+        test_game.start_game()
 
         test_game.pick_cards([8, 8, 7, 7])
         test_game.reset_turn()
@@ -343,7 +368,7 @@ class TestGoNutsForDonuts:
 
         test_game = GoNutsGame(4)
         test_game.setup_game(deck_contents=self.fixture_contents(), shuffle=False)
-        test_game.reset_turn() # deals top 5
+        test_game.start_game() # deals top 5
 
         test_game.card_action_chocolate_frosted(0)
 
@@ -356,7 +381,7 @@ class TestGoNutsForDonuts:
 
         test_game = GoNutsGame(4)
         test_game.setup_game(deck_contents=self.fixture_contents(), shuffle=False)
-        test_game.reset_turn()
+        test_game.start_game()
         # deck 9, deal 5, redeal 4, empty deck
         test_game.pick_cards([8, 7, 6, 5])
         test_game.reset_turn()
@@ -370,7 +395,7 @@ class TestGoNutsForDonuts:
 
         test_game = GoNutsGame(4)
         test_game.setup_game(deck_contents=self.fixture_contents(), shuffle=False)
-        test_game.reset_turn() # deals top 5
+        test_game.start_game() # deals top 5
         test_game.pick_cards([8, 8, 7, 7]) # adds 8 then 7 to discard pile
         test_game.reset_turn()
 
@@ -387,7 +412,7 @@ class TestGoNutsForDonuts:
 
         test_game = GoNutsGame(4)
         test_game.setup_game(deck_contents=self.fixture_contents(), shuffle=False)
-        test_game.reset_turn() # deals top 5
+        test_game.start_game() # deals top 5
 
         test_game.card_action_eclair(0)
 

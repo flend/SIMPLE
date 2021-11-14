@@ -169,7 +169,10 @@ class GoNutsGame:
             player_id += 1
 
     def start_game(self):
-        self.reset_turn()
+        # Setup donut decks for the first time
+        self.donut_decks = []
+        for i in range (0, self.no_donut_decks):
+            self.donut_decks.append(DonutDeckPosition(self.deck.draw_one()))
 
     def standard_deck_contents(self):
 
@@ -243,12 +246,6 @@ class GoNutsGame:
     def reset_turn(self):
         logger.debug(f'\nResetting turn...')
         
-        # Setup donut decks for the first time
-        if not self.turns_taken:
-            self.donut_decks = []
-            for i in range (0, self.no_donut_decks):
-                self.donut_decks.append(DonutDeckPosition(self.deck.draw_one()))
-
         # Check end of game
         decks_to_discard = sum(1 for d in self.donut_decks if d.to_discard)
         decks_taken = sum(1 for d in self.donut_decks if d.taken)
@@ -372,11 +369,13 @@ class GoNutsGameGymTranslator:
         player_num = current_player_num
         for i in range(n_players):
             player = self.game.players[player_num]
-            ret = np.append(ret, player.score / self.max_score)
+            ret = np.append(ret, player.score / self.game.max_score)
             player_num = (player_num + 1) % n_players
 
         # Legal actions, representing the donut choices
-        ret = np.append(ret, self.legal_actions)
+        ret = np.append(ret, self.get_legal_actions())
+
+        return ret
 
 class GoNutsForDonutsEnv(gym.Env):
     metadata = {'render.modes': ['human']}
