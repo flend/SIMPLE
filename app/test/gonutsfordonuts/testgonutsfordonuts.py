@@ -166,6 +166,42 @@ class TestGoNutsForDonutsGymTranslator:
         
         assert (translator.get_observations(0) == expected_observations).all()
 
+    def test_observations_correct_for_game_after_one_turn_from_player_zero_perspective(self):
+
+        no_players = 4
+        test_game = GoNutsGame(no_players)
+        translator = GoNutsGameGymTranslator(test_game)
+
+        test_game.setup_game(deck_contents=self.fixture_contents(), shuffle=False)
+        test_game.start_game() # deals top 5
+        # d1: 8 CF, d2: 7 DH, d3: 6 ECL, d4: 5 G, d5: 4 JF; draw: [3 MB, 2 P, 1 PWD, 0 FC]; discard: []
+        test_game.do_player_actions([8, 7, 7, 5])
+        # p1: [8 CF, 3 MB], p2: [], p3: [], p4: [5 G]; draw: [2 P, 1 PWD, 0 FC]
+        test_game.reset_turn()
+        # d1: 2 P, d2: 1 PWD, d3: 6 ECL, d4: 0 FC, d5: 4 JF; draw: []; discard: [7 DH]
+
+        # Positions (from player 0 perspective)
+        no_cards = len(self.fixture_contents())
+        obs = np.array([0, 0, 0, 1, 0, 0, 0, 0, 1])
+        obs = np.append(obs, np.zeros(no_cards))
+        obs = np.append(obs, np.zeros(no_cards))
+        obs = np.append(obs, [0, 0, 0, 0, 0, 1, 0, 0, 0])
+
+        # Discard
+        obs = np.append(obs, [0, 0, 0, 0, 0, 0, 0, 1, 0])
+
+        # Last moves
+        obs = np.append(obs, np.array([8, 7, 7, 5]))
+        # Scores
+        ret = np.append(obs, np.array([0, 0, 0, 2 / test_game.max_score]))
+        # Legal actions
+        legal_actions = np.array([1, 1, 1, 0, 1, 0, 1, 0, 0])
+        ret = np.append(ret, legal_actions)
+
+        expected_observations = ret
+        
+        assert (translator.get_observations(0) == expected_observations).all()
+
 class TestGoNutsForDonuts:
     
     def fixture_contents(self):
