@@ -254,6 +254,7 @@ class GoNutsGame:
 
     def standard_deck_contents(self):
 
+        # 39 cards
         return [
           {'card': ChocolateFrosted, 'info': {}, 'count': 3}  #0 
            ,  {'card': DonutHoles, 'info': {}, 'count':  6} #1 
