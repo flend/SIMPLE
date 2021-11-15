@@ -494,7 +494,7 @@ class GoNutsForDonutsEnv(gym.Env):
         if close:
             return
 
-        logger.debug(f'\n\n-------TURN {self.turns_taken + 1}-----------')
+        logger.debug(f'\n\n-------TURN {self.game.turns_taken + 1}-----------')
         logger.debug(f"It is Player {self.current_player.id}'s turn to choose")            
 
         # Render player positions
@@ -507,12 +507,12 @@ class GoNutsForDonutsEnv(gym.Env):
                 logger.debug('Empty')
 
         # Render donuts to choose
-        for d, i in enumerate(self.game.donut_decks):
+        for i, d in enumerate(self.game.donut_decks):
             this_card = d.get_card()
             logger.debug(f'Deck {i}: {this_card.symbol}')
 
         # Top of discard
-        if self.game.discard.size:
+        if self.game.discard.size():
             logger.debug(f'Discard: {self.game.discard.size()} cards, top {self.game.discard.peek_one().symbol}')
 
         logger.debug(f'\n{self.game.deck.size()} cards left in deck')
@@ -526,7 +526,7 @@ class GoNutsForDonutsEnv(gym.Env):
         if self.done:
             logger.debug(f'\n\nGAME OVER')
             
-        for p in self.players:
+        for p in self.game.players:
             logger.debug(f'Player {p.id} points: {p.score}')
 
 
