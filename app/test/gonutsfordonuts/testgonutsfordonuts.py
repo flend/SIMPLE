@@ -1,8 +1,39 @@
 import numpy as np
 
-from gonutsfordonuts.envs.gonutsfordonuts import GoNutsGame, GoNutsScorer, GoNutsGameGymTranslator
+from gonutsfordonuts.envs.gonutsfordonuts import GoNutsGame, GoNutsScorer, GoNutsGameGymTranslator, GoNutsForDonutsEnvUtility
 from gonutsfordonuts.envs.classes import ChocolateFrosted, DonutHoles, Eclair, FrenchCruller, Glazed, JellyFilled, MapleBar, Plain, Powdered
-from gonutsfordonuts.envs.classes import Position
+from gonutsfordonuts.envs.classes import Position, Player
+
+class TestGoNutsForDonutsEnvUtility:
+    def test_rewards_single_winner(self):
+
+        players = [Player(p) for p in range(4)]
+        players[0].score = 0.1
+        players[1].score = 0.2
+        players[2].score = 0.15
+        players[3].score = 0.05
+
+        assert (GoNutsForDonutsEnvUtility.score_game_from_players(players) == np.array([ 0, +1, 0, -1])).all()
+
+    def test_rewards_multiple_winners(self):
+
+        players = [Player(p) for p in range(4)]
+        players[0].score = 0.1
+        players[1].score = 0.2
+        players[2].score = 0.2
+        players[3].score = 0.05
+
+        assert (GoNutsForDonutsEnvUtility.score_game_from_players(players) == np.array([0, +0.5, +0.5, -1])).all()
+
+    def test_rewards_multiple_losers(self):
+
+        players = [Player(p) for p in range(4)]
+        players[0].score = 0.1
+        players[1].score = 0.2
+        players[2].score = 0.05
+        players[3].score = 0.05
+
+        assert (GoNutsForDonutsEnvUtility.score_game_from_players(players) == np.array([0, +1, -0.5, -0.5])).all()
 
 class TestGoNutsForDonutsScorer:
 

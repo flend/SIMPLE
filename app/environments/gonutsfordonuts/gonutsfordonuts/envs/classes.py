@@ -124,8 +124,8 @@ class DonutDeckPosition():
         self.taken = False
         self.to_discard = False
 
-    def get_card_type(self):
-        return self.card.type
+    def get_card(self):
+        return self.card
 
     def set_taken(self):
         self.taken = True
@@ -167,6 +167,9 @@ class Discard():
 
     def draw_one(self):
         return self.cards.pop()
+
+    def peek_one(self):
+        return self.cards[-1]
     
     def size(self):
         return len(self.cards)

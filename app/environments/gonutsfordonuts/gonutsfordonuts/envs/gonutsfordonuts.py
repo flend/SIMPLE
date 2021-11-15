@@ -132,6 +132,84 @@ class GoNutsScorer:
         return 0
 
 
+class GoNutsGameGymTranslator:
+
+    def __init__(self, donuts_game):
+        self.game = donuts_game
+
+    def total_positions(self):
+        # player positions / discards
+        return self.game.n_players + 1
+
+    def observation_space_size(self):
+
+        # total positions (see above) / last picks (by player) / player scores / legal actions
+        return self.game.total_cards * self.total_positions() + self.game.n_players + self.game.n_players + self.action_space_size()
+
+    def action_space_size(self):
+        # agents choose a card_id as an action.
+        # although all card_ids corresponding to the same card type ought to have the same value,
+        # it is actual cards we pick and N of them are unmasked each turn
+        return self.game.total_cards
+    
+    def get_legal_actions(self):
+        
+        legal_actions = np.zeros(self.action_space_size())
+
+        for i in range(self.game.no_donut_decks):
+            legal_actions[self.game.donut_decks[i].card.id] = 1
+        
+        return legal_actions
+
+    def get_observations(self, current_player_num):
+
+        n_players = self.game.n_players
+
+        obs = np.zeros([self.total_positions(), self.game.total_cards])
+
+        # Note that tidying the observations to card_id strongly couples the model to the exact
+        # composition of the original deck. e.g. increasing the number of FCs due to player count may
+        # cause the model to be non-generalisable to different player counts
+        
+        # Each player's current position (tableau)
+        # starting from the current player and cycling to higher-numbered players
+        player_num = current_player_num
+        for i in range(n_players):
+            player = self.game.players[player_num]
+
+            for card in player.position.cards:
+                obs[i][card.id] = 1
+
+            player_num = (player_num + 1) % n_players
+
+        # The discard deck
+        discard_index = n_players
+        for card in self.game.discard.cards:
+            obs[discard_index][card.id] = 1
+
+        ret = obs.flatten()
+
+        # The donut choices picked by the players last time
+        # Although players pick type, for convenience we observe the card ID they took
+        if self.game.turns_taken >= 1:
+            player_num = current_player_num
+            for i in range(n_players):
+                ret = np.append(ret, self.game.last_player_card_picks[player_num])
+                player_num = (player_num + 1) % n_players
+        else:
+            ret = np.append(ret, np.zeros(n_players))
+
+        # Current player scores [to guide the agent to which players to target]
+        player_num = current_player_num
+        for i in range(n_players):
+            player = self.game.players[player_num]
+            ret = np.append(ret, player.score / self.game.max_score)
+            player_num = (player_num + 1) % n_players
+
+        # Legal actions, representing the donut choices
+        ret = np.append(ret, self.get_legal_actions())
+
+        return ret
 
 class GoNutsGame:
 
@@ -298,116 +376,13 @@ class GoNutsGame:
     def player_scores(self):
         return [ p.score for p in self.players ]
 
-class GoNutsGameGymTranslator:
+class GoNutsForDonutsEnvUtility:
 
-    def __init__(self, donuts_game):
-        self.game = donuts_game
+    @staticmethod
+    def score_game_from_players(players):
 
-    def total_positions(self):
-        # player positions / discards
-        return self.game.n_players + 1
-
-    def observation_space_size(self):
-
-        # total positions (see above) / last picks (by player) / player scores / legal actions
-        return self.game.total_cards * self.total_positions() + self.game.n_players + self.game.n_players + self.action_space_size()
-
-    def action_space_size(self):
-        # agents choose a card_id as an action.
-        # although all card_ids corresponding to the same card type ought to have the same value,
-        # it is actual cards we pick and N of them are unmasked each turn
-        return self.game.total_cards
-    
-    def get_legal_actions(self):
-        
-        legal_actions = np.zeros(self.action_space_size())
-
-        for i in range(self.game.no_donut_decks):
-            legal_actions[self.game.donut_decks[i].card.id] = 1
-        
-        return legal_actions
-
-    def get_observations(self, current_player_num):
-
-        n_players = self.game.n_players
-
-        obs = np.zeros([self.total_positions(), self.game.total_cards])
-
-        # Note that tidying the observations to card_id strongly couples the model to the exact
-        # composition of the original deck. e.g. increasing the number of FCs due to player count may
-        # cause the model to be non-generalisable to different player counts
-        
-        # Each player's current position (tableau)
-        # starting from the current player and cycling to higher-numbered players
-        player_num = current_player_num
-        for i in range(n_players):
-            player = self.game.players[player_num]
-
-            for card in player.position.cards:
-                obs[i][card.id] = 1
-
-            player_num = (player_num + 1) % n_players
-
-        # The discard deck
-        discard_index = n_players
-        for card in self.game.discard.cards:
-            obs[discard_index][card.id] = 1
-
-        ret = obs.flatten()
-
-        # The donut choices picked by the players last time
-        # Although players pick type, for convenience we observe the card ID they took
-        if self.game.turns_taken >= 1:
-            player_num = current_player_num
-            for i in range(n_players):
-                ret = np.append(ret, self.game.last_player_card_picks[player_num])
-                player_num = (player_num + 1) % n_players
-        else:
-            ret = np.append(ret, np.zeros(n_players))
-
-        # Current player scores [to guide the agent to which players to target]
-        player_num = current_player_num
-        for i in range(n_players):
-            player = self.game.players[player_num]
-            ret = np.append(ret, player.score / self.game.max_score)
-            player_num = (player_num + 1) % n_players
-
-        # Legal actions, representing the donut choices
-        ret = np.append(ret, self.get_legal_actions())
-
-        return ret
-
-class GoNutsForDonutsEnv(gym.Env):
-    metadata = {'render.modes': ['human']}
-
-    def __init__(self, verbose = False, manual = False):
-        super(GoNutsForDonutsEnv, self).__init__()
-        self.name = 'gonutsfordonuts'
-        self.manual = manual
-
-        no_players = 3
-        self.n_players = no_players
-
-        self.game = GoNutsGame(no_players)
-        self.game.setup_game()
-
-        self.translator = GoNutsGameGymTranslator(self.game)
-
-        self.action_space = gym.spaces.Discrete(self.translator.action_space_size())
-        self.observation_space = gym.spaces.Box(0, 1, (self.translator.observation_space_size(),))
-        self.verbose = verbose
-  
-    @property
-    def observation(self):
-        return self.translator.get_observations(self.current_player_num)
-
-    @property
-    def legal_actions(self):
-        return self.translator.get_legal_actions()
-
-    def score_game(self):
-        reward = [0.0] * self.n_players
-        scores = [p.score for p in self.game.players]
+        reward = [0.0] * len(players)
+        scores = [p.score for p in players]
         best_score = max(scores)
         worst_score = min(scores)
         winners = []
@@ -425,6 +400,38 @@ class GoNutsForDonutsEnv(gym.Env):
             reward[l] -= 1.0 / len(losers)
 
         return reward
+
+class GoNutsForDonutsEnv(gym.Env):
+    metadata = {'render.modes': ['human']}
+
+    def __init__(self, verbose = False, manual = False):
+        super(GoNutsForDonutsEnv, self).__init__()
+        self.name = 'gonutsfordonuts'
+        self.manual = manual
+
+        no_players = 3
+        self.n_players = no_players
+
+        self.game = GoNutsGame(no_players)
+        self.game.setup_game()
+        self.game.start_game()
+
+        self.translator = GoNutsGameGymTranslator(self.game)
+
+        self.action_space = gym.spaces.Discrete(self.translator.action_space_size())
+        self.observation_space = gym.spaces.Box(0, 1, (self.translator.observation_space_size(),))
+        self.verbose = verbose
+  
+    @property
+    def observation(self):
+        return self.translator.get_observations(self.current_player_num)
+
+    @property
+    def legal_actions(self):
+        return self.translator.get_legal_actions()
+
+    def score_game(self):
+        return GoNutsForDonutsEnvUtility.score_game_from_players(self.game.players)
 
     @property
     def current_player(self):
@@ -473,6 +480,7 @@ class GoNutsForDonutsEnv(gym.Env):
     def reset(self):
 
         self.game.reset_game()
+        self.game.start_game()
 
         self.action_bank = []
 
@@ -486,28 +494,28 @@ class GoNutsForDonutsEnv(gym.Env):
         if close:
             return
 
-        if self.turns_taken < self.cards_per_player:
-            logger.debug(f'\n\n-------ROUND {self.round} : TURN {self.turns_taken + 1}-----------')
-            logger.debug(f"It is Player {self.current_player.id}'s turn to choose")
-        else:
-            logger.debug(f'\n\n-------FINAL ROUND {self.round} POSITION-----------')
-            
+        logger.debug(f'\n\n-------TURN {self.turns_taken + 1}-----------')
+        logger.debug(f"It is Player {self.current_player.id}'s turn to choose")            
 
-        for p in self.players:
-            logger.debug(f'\nPlayer {p.id}\'s hand')
-            if p.hand.size() > 0:
-                logger.debug('  '.join([ str(card.order) + ': ' + card.symbol for card in sorted(p.hand.cards, key=lambda x: x.id)]))
-            else:
-                logger.debug('Empty')
+        # Render player positions
 
+        for p in self.game.players:
             logger.debug(f'Player {p.id}\'s position')
             if p.position.size() > 0:
                 logger.debug('  '.join([str(card.order) + ': ' + card.symbol + ': ' + str(card.id) for card in sorted(p.position.cards, key=lambda x: x.id)]))
             else:
                 logger.debug('Empty')
 
-        logger.debug(f'\n{self.deck.size()} cards left in deck')
-        logger.debug(f'{self.discard.size()} cards discarded')
+        # Render donuts to choose
+        for d, i in enumerate(self.game.donut_decks):
+            this_card = d.get_card()
+            logger.debug(f'Deck {i}: {this_card.symbol}')
+
+        # Top of discard
+        if self.game.discard.size:
+            logger.debug(f'Discard: {self.game.discard.size()} cards, top {self.game.discard.peek_one().symbol}')
+
+        logger.debug(f'\n{self.game.deck.size()} cards left in deck')
 
         if self.verbose:
             logger.debug(f'\nObservation: \n{[i if o == 1 else (i,o) for i,o in enumerate(self.observation) if o != 0]}')
@@ -518,10 +526,8 @@ class GoNutsForDonutsEnv(gym.Env):
         if self.done:
             logger.debug(f'\n\nGAME OVER')
             
-
-        if self.turns_taken == self.cards_per_player:
-            for p in self.players:
-                logger.debug(f'Player {p.id} points: {p.score}')
+        for p in self.players:
+            logger.debug(f'Player {p.id} points: {p.score}')
 
 
     def rules_move(self):
