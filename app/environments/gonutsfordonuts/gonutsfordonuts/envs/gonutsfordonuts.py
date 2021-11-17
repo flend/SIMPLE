@@ -292,9 +292,12 @@ class GoNutsGame:
 
             if card_ids_counter[card_id] > 1:
                 deck.set_to_discard()
+                logger.debug(f'Discarding {deck.card.symbol}')
                 cards_picked.append(None)
             else:
                 player.position.add_one(deck.card)
+                logger.debug(f'Player {player.id} picks {deck.card.symbol}')
+
                 cards_picked.append(deck.card)
                 deck.set_taken()
         
@@ -510,7 +513,7 @@ class GoNutsForDonutsEnv(gym.Env):
         # Render donuts to choose
         for i, d in enumerate(self.game.donut_decks):
             this_card = d.get_card()
-            logger.debug(f'Deck {i}: {this_card.symbol}')
+            logger.debug(f'Deck {i}: {this_card.symbol}; {this_card.id}')
 
         # Top of discard
         if self.game.discard.size():
@@ -522,7 +525,16 @@ class GoNutsForDonutsEnv(gym.Env):
             logger.debug(f'\nObservation: \n{[i if o == 1 else (i,o) for i,o in enumerate(self.observation) if o != 0]}')
         
         if not self.done:
-            logger.debug(f'\nLegal actions: {[i for i,o in enumerate(self.legal_actions) if o != 0]}')
+            legal_action_str = "Legal actions: "
+
+            for i,o in enumerate(self.legal_actions):
+                if o:
+                    card_for_action = next((c for c in self.game.deck.base_deck if c.id == i), None)
+                    if card_for_action:
+                        legal_action_str += f"{i}:{card_for_action.symbol} "
+                    else:
+                        logger.debug(f"Can't find card for action {o}")
+            logger.debug(legal_action_str)
 
         if self.done:
             logger.debug(f'\n\nGAME OVER')

@@ -79,6 +79,8 @@ class Powdered(Card):
 class Deck():
     def __init__(self, contents):
         self.contents = contents
+        self.cards = [] # Stack to pull cards from
+        self.base_deck = [] # Snapshot of the initial deck
         self.create()
     
     def shuffle(self):
@@ -97,8 +99,11 @@ class Deck():
         for card in cards:
             self.cards.append(card)
 
+    def add_to_base_deck(self, cards):
+        for card in cards:
+            self.base_deck.append(card)
+
     def create(self):
-        self.cards = []
 
         # card.id uniquely identifies the card in the deck
         # this occurs before shuffling, so a particular card id is always of a particular type
@@ -112,7 +117,9 @@ class Deck():
             x['info']['order'] = order
             for i in range(x['count']):
                 x['info']['id'] = card_id
-                self.add([x['card'](**x['info'])])
+                card = [x['card'](**x['info'])]
+                self.add(card)
+                self.add_to_base_deck(card)
                 card_id += 1
                                 
     def size(self):
