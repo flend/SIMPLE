@@ -9,7 +9,7 @@ from stable_baselines.common.policies import ActorCriticPolicy
 from stable_baselines.common.distributions import CategoricalProbabilityDistribution
 
 
-ACTIONS = 39
+ACTIONS = 38 # number of card (ids) - 38 for the 3-player game
 FEATURE_SIZE = 64
 
 

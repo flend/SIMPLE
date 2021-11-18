@@ -45,11 +45,11 @@ class GoNutsScorer:
             logger.debug(f'Powdered: {score_pwdr}')
             player_scores[p] += score_pwdr
         
-        logger.debug(f'All without plain (all players): {player_scores}')
+        logger.info(f'All without plain (all players): {player_scores}')
         score_plain = GoNutsScorer.score_plain(positions)
-        logger.debug(f'Plain (all players): {score_plain}')
+        logger.info(f'Plain (all players): {score_plain}')
         player_scores = np.add(player_scores, score_plain)
-        logger.debug(f'Final score (all players): {player_scores}')
+        logger.info(f'Final score (all players): {player_scores}')
 
         return player_scores
 
@@ -254,7 +254,7 @@ class GoNutsGame:
 
     def standard_deck_contents(self):
 
-        # 39 cards
+        # 36 + (np - 1) cards
         return [
           {'card': ChocolateFrosted, 'info': {}, 'count': 3}  #0 
            ,  {'card': DonutHoles, 'info': {}, 'count':  6} #1 
@@ -272,7 +272,7 @@ class GoNutsGame:
             if deck.card.id == card_id:
                 return deck
 
-        logger.debug(f'Cannot find deck for card_id {card_id}')
+        logger.info(f'Cannot find deck for card_id {card_id}')
         raise Exception(f'Cannot find deck for card_id {card_id}')
 
     def pick_cards(self, cards_ids_picked):
@@ -280,7 +280,7 @@ class GoNutsGame:
         cards_picked = []
 
         if len(cards_ids_picked) != self.n_players:
-            logger.debug('pick_cards() called with wrong number of card_ids')
+            logger.info('pick_cards() called with wrong number of card_ids')
             raise Exception('pick_cards() called with wrong number of card_ids')
 
         for i, card_id in enumerate(cards_ids_picked):
@@ -326,7 +326,10 @@ class GoNutsGame:
             self.players[player_no].position.add_one(self.discard.draw_one())
 
     def reset_turn(self):
-        logger.debug(f'\nResetting turn...')
+
+        self.turns_taken += 1
+
+        logger.info(f'\nSetting up turn {self.turns_taken}...')
         
         # Check end of game
         decks_to_discard = sum(1 for d in self.donut_decks if d.to_discard)
@@ -340,16 +343,19 @@ class GoNutsGame:
             for i in range(0, self.no_donut_decks):
                 if self.donut_decks[i].taken:
                     # Already added to player's position
-                    logger.debug(f'Filling deck position {i}')
                     self.donut_decks[i] = DonutDeckPosition(self.deck.draw_one())
+                    logger.info(f'Filling deck position {i} with card {self.donut_decks[i].card.symbol}')
+
                 elif self.donut_decks[i].to_discard:
-                    logger.debug(f'Filling and discarding deck position {i}')
-                    self.discard.add([self.donut_decks[i].card])
+                    discarded_card = self.donut_decks[i].card
+                    self.discard.add([discarded_card])
                     self.donut_decks[i] = DonutDeckPosition(self.deck.draw_one())
+                    logger.info(f'Discarding {discarded_card} from deck position {i} and filling with card {self.donut_decks[i].card.symbol}')
+
                 # Otherwise the card stays in position
-        
-        self.turns_taken += 1
-    
+                else:
+                    logger.info(f'Deck position {i} stays unchanged with card {self.donut_decks[i].card.symbol}')
+                    
     def is_game_over(self):
         return self.game_ends
 
@@ -365,7 +371,7 @@ class GoNutsGame:
 
     def do_player_actions(self, player_card_picks):
 
-        logger.debug(f'\nThe chosen cards are now competitively picked')
+        logger.info(f'\nThe chosen cards are now competitively picked')
 
         self.record_player_actions(player_card_picks)
 
@@ -449,7 +455,7 @@ class GoNutsForDonutsEnv(gym.Env):
         # illegal action
         if self.legal_actions[action] == 0:
             reward = [1.0/(self.n_players-1)] * self.n_players
-            logger.debug(f'Illegal action played {action}')
+            logger.info(f'Illegal action played {action}')
             reward[self.current_player_num] = -1
             # I think this jettisons the run
             done = True
@@ -490,7 +496,7 @@ class GoNutsForDonutsEnv(gym.Env):
 
         self.current_player_num = 0
         self.done = False
-        logger.debug(f'\n\n---- NEW GAME ----')
+        logger.info(f'\n\n---- NEW GAME ----')
         return self.observation
 
     def render(self, mode='human', close=False):
@@ -498,31 +504,31 @@ class GoNutsForDonutsEnv(gym.Env):
         if close:
             return
 
-        logger.debug(f'\n\n-------TURN {self.game.turns_taken + 1}-----------')
-        logger.debug(f"It is Player {self.current_player.id}'s turn to choose")            
+        logger.info(f'\n\n-------TURN {self.game.turns_taken + 1}-----------')
+        logger.info(f"It is Player {self.current_player.id}'s turn to choose")            
 
         # Render player positions
 
         for p in self.game.players:
-            logger.debug(f'Player {p.id}\'s position')
+            logger.info(f'Player {p.id}\'s position')
             if p.position.size() > 0:
-                logger.debug('  '.join([str(card.order) + ': ' + card.symbol + ': ' + str(card.id) for card in sorted(p.position.cards, key=lambda x: x.id)]))
+                logger.info('  '.join([str(card.order) + ': ' + card.symbol + ': ' + str(card.id) for card in sorted(p.position.cards, key=lambda x: x.id)]))
             else:
-                logger.debug('Empty')
+                logger.info('Empty')
 
         # Render donuts to choose
         for i, d in enumerate(self.game.donut_decks):
             this_card = d.get_card()
-            logger.debug(f'Deck {i}: {this_card.symbol}; {this_card.id}')
+            logger.info(f'Deck {i}: {this_card.symbol}; {this_card.id}')
 
         # Top of discard
         if self.game.discard.size():
-            logger.debug(f'Discard: {self.game.discard.size()} cards, top {self.game.discard.peek_one().symbol}')
+            logger.info(f'Discard: {self.game.discard.size()} cards, top {self.game.discard.peek_one().symbol}')
 
-        logger.debug(f'\n{self.game.deck.size()} cards left in deck')
+        logger.info(f'\n{self.game.deck.size()} cards left in deck')
 
         if self.verbose:
-            logger.debug(f'\nObservation: \n{[i if o == 1 else (i,o) for i,o in enumerate(self.observation) if o != 0]}')
+            logger.info(f'\nObservation: \n{[i if o == 1 else (i,o) for i,o in enumerate(self.observation) if o != 0]}')
         
         if not self.done:
             legal_action_str = "Legal actions: "
@@ -533,14 +539,14 @@ class GoNutsForDonutsEnv(gym.Env):
                     if card_for_action:
                         legal_action_str += f"{i}:{card_for_action.symbol} "
                     else:
-                        logger.debug(f"Can't find card for action {o}")
-            logger.debug(legal_action_str)
+                        logger.info(f"Can't find card for action {o}")
+            logger.info(legal_action_str)
 
         if self.done:
-            logger.debug(f'\n\nGAME OVER')
+            logger.info(f'\n\nGAME OVER')
             
         for p in self.game.players:
-            logger.debug(f'Player {p.id} points: {p.score}')
+            logger.info(f'Player {p.id} points: {p.score}')
 
 
     def rules_move(self):
