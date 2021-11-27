@@ -6,6 +6,7 @@ import random
 import csv
 import time
 import numpy as np
+import math
 
 from mpi4py import MPI
 
@@ -117,7 +118,7 @@ def load_all_models_with_names(env, max=0):
     modellist.sort()
 
     if max > 0:
-        modellist = modellist[0:max]
+        modellist = modellist[::math.floor(len(modellist)/max)]
 
     models = [(load_model(env, 'base.zip'), 'base')]
     for model_name in modellist:
