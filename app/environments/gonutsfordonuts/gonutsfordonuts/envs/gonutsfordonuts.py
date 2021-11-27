@@ -350,7 +350,7 @@ class GoNutsGame:
                     discarded_card = self.donut_decks[i].card
                     self.discard.add([discarded_card])
                     self.donut_decks[i] = DonutDeckPosition(self.deck.draw_one())
-                    logger.info(f'Discarding {discarded_card} from deck position {i} and filling with card {self.donut_decks[i].card.symbol}')
+                    logger.info(f'Discarding {discarded_card.symbol} from deck position {i} and filling with card {self.donut_decks[i].card.symbol}')
 
                 # Otherwise the card stays in position
                 else:
@@ -481,7 +481,7 @@ class GoNutsForDonutsEnv(gym.Env):
                 reward = self.score_game()
                 done = True
             else:
-                self.render()
+                pass #self.render()
 
         self.done = done
 
@@ -504,31 +504,31 @@ class GoNutsForDonutsEnv(gym.Env):
         if close:
             return
 
-        logger.info(f'\n\n-------TURN {self.game.turns_taken + 1}-----------')
-        logger.info(f"It is Player {self.current_player.id}'s turn to choose")            
+        print(f'\n\n-------TURN {self.game.turns_taken + 1}-----------')
+        print(f"It is Player {self.current_player.id}'s turn to choose")            
 
         # Render player positions
 
         for p in self.game.players:
-            logger.info(f'Player {p.id}\'s position')
+            print(f'Player {p.id}\'s position')
             if p.position.size() > 0:
-                logger.info('  '.join([str(card.order) + ': ' + card.symbol + ': ' + str(card.id) for card in sorted(p.position.cards, key=lambda x: x.id)]))
+                print('  '.join([str(card.order) + ': ' + card.symbol + ': ' + str(card.id) for card in sorted(p.position.cards, key=lambda x: x.id)]))
             else:
-                logger.info('Empty')
+                print('Empty')
 
         # Render donuts to choose
         for i, d in enumerate(self.game.donut_decks):
             this_card = d.get_card()
-            logger.info(f'Deck {i}: {this_card.symbol}; {this_card.id}')
+            print(f'Deck {i}: {this_card.symbol}; {this_card.id}')
 
         # Top of discard
         if self.game.discard.size():
-            logger.info(f'Discard: {self.game.discard.size()} cards, top {self.game.discard.peek_one().symbol}')
+            print(f'Discard: {self.game.discard.size()} cards, top {self.game.discard.peek_one().symbol}')
 
-        logger.info(f'\n{self.game.deck.size()} cards left in deck')
+        print(f'\n{self.game.deck.size()} cards left in deck')
 
         if self.verbose:
-            logger.info(f'\nObservation: \n{[i if o == 1 else (i,o) for i,o in enumerate(self.observation) if o != 0]}')
+            print(f'\nObservation: \n{[i if o == 1 else (i,o) for i,o in enumerate(self.observation) if o != 0]}')
         
         if not self.done:
             legal_action_str = "Legal actions: "
@@ -539,14 +539,14 @@ class GoNutsForDonutsEnv(gym.Env):
                     if card_for_action:
                         legal_action_str += f"{i}:{card_for_action.symbol} "
                     else:
-                        logger.info(f"Can't find card for action {o}")
-            logger.info(legal_action_str)
+                        print(f"Can't find card for action {o}")
+            print(legal_action_str)
 
         if self.done:
-            logger.info(f'\n\nGAME OVER')
+            print(f'\n\nGAME OVER')
             
         for p in self.game.players:
-            logger.info(f'Player {p.id} points: {p.score}')
+            print(f'Player {p.id} points: {p.score}')
 
 
     def rules_move(self):

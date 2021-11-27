@@ -19,24 +19,45 @@ import config
 
 from stable_baselines import logger
 
-
-def write_results(players, game, games, episode_length):
+def write_tournament_results(filename, x, y, scores):
     
-    out = {'game': game
-    , 'games': games
-    , 'episode_length': episode_length
-    , 'p1': players[0].name
-    , 'p2': players[1].name
-    , 'p1_points': players[0].points
-    , 'p2_points': np.sum([x.points for x in players[1:]])
-    }
+    out = { 'x': x, 'y': y}
+
+    for i, p in enumerate(scores):
+        out[f'p{i}'] = p.name
+        out[f'p{i}_mean_points'] = p.mean_score
+
+    resultsfile = f"{config.RESULTSPATH}/{filename}"
+
+    logger.info(f"Writing tournament result file: {resultsfile}")
 
     if not os.path.exists(config.RESULTSPATH):
-        with open(config.RESULTSPATH,'a') as csvfile:
+        with open(resultsfile,'a') as csvfile:
             writer = csv.DictWriter(csvfile, fieldnames=out.keys())
             writer.writeheader()
 
-    with open(config.RESULTSPATH,'a') as csvfile:
+    with open(resultsfile,'a') as csvfile:
+        writer = csv.DictWriter(csvfile, fieldnames=out.keys())
+        writer.writerow(out)
+
+def write_results(filename, players, game, games, episode_length):
+    
+    out = {'game': game
+    , 'games': games
+    , 'episode_length': episode_length }
+
+    for i, p in enumerate(players):
+        out[f'p{i}'] = p.name
+        out[f'p{i}_points'] = p.points
+
+    resultsfile = f"{config.RESULTSPATH}/{filename}"
+
+    if not os.path.exists(config.RESULTSPATH):
+        with open(resultsfile,'a') as csvfile:
+            writer = csv.DictWriter(csvfile, fieldnames=out.keys())
+            writer.writeheader()
+
+    with open(resultsfile,'a') as csvfile:
         writer = csv.DictWriter(csvfile, fieldnames=out.keys())
         writer.writerow(out)
 
@@ -85,11 +106,23 @@ def load_model(env, name):
 def load_all_models(env):
     modellist = [f for f in os.listdir(os.path.join(config.MODELDIR, env.name)) if f.startswith("_model")]
     modellist.sort()
+
     models = [load_model(env, 'base.zip')]
     for model_name in modellist:
         models.append(load_model(env, name = model_name))
     return models
 
+def load_all_models_with_names(env, max=0):
+    modellist = [f for f in os.listdir(os.path.join(config.MODELDIR, env.name)) if f.startswith("_model")]
+    modellist.sort()
+
+    if max > 0:
+        modellist = modellist[0:max]
+
+    models = [(load_model(env, 'base.zip'), 'base')]
+    for model_name in modellist:
+        models.append((load_model(env, name = model_name), model_name))
+    return models
 
 def get_best_model_name(env_name):
     modellist = [f for f in os.listdir(os.path.join(config.MODELDIR, env_name)) if f.startswith("_model")]
