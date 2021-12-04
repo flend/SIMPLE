@@ -113,13 +113,12 @@ def load_all_models(env):
         models.append(load_model(env, name = model_name))
     return models
 
-def load_all_models_with_names(env, max=0):
+def load_all_models_with_names(env, start=None, stop=None, step=None):
     modellist = [f for f in os.listdir(os.path.join(config.MODELDIR, env.name)) if f.startswith("_model")]
     modellist.sort()
 
-    if max > 0:
-        modellist = modellist[::math.floor(len(modellist)/max)]
-
+    modellist = modellist[slice(start, stop, step)]
+    
     models = [(load_model(env, 'base.zip'), 'base')]
     for model_name in modellist:
         models.append((load_model(env, name = model_name), model_name))

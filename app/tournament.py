@@ -42,7 +42,7 @@ def main(args):
     set_global_seeds(args.seed)
 
     #load the agents
-    ppo_models = load_all_models_with_names(env, max=args.max)
+    ppo_models = load_all_models_with_names(env, start=args.start, stop=args.stop, step=args.max)
     total_agents = len(ppo_models)
 
     #play all agents against each other
@@ -51,9 +51,10 @@ def main(args):
             agents = []
 
             agent_obj_1 = Agent(ppo_models[game_cell_i][1], ppo_models[game_cell_i][0])
-            # 2 copies of the second agent for a 3-player game
             agent_obj_2 = Agent(ppo_models[game_cell_j][1], ppo_models[game_cell_j][0])
-            agent_obj_3 = Agent(ppo_models[game_cell_j][1], ppo_models[game_cell_j][0])
+            # gonutsfordonuts perfectly blocks when playing against itself so 2 copies of the same agent is a bad idea
+            # always use 1 copy of base that plays exploratively
+            agent_obj_3 = Agent(ppo_models[0][1], ppo_models[0][0])
             
             agents.append(agent_obj_1)
             agents.append(agent_obj_2)
@@ -71,6 +72,8 @@ def main(args):
                 total_rewards[agent_obj_3.id] = 0
                 
                 players = agents[:]
+
+                # TODO: randomise player order without breaking records
 
                 for p in players:
                     p.points = 0
@@ -91,7 +94,8 @@ def main(args):
                     logger.info(f'\nCurrent player name: {current_player.name}')
 
                     logger.info(f'\n{current_player.name} model choices')
-                    action = current_player.choose_action(env, choose_best_action = True, mask_invalid_actions = True)
+                                       
+                    action = current_player.choose_action(env, choose_best_action = args.best, mask_invalid_actions = True)
 
                     obs, reward, done, _ = env.step(action)
 
@@ -127,12 +131,18 @@ def cli() -> None:
             , help="Show logs to debug level")
     parser.add_argument("--verbose", "-v",  action = 'store_true', default = False
             , help="Show observation on debug logging")
+    parser.add_argument("--best", "-b", action = 'store_true', default = False
+              , help="Play best moves (rather than sampling from policy prob distribution)")
     parser.add_argument("--manual", "-m",  action = 'store_true', default = False
             , help="Manual update of the game state on step")
     parser.add_argument("--seed", "-s",  type = int, default = 17
             , help="Random seed")
     parser.add_argument("--max", "-x", type = int, default = 1000
-            , help="Maximum number of models to include in tournament")
+            , help="Step no through models to include in tournament")
+    parser.add_argument("--start", "-st", type = int, default = 1000
+            , help="First model to include")
+    parser.add_argument("--stop", "-sp", type = int, default = 1000
+            , help="Last model - exclusive")
     parser.add_argument("--games", "-g", type = int, default = 1
                 , help="Number of games to play)")
     parser.add_argument("--env_name", "-e",  type = str, default = 'TicTacToe'
