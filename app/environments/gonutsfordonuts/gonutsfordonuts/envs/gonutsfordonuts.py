@@ -137,20 +137,26 @@ class GoNutsGameGymTranslator:
     def __init__(self, donuts_game):
         self.game = donuts_game
 
+        # Define the maximum card space for the max numbers of players
+        # (for lower number of player games, non-player observations are zeroed)
+        self.total_possible_cards = 70
+        self.total_possible_players = 5
+        self.discard_size = 5
+
     def total_positions(self):
         # player positions / discards
         return self.game.n_players + 1
 
     def observation_space_size(self):
 
-        # total positions (see above) / last picks (by player) / player scores / legal actions
-        return self.game.total_cards * self.total_positions() + self.game.n_players + self.game.n_players + self.action_space_size()
+        # player positions / discard / player scores / legal actions
+        return self.total_possible_cards * self.total_possible_players + self.total_possible_cards + self.total_possible_players + self.action_space_size()
 
     def action_space_size(self):
         # agents choose a card_id as an action.
         # although all card_ids corresponding to the same card type ought to have the same value,
         # it is actual cards we pick and N of them are unmasked each turn
-        return self.game.total_cards
+        return self.total_possible_cards
     
     def get_legal_actions(self):
         
@@ -163,14 +169,14 @@ class GoNutsGameGymTranslator:
 
     def get_observations(self, current_player_num):
 
+        # To make this a generalisable model
+        # Always assume we are playing with 5 players and just 0 out their observations
+        # Always assume we are playing with all the cards, cards we are not playing with will not occur
+
         n_players = self.game.n_players
 
-        obs = np.zeros([self.total_positions(), self.game.total_cards])
+        obs = np.zeros([self.total_possible_players, self.total_possible_cards])
 
-        # Note that tidying the observations to card_id strongly couples the model to the exact
-        # composition of the original deck. e.g. increasing the number of FCs due to player count may
-        # cause the model to be non-generalisable to different player counts
-        
         # Each player's current position (tableau)
         # starting from the current player and cycling to higher-numbered players
         player_num = current_player_num
@@ -182,29 +188,26 @@ class GoNutsGameGymTranslator:
 
             player_num = (player_num + 1) % n_players
 
-        # The discard deck
-        discard_index = n_players
-        for card in self.game.discard.cards:
-            obs[discard_index][card.id] = 1
-
         ret = obs.flatten()
 
-        # The donut choices picked by the players last time
-        # Although players pick type, for convenience we observe the card ID they took
-        if self.game.turns_taken >= 1:
-            player_num = current_player_num
-            for i in range(n_players):
-                ret = np.append(ret, self.game.last_player_card_picks[player_num])
-                player_num = (player_num + 1) % n_players
-        else:
-            ret = np.append(ret, np.zeros(n_players))
+        # The discard deck
+        # Iterates the discard backwards (as it is a stack) - up to maximum depth
+        discard = np.zeros(self.discard_size)
+        for i, card in enumerate(list(reversed(self.game.discard.cards))[:self.discard_size]):
+            discard[i] = 1
 
+        ret = np.append(ret, discard)
+        
         # Current player scores [to guide the agent to which players to target]
+        player_scores = np.zeros(self.total_possible_players)
+
         player_num = current_player_num
         for i in range(n_players):
             player = self.game.players[player_num]
-            ret = np.append(ret, player.score / self.game.max_score)
+            player_scores[i] = player.score / self.game.max_score
             player_num = (player_num + 1) % n_players
+
+        ret = np.append(ret, player_num)
 
         # Legal actions, representing the donut choices
         ret = np.append(ret, self.get_legal_actions())
@@ -216,25 +219,24 @@ class GoNutsGame:
     def __init__(self, n_players):
         self.n_players = n_players
 
-    def setup_game(self, deck_contents=None, shuffle=True):
+    def setup_game(self, shuffle=True, deck_order=None):
         self.no_donut_decks = self.n_players + 1
         self.card_types = 9
         
         self.max_score = 200 # to normalise current scores to [0, 1] interval
 
-        if deck_contents:
-            self.contents = deck_contents
-        else:
-            self.contents = self.standard_deck_contents()
+        self.contents = GoNutsGame.standard_deck_contents()
 
         self.total_cards = sum([x['count'] for x in self.contents])
 
-        self.reset_game(shuffle)
+        self.reset_game(shuffle, deck_order)
 
-    def reset_game(self, shuffle=True):
-        self.deck = Deck(self.contents)
+    def reset_game(self, shuffle=True, deck_order=None):
+        self.deck = Deck(self.n_players, GoNutsGame.standard_deck_contents())
         if shuffle:
             self.deck.shuffle()
+        elif deck_order:
+            self.deck.reorder(deck_order)
         
         self.discard = Discard()
         self.players = []
@@ -252,19 +254,47 @@ class GoNutsGame:
         for i in range (0, self.no_donut_decks):
             self.donut_decks.append(DonutDeckPosition(self.deck.draw_one()))
 
+    @classmethod
     def standard_deck_contents(self):
 
-        # 36 + (np - 1) cards
-        return [
-          {'card': ChocolateFrosted, 'info': {}, 'count': 3}  #0 
+        # # 36 + (np - 1) cards
+        # return [
+        #   {'card': ChocolateFrosted, 'info': {}, 'count': 3}  #0 
+        #    ,  {'card': DonutHoles, 'info': {}, 'count':  6} #1 
+        # ,  {'card': Eclair, 'info': {}, 'count':  3}  #2   
+        #   ,  {'card': Glazed, 'info': {}, 'count':  5} #3  
+        #    ,  {'card': JellyFilled, 'info': {}, 'count':  6} #4 
+        #    ,  {'card': MapleBar,  'info': {}, 'count':  2} #5 
+        #    ,  {'card': Plain, 'info': {}, 'count':  7} #6 
+        #   ,  {'card': Powdered, 'info': {}, 'count':  4}  #7 
+        #   ,  {'card': FrenchCruller, 'info': {}, 'count':  min(self.n_players - 1, 4)}  #8 (last due to variability) 
+        # ]
+
+        # Full standard deck contents
+        # 66 + (np - 1) cards [define as 5 - 1 = 4 in observation space] = 70 cards
+        return [ {'card': ChocolateFrosted, 'info': {}, 'count': 3}  #0 
            ,  {'card': DonutHoles, 'info': {}, 'count':  6} #1 
-        ,  {'card': Eclair, 'info': {}, 'count':  3}  #2   
-          ,  {'card': Glazed, 'info': {}, 'count':  5} #3  
+           ,  {'card': Eclair, 'info': {}, 'count':  3}  #2   
+           ,  {'card': Glazed, 'info': {}, 'count':  5} #3  
            ,  {'card': JellyFilled, 'info': {}, 'count':  6} #4 
            ,  {'card': MapleBar,  'info': {}, 'count':  2} #5 
            ,  {'card': Plain, 'info': {}, 'count':  7} #6 
-          ,  {'card': Powdered, 'info': {}, 'count':  4}  #7 
-          ,  {'card': FrenchCruller, 'info': {}, 'count':  min(self.n_players - 1, 4)}  #8 (last due to variability) 
+           ,  {'card': Powdered, 'info': {}, 'count':  4}  #7         
+           ,  {'card': BostonCream, 'info': {}, 'count':  6} #8
+           ,  {'card': DoubleChocolate, 'info': {}, 'count':  2} #9
+           ,  {'card': RedVelvet, 'info': {}, 'count':  2} #10
+           ,  {'card': Sprinkled, 'info': {}, 'count':  2} #11
+           ,  {'card': BearClaw, 'info': {}, 'count':  2} #12
+           ,  {'card': CinnamonTwist, 'info': {}, 'count':  2} #13
+           ,  {'card': Coffee, 'info': {}, 'count':  2} #14
+           ,  {'card': DayOldDonuts, 'info': {}, 'count':  1} #15
+           ,  {'card': Milk, 'info': {}, 'count':  1} #16
+           ,  {'card': OldFashioned, 'info': {}, 'count':  2} #17
+           ,  {'card': MapleFrosted, 'info': {}, 'count':  2} #18
+           ,  {'card': MuchoMatcha, 'info': {}, 'count':  2} #19
+           ,  {'card': RaspberryFrosted, 'info': {}, 'count':  2} #19
+           ,  {'card': StrawberryGlazed, 'info': {}, 'count':  2} #20
+           ,  {'card': FrenchCruller, 'info': {}, 'count':  4}  #21 (last due to variability) 
         ]
     
     def deck_for_card_id(self, card_id):

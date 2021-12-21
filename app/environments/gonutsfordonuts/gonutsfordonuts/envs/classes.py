@@ -74,17 +74,132 @@ class Powdered(Card):
         super(Powdered, self).__init__(id, order, 'powdered')
         self.colour = 'green'
         self.type = self.name
-        self.symbol = 'POW'        
+        self.symbol = 'POW'
+
+class BostonCream(Card):
+    def __init__(self, id, order):
+        super(BostonCream, self).__init__(id, order, 'boston_cream')
+        self.colour = 'pink'
+        self.type = self.name
+        self.symbol = 'BC'
+
+class DoubleChocolate(Card):
+    def __init__(self, id, order):
+        super(DoubleChocolate, self).__init__(id, order, 'double_chocolate')
+        self.colour = 'pink'
+        self.type = self.name
+        self.symbol = 'DC'
+
+class RedVelvet(Card):
+    def __init__(self, id, order):
+        super(RedVelvet, self).__init__(id, order, 'red_velvet')
+        self.colour = 'pink'
+        self.type = self.name
+        self.symbol = 'RV'
+
+class Sprinkled(Card):
+    def __init__(self, id, order):
+        super(Sprinkled, self).__init__(id, order, 'sprinkled')
+        self.colour = 'pink'
+        self.type = self.name
+        self.symbol = 'SPR'
+
+class BearClaw(Card):
+    def __init__(self, id, order):
+        super(BearClaw, self).__init__(id, order, 'bear_claw')
+        self.colour = 'purple'
+        self.type = self.name
+        self.symbol = 'BEAR'
+
+class CinnamonTwist(Card):
+    def __init__(self, id, order):
+        super(CinnamonTwist, self).__init__(id, order, 'cinnamon_twist')
+        self.colour = 'purple'
+        self.type = self.name
+        self.symbol = 'CT'
+
+class Coffee(Card):
+    def __init__(self, id, order):
+        super(Coffee, self).__init__(id, order, 'coffee')
+        self.colour = 'purple'
+        self.type = self.name
+        self.symbol = 'CFF'
+
+class DayOldDonuts(Card):
+    def __init__(self, id, order):
+        super(DayOldDonuts, self).__init__(id, order, 'day_old_donuts')
+        self.colour = 'purple'
+        self.type = self.name
+        self.symbol = 'DOD'
+
+class Milk(Card):
+    def __init__(self, id, order):
+        super(Milk, self).__init__(id, order, 'milk')
+        self.colour = 'purple'
+        self.type = self.name
+        self.symbol = 'MLK'
+
+class OldFashioned(Card):
+    def __init__(self, id, order):
+        super(OldFashioned, self).__init__(id, order, 'old_fashioned')
+        self.colour = 'purple'
+        self.type = self.name
+        self.symbol = 'OLD'
+
+class MapleFrosted(Card):
+    def __init__(self, id, order):
+        super(MapleFrosted, self).__init__(id, order, 'maple_frosted')
+        self.colour = 'blue'
+        self.type = self.name
+        self.symbol = 'MF'
+
+class MuchoMatcha(Card):
+    def __init__(self, id, order):
+        super(MuchoMatcha, self).__init__(id, order, 'mucho_matcha')
+        self.colour = 'blue'
+        self.type = self.name
+        self.symbol = 'MM'
+
+class RaspberryFrosted(Card):
+    def __init__(self, id, order):
+        super(RaspberryFrosted, self).__init__(id, order, 'raspberry_frosted')
+        self.colour = 'blue'
+        self.type = self.name
+        self.symbol = 'RF'
+
+class StrawberryGlazed(Card):
+    def __init__(self, id, order):
+        super(StrawberryGlazed, self).__init__(id, order, 'strawberry_glazed')
+        self.colour = 'blue'
+        self.type = self.name
+        self.symbol = 'SG'
        
 class Deck():
-    def __init__(self, contents):
+    def __init__(self, players, contents):
+        # The cards to use for this case
         self.contents = contents
+        # The full set of standard cards, used to define the spaces
         self.cards = [] # Stack to pull cards from
-        self.base_deck = [] # Snapshot of the initial deck
+        self.base_deck = [] # Snapshot of the full standard deck
         self.create()
     
     def shuffle(self):
         random.shuffle(self.cards)
+
+    def reorder(self, new_order):
+        
+        new_card_order = []
+
+        # Put the requested cards on the top of deck
+        for i in new_order:
+            new_card_order.append(self.cards[i])
+
+        # Add any unrequested cards in their conventional order afterwards
+        for card in self.cards:
+            if not card.id in new_order:
+                new_card_order.append(card)
+
+        self.cards = new_card_order
 
     def draw(self, n):
         drawn = []

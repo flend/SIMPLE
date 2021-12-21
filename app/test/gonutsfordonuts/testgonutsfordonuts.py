@@ -1,8 +1,40 @@
 import numpy as np
 
 from gonutsfordonuts.envs.gonutsfordonuts import GoNutsGame, GoNutsScorer, GoNutsGameGymTranslator, GoNutsForDonutsEnvUtility
-from gonutsfordonuts.envs.classes import ChocolateFrosted, DonutHoles, Eclair, FrenchCruller, Glazed, JellyFilled, MapleBar, Plain, Powdered
-from gonutsfordonuts.envs.classes import Position, Player
+from gonutsfordonuts.envs.classes import ChocolateFrosted, DonutHoles, Eclair, FrenchCruller, Glazed, JellyFilled, MapleBar, Plain, Powdered, BostonCream, DoubleChocolate, RedVelvet, Sprinkled, BearClaw, CinnamonTwist, Coffee, DayOldDonuts, Milk, OldFashioned, MapleFrosted, MuchoMatcha, RaspberryFrosted, StrawberryGlazed
+from gonutsfordonuts.envs.classes import Position, Player, Deck
+
+class TestDeck:
+
+    def test_standard_contents(self):
+
+        d = Deck(2, GoNutsGame.standard_deck_contents())
+
+        assert d.size() == 70
+
+    def test_reorder_standard_deck(self):
+
+        d = Deck(2, GoNutsGame.standard_deck_contents())
+
+        desired_ordered_cards = [10, 20, 30, 34]
+
+        d.reorder(desired_ordered_cards)
+
+        expected_order = [10, 20, 30, 34]
+        expected_order.extend(list(range(0, 10)))
+        expected_order.extend(range(11, 20))
+        expected_order.extend(range(21, 30))
+        expected_order.extend(range(31, 34))
+        expected_order.extend(range(35, 70))
+
+        expected_order_cards = np.array(expected_order)
+        new_card_order = np.array([ c.id for c in d.cards ])
+
+        print(len(expected_order_cards))
+        print(len(new_card_order))
+
+        assert (new_card_order == expected_order_cards).all()
+
 
 class TestGoNutsForDonutsEnvUtility:
     def test_rewards_single_winner(self):
@@ -143,6 +175,36 @@ class TestGoNutsForDonutsScorer:
 
 class TestGoNutsForDonutsGymTranslator:
 
+    def fixture_all_contents(self):
+
+        contents = [ {'card': ChocolateFrosted, 'info': {}, 'count': 3}  #0 
+           ,  {'card': DonutHoles, 'info': {}, 'count':  6} #1 
+           ,  {'card': Eclair, 'info': {}, 'count':  3}  #2   
+           ,  {'card': Glazed, 'info': {}, 'count':  5} #3  
+           ,  {'card': JellyFilled, 'info': {}, 'count':  6} #4 
+           ,  {'card': MapleBar,  'info': {}, 'count':  2} #5 
+           ,  {'card': Plain, 'info': {}, 'count':  7} #6 
+           ,  {'card': Powdered, 'info': {}, 'count':  4}  #7         
+           ,  {'card': BostonCream, 'info': {}, 'count':  6} #8
+           ,  {'card': DoubleChocolate, 'info': {}, 'count':  2} #9
+           ,  {'card': RedVelvet, 'info': {}, 'count':  2} #10
+           ,  {'card': Sprinkled, 'info': {}, 'count':  2} #11
+           ,  {'card': BearClaw, 'info': {}, 'count':  2} #12
+           ,  {'card': CinnamonTwist, 'info': {}, 'count':  2} #13
+           ,  {'card': Coffee, 'info': {}, 'count':  2} #14
+           ,  {'card': DayOldDonuts, 'info': {}, 'count':  1} #15
+           ,  {'card': Milk, 'info': {}, 'count':  1} #16
+           ,  {'card': OldFashioned, 'info': {}, 'count':  2} #17
+           ,  {'card': MapleFrosted, 'info': {}, 'count':  2} #18
+           ,  {'card': MuchoMatcha, 'info': {}, 'count':  2} #19
+           ,  {'card': RaspberryFrosted, 'info': {}, 'count':  2} #19
+           ,  {'card': StrawberryGlazed, 'info': {}, 'count':  2} #20
+           ,  {'card': FrenchCruller, 'info': {}, 'count':  4}  #21
+        ]
+        
+        contents.reverse() # (deck is a stack, so reverse so card #0 is on top - note it gets card.id = 8)
+        return contents
+
     def fixture_contents(self):
         contents = [
           {'card': ChocolateFrosted, 'info': {}, 'count': 1}  #0 / card.id = 8
@@ -153,23 +215,20 @@ class TestGoNutsForDonutsGymTranslator:
            ,  {'card': MapleBar,  'info': {}, 'count':  1} #5 / card.id = 3
            ,  {'card': Plain, 'info': {}, 'count':  1} #6 / card.id = 2
           ,  {'card': Powdered, 'info': {}, 'count':  1}  #7 / card.id = 1
-          ,  {'card': FrenchCruller, 'info': {}, 'count': 1}  #8 / card.id = 0 (last due to variability) 
+          ,  {'card': BostonCream, 'info': {}, 'count': 1}  #8 / card.id = 0 (last due to variability) 
         ]
-        
-        contents.reverse() # (deck is a stack, so reverse so card #0 is on top - note it gets card.id = 8)
-        return contents
 
     def test_legal_actions_have_only_donut_deck_picks(self):
 
-        test_game = GoNutsGame(4)
+        test_game = GoNutsGame(5)
         translator = GoNutsGameGymTranslator(test_game)
 
         test_game.setup_game(deck_contents=self.fixture_contents(), shuffle=False)
         test_game.start_game()
 
-        # 5 dealt cards in donut array
-        expected_legal_actions = np.array([0, 0, 0, 0, 1, 1, 1, 1, 1])
-        
+        # 6 dealt cards will be last 6 in contents (one more than number of players)
+        expected_legal_actions = np.zeros(translator.total_possible_cards)
+        expected_legal_actions[-6:] = [1, 1, 1, 1, 1, 1]
         assert (translator.get_legal_actions() == expected_legal_actions).all()
 
     def test_observations_correct_for_started_game(self):
@@ -182,15 +241,15 @@ class TestGoNutsForDonutsGymTranslator:
         test_game.start_game()
 
         # Positions & discard
-        obs = np.zeros([no_players + 1, len(self.fixture_contents())])
+        obs = np.zeros([translator.total_possible_players, translator.total_possible_cards])
         ret = obs.flatten()
 
-        # Last moves
-        ret = np.append(ret, np.zeros(no_players))
         # Scores
         ret = np.append(ret, np.zeros(no_players))
+        
         # Legal actions
-        legal_actions = np.array([0, 0, 0, 0, 1, 1, 1, 1, 1])
+        legal_actions = np.zeros(translator.total_possible_cards)
+        legal_actions[-5:] = [1, 1, 1, 1, 1]
         ret = np.append(ret, legal_actions)
 
         expected_observations = ret
@@ -205,11 +264,11 @@ class TestGoNutsForDonutsGymTranslator:
 
         test_game.setup_game(deck_contents=self.fixture_contents(), shuffle=False)
         test_game.start_game() # deals top 5
-        # d1: 8 CF, d2: 7 DH, d3: 6 ECL, d4: 5 G, d5: 4 JF; draw: [3 MB, 2 P, 1 PWD, 0 FC]; discard: []
+        # d1: 8 CF, d2: 7 DH, d3: 6 ECL, d4: 5 G, d5: 4 JF; draw: [3 MB, 2 P, 1 PWD, 0 BC]; discard: []
         test_game.do_player_actions([8, 7, 7, 5])
-        # p1: [8 CF, 3 MB], p2: [], p3: [], p4: [5 G]; draw: [2 P, 1 PWD, 0 FC]
+        # p1: [8 CF, 3 MB], p2: [], p3: [], p4: [5 G]; draw: [2 P, 1 PWD, 0 BC]
         test_game.reset_turn()
-        # d1: 2 P, d2: 1 PWD, d3: 6 ECL, d4: 0 FC, d5: 4 JF; draw: []; discard: [7 DH]
+        # d1: 2 P, d2: 1 PWD, d3: 6 ECL, d4: 0 BC, d5: 4 JF; draw: []; discard: [7 DH]
 
         # Positions (from player 0 perspective)
         no_cards = len(self.fixture_contents())
