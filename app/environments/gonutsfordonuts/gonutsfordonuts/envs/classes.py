@@ -190,7 +190,7 @@ class Deck():
         
         new_card_order = []
 
-        # Put the requested cards on the top of deck
+        # Put the requested cards first
         for i in new_order:
             new_card_order.append(self.cards[i])
 
@@ -198,6 +198,9 @@ class Deck():
         for card in self.cards:
             if not card.id in new_order:
                 new_card_order.append(card)
+
+        # Reverse the deck so that the chosen cards are drawn first
+        new_card_order.reverse()
 
         self.cards = new_card_order
 
@@ -291,6 +294,8 @@ class Discard():
         return self.cards.pop()
 
     def peek_one(self):
+        if not len(self.cards):
+            return None
         return self.cards[-1]
     
     def size(self):

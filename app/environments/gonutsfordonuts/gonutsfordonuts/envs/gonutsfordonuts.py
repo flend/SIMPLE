@@ -141,7 +141,6 @@ class GoNutsGameGymTranslator:
         # (for lower number of player games, non-player observations are zeroed)
         self.total_possible_cards = 70
         self.total_possible_players = 5
-        self.discard_size = 5
 
     def total_positions(self):
         # player positions / discards
@@ -191,10 +190,11 @@ class GoNutsGameGymTranslator:
         ret = obs.flatten()
 
         # The discard deck
-        # Iterates the discard backwards (as it is a stack) - up to maximum depth
-        discard = np.zeros(self.discard_size)
-        for i, card in enumerate(list(reversed(self.game.discard.cards))[:self.discard_size]):
-            discard[i] = 1
+        # Just the top card of the discard pile
+        discard = np.zeros(self.total_possible_cards)
+        #for i, card in enumerate(list(reversed(self.game.discard.cards))[:self.discard_size]):
+        if self.game.discard.size():
+            discard[self.game.discard.peek_one().id] = 1
 
         ret = np.append(ret, discard)
         
@@ -207,7 +207,7 @@ class GoNutsGameGymTranslator:
             player_scores[i] = player.score / self.game.max_score
             player_num = (player_num + 1) % n_players
 
-        ret = np.append(ret, player_num)
+        ret = np.append(ret, player_scores)
 
         # Legal actions, representing the donut choices
         ret = np.append(ret, self.get_legal_actions())
@@ -272,7 +272,8 @@ class GoNutsGame:
 
         # Full standard deck contents
         # 66 + (np - 1) cards [define as 5 - 1 = 4 in observation space] = 70 cards
-        return [ {'card': ChocolateFrosted, 'info': {}, 'count': 3}  #0 
+        # Note: reversed so dealt in top-to-bottom order
+        standard_deck_contents = [ {'card': ChocolateFrosted, 'info': {}, 'count': 3}  #0 
            ,  {'card': DonutHoles, 'info': {}, 'count':  6} #1 
            ,  {'card': Eclair, 'info': {}, 'count':  3}  #2   
            ,  {'card': Glazed, 'info': {}, 'count':  5} #3  
@@ -296,6 +297,8 @@ class GoNutsGame:
            ,  {'card': StrawberryGlazed, 'info': {}, 'count':  2} #20
            ,  {'card': FrenchCruller, 'info': {}, 'count':  4}  #21 (last due to variability) 
         ]
+
+        return standard_deck_contents
     
     def deck_for_card_id(self, card_id):
         for deck in self.donut_decks:

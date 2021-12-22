@@ -22,18 +22,35 @@ class TestDeck:
 
         expected_order = [10, 20, 30, 34]
         expected_order.extend(list(range(0, 10)))
-        expected_order.extend(range(11, 20))
-        expected_order.extend(range(21, 30))
-        expected_order.extend(range(31, 34))
-        expected_order.extend(range(35, 70))
+        expected_order.extend(list(range(11, 20)))
+        expected_order.extend(list(range(21, 30)))
+        expected_order.extend(list(range(31, 34)))
+        expected_order.extend(list(range(35, 70)))
+
+        # We are inspecting the deck from bottom to top but cards are drawn in the other way
+        expected_order.reverse()
 
         expected_order_cards = np.array(expected_order)
+
         new_card_order = np.array([ c.id for c in d.cards ])
 
         print(len(expected_order_cards))
         print(len(new_card_order))
 
         assert (new_card_order == expected_order_cards).all()
+
+    def test_deal_reordered_standard_deck(self):
+
+        d = Deck(2, GoNutsGame.standard_deck_contents())
+
+        desired_ordered_cards = [CF_FIRST, DH_FIRST, GZ_FIRST, POW_FIRST]
+
+        d.reorder(desired_ordered_cards)
+    
+        assert d.draw_one().symbol == "CF"
+        assert d.draw_one().symbol == "DH"
+        assert d.draw_one().symbol == "GZ"
+        assert d.draw_one().symbol == "POW"
 
 
 class TestGoNutsForDonutsEnvUtility:
@@ -173,62 +190,75 @@ class TestGoNutsForDonutsScorer:
         scores = GoNutsScorer.score_turn(positions)
         assert (scores == [10, 5, 10]).all()
 
+CF_FIRST = 0
+DH_FIRST = 3
+ECL_FIRST = 9
+GZ_FIRST = 12
+JF_FIRST = 17
+MB_FIRST = 23
+P_FIRST = 25
+POW_FIRST = 32
+BC_FIRST = 36
+DC_FIRST = 42
+RV_FIRST = 44
+SPR_FIRST = 46
+BEAR_FIRST = 48
+CT_FIRST = 50
+CFF_FIRST = 52
+DOD_FIRST = 54
+MILK_FIRST = 55
+OLD_FIRST = 56
+MF_FIRST = 58
+MM_FIRST = 60
+RF_FIRST = 62
+SG_FIRST = 64
+FC_FIRST = 66
+
 class TestGoNutsForDonutsGymTranslator:
 
-    def fixture_all_contents(self):
+    def fixture_card_order(self):
 
-        contents = [ {'card': ChocolateFrosted, 'info': {}, 'count': 3}  #0 
-           ,  {'card': DonutHoles, 'info': {}, 'count':  6} #1 
-           ,  {'card': Eclair, 'info': {}, 'count':  3}  #2   
-           ,  {'card': Glazed, 'info': {}, 'count':  5} #3  
-           ,  {'card': JellyFilled, 'info': {}, 'count':  6} #4 
-           ,  {'card': MapleBar,  'info': {}, 'count':  2} #5 
-           ,  {'card': Plain, 'info': {}, 'count':  7} #6 
-           ,  {'card': Powdered, 'info': {}, 'count':  4}  #7         
-           ,  {'card': BostonCream, 'info': {}, 'count':  6} #8
-           ,  {'card': DoubleChocolate, 'info': {}, 'count':  2} #9
-           ,  {'card': RedVelvet, 'info': {}, 'count':  2} #10
-           ,  {'card': Sprinkled, 'info': {}, 'count':  2} #11
-           ,  {'card': BearClaw, 'info': {}, 'count':  2} #12
-           ,  {'card': CinnamonTwist, 'info': {}, 'count':  2} #13
-           ,  {'card': Coffee, 'info': {}, 'count':  2} #14
-           ,  {'card': DayOldDonuts, 'info': {}, 'count':  1} #15
-           ,  {'card': Milk, 'info': {}, 'count':  1} #16
-           ,  {'card': OldFashioned, 'info': {}, 'count':  2} #17
-           ,  {'card': MapleFrosted, 'info': {}, 'count':  2} #18
-           ,  {'card': MuchoMatcha, 'info': {}, 'count':  2} #19
-           ,  {'card': RaspberryFrosted, 'info': {}, 'count':  2} #19
-           ,  {'card': StrawberryGlazed, 'info': {}, 'count':  2} #20
-           ,  {'card': FrenchCruller, 'info': {}, 'count':  4}  #21
-        ]
-        
-        contents.reverse() # (deck is a stack, so reverse so card #0 is on top - note it gets card.id = 8)
-        return contents
+        #  [ {'card': ChocolateFrosted, 'info': {}, 'count': 3}  #0 
+        #    ,  {'card': DonutHoles, 'info': {}, 'count':  6} #1 
+        #    ,  {'card': Eclair, 'info': {}, 'count':  3}  #2   
+        #    ,  {'card': Glazed, 'info': {}, 'count':  5} #3  
+        #    ,  {'card': JellyFilled, 'info': {}, 'count':  6} #4 
+        #    ,  {'card': MapleBar,  'info': {}, 'count':  2} #5 
+        #    ,  {'card': Plain, 'info': {}, 'count':  7} #6 
+        #    ,  {'card': Powdered, 'info': {}, 'count':  4}  #7         
+        #    ,  {'card': BostonCream, 'info': {}, 'count':  6} #8
+        #    ,  {'card': DoubleChocolate, 'info': {}, 'count':  2} #9
+        #    ,  {'card': RedVelvet, 'info': {}, 'count':  2} #10
+        #    ,  {'card': Sprinkled, 'info': {}, 'count':  2} #11
+        #    ,  {'card': BearClaw, 'info': {}, 'count':  2} #12
+        #    ,  {'card': CinnamonTwist, 'info': {}, 'count':  2} #13
+        #    ,  {'card': Coffee, 'info': {}, 'count':  2} #14
+        #    ,  {'card': DayOldDonuts, 'info': {}, 'count':  1} #15
+        #    ,  {'card': Milk, 'info': {}, 'count':  1} #16
+        #    ,  {'card': OldFashioned, 'info': {}, 'count':  2} #17
+        #    ,  {'card': MapleFrosted, 'info': {}, 'count':  2} #18
+        #    ,  {'card': MuchoMatcha, 'info': {}, 'count':  2} #19
+        #    ,  {'card': RaspberryFrosted, 'info': {}, 'count':  2} #19
+        #    ,  {'card': StrawberryGlazed, 'info': {}, 'count':  2} #20
+        #    ,  {'card': FrenchCruller, 'info': {}, 'count':  4}  #21 (last due to variability) 
+        # ].reverse()
 
-    def fixture_contents(self):
-        contents = [
-          {'card': ChocolateFrosted, 'info': {}, 'count': 1}  #0 / card.id = 8
-           ,  {'card': DonutHoles, 'info': {}, 'count':  1} #1 / card.id = 7
-        ,  {'card': Eclair, 'info': {}, 'count':  1}  #2 / card.id = 6
-          ,  {'card': Glazed, 'info': {}, 'count':  1} #3 / card.id = 5
-           ,  {'card': JellyFilled, 'info': {}, 'count':  1} #4 / card.id = 4
-           ,  {'card': MapleBar,  'info': {}, 'count':  1} #5 / card.id = 3
-           ,  {'card': Plain, 'info': {}, 'count':  1} #6 / card.id = 2
-          ,  {'card': Powdered, 'info': {}, 'count':  1}  #7 / card.id = 1
-          ,  {'card': BostonCream, 'info': {}, 'count': 1}  #8 / card.id = 0 (last due to variability) 
-        ]
+        #       CF  DH ECL GLZ JF  MB  P   PWD FC
+        return [ CF_FIRST, DH_FIRST, ECL_FIRST, GZ_FIRST, JF_FIRST, MB_FIRST, P_FIRST, POW_FIRST, FC_FIRST ]
 
     def test_legal_actions_have_only_donut_deck_picks(self):
 
         test_game = GoNutsGame(5)
         translator = GoNutsGameGymTranslator(test_game)
 
-        test_game.setup_game(deck_contents=self.fixture_contents(), shuffle=False)
+        test_game.setup_game(shuffle=False, deck_order=self.fixture_card_order())
         test_game.start_game()
 
-        # 6 dealt cards will be last 6 in contents (one more than number of players)
+        # 6 dealt cards will be the top 6
         expected_legal_actions = np.zeros(translator.total_possible_cards)
-        expected_legal_actions[-6:] = [1, 1, 1, 1, 1, 1]
+        for i in self.fixture_card_order()[:6]:
+            expected_legal_actions[i] = 1
+
         assert (translator.get_legal_actions() == expected_legal_actions).all()
 
     def test_observations_correct_for_started_game(self):
@@ -237,19 +267,23 @@ class TestGoNutsForDonutsGymTranslator:
         test_game = GoNutsGame(no_players)
         translator = GoNutsGameGymTranslator(test_game)
 
-        test_game.setup_game(deck_contents=self.fixture_contents(), shuffle=False)
+        test_game.setup_game(shuffle=False, deck_order=self.fixture_card_order())
         test_game.start_game()
 
-        # Positions & discard
+        # Positions
         obs = np.zeros([translator.total_possible_players, translator.total_possible_cards])
         ret = obs.flatten()
 
+        # Discard
+        ret = np.append(ret, np.zeros(translator.total_possible_cards))
+
         # Scores
-        ret = np.append(ret, np.zeros(no_players))
-        
+        ret = np.append(ret, np.zeros(translator.total_possible_players))
+
         # Legal actions
         legal_actions = np.zeros(translator.total_possible_cards)
-        legal_actions[-5:] = [1, 1, 1, 1, 1]
+        for i in self.fixture_card_order()[:5]:
+            legal_actions[i] = 1
         ret = np.append(ret, legal_actions)
 
         expected_observations = ret
@@ -262,31 +296,47 @@ class TestGoNutsForDonutsGymTranslator:
         test_game = GoNutsGame(no_players)
         translator = GoNutsGameGymTranslator(test_game)
 
-        test_game.setup_game(deck_contents=self.fixture_contents(), shuffle=False)
+        test_game.setup_game(shuffle=False, deck_order=self.fixture_card_order())
         test_game.start_game() # deals top 5
-        # d1: 8 CF, d2: 7 DH, d3: 6 ECL, d4: 5 G, d5: 4 JF; draw: [3 MB, 2 P, 1 PWD, 0 BC]; discard: []
-        test_game.do_player_actions([8, 7, 7, 5])
-        # p1: [8 CF, 3 MB], p2: [], p3: [], p4: [5 G]; draw: [2 P, 1 PWD, 0 BC]
+        # d1: 0 CF, d2: 3 DH, d3: 9 ECL, d4: 12 G, d5: 17 JF; draw: [23 MB, 25 P, 32 PWD, 66 FC]; discard: []
+        print(f'Deck 1 {test_game.donut_decks[0].card.symbol}')
+        print(f'Deck 2 {test_game.donut_decks[1].card.symbol}')
+        print(f'Deck 3 {test_game.donut_decks[2].card.symbol}')
+        test_game.do_player_actions([CF_FIRST, DH_FIRST, DH_FIRST, GZ_FIRST])
+        # p1: [0 CF, 23 MB], p2: [], p3: [], p4: [12 G]; draw: [25 P, 32 PWD, 66 FC]
         test_game.reset_turn()
-        # d1: 2 P, d2: 1 PWD, d3: 6 ECL, d4: 0 BC, d5: 4 JF; draw: []; discard: [7 DH]
+        # d1: 25 P, d2: 32 PWD, d3: 9 ECL, d4: 66 FC, d5: 17 JF; draw: []; discard: [3 DH]
 
         # Positions (from player 0 perspective)
-        no_cards = len(self.fixture_contents())
+        no_cards = translator.total_possible_cards
         obs = np.array([])
-        obs = np.append(obs, np.array([0, 0, 0, 1, 0, 0, 0, 0, 1]))
+        p1position = np.zeros(no_cards)
+        p1position[CF_FIRST] = 1
+        p1position[MB_FIRST] = 1
+        obs = np.append(obs, p1position)
         obs = np.append(obs, np.zeros(no_cards))
         obs = np.append(obs, np.zeros(no_cards))
-        obs = np.append(obs, np.array([0, 0, 0, 0, 0, 1, 0, 0, 0]))
+        p4position = np.zeros(no_cards)
+        p4position[GZ_FIRST] = 1
+        obs = np.append(obs, p4position)
+        obs = np.append(obs, np.zeros(no_cards))
+        ret = obs
 
         # Discard
-        obs = np.append(obs, np.array([0, 0, 0, 0, 0, 0, 0, 1, 0]))
+        discard = np.zeros(translator.total_possible_cards)
+        discard[DH_FIRST] = 1
+        ret = np.append(ret, discard)
 
-        # Last moves
-        obs = np.append(obs, np.array([8, 7, 7, 5]))
         # Scores
-        ret = np.append(obs, np.array([0, 0, 0, 2 / test_game.max_score]))
+        ret = np.append(ret, np.array([0, 0, 0, 2 / test_game.max_score, 0]))
+        
         # Legal actions
-        legal_actions = np.array([1, 1, 1, 0, 1, 0, 1, 0, 0])
+        legal_actions = np.zeros(no_cards)
+        legal_actions[P_FIRST] = 1
+        legal_actions[POW_FIRST] = 1
+        legal_actions[ECL_FIRST] = 1
+        legal_actions[FC_FIRST] = 1
+        legal_actions[JF_FIRST] = 1
         ret = np.append(ret, legal_actions)
 
         expected_observations = ret
