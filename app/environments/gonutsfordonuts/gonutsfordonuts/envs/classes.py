@@ -187,7 +187,10 @@ class Deck():
         random.shuffle(self.cards)
 
     def reorder(self, new_order):
-        
+        """Reorders the deck with the order specified, any non specified cards follow in current ordering
+           Order specified to-be is draw order
+        """
+
         new_card_order = []
 
         # Put the requested cards first
@@ -203,6 +206,19 @@ class Deck():
         new_card_order.reverse()
 
         self.cards = new_card_order
+
+    def filter(self, filter):
+        """Filters the deck to keep only the card ids in filter, in the order specified.
+           Order specified to-be is draw order
+        """
+        new_deck = []
+        for i in filter:
+            new_deck.append(self.cards[i])
+
+        # Reverse the deck so that the chosen cards are drawn first
+        new_deck.reverse()
+
+        self.cards = new_deck
 
     def draw(self, n):
         drawn = []

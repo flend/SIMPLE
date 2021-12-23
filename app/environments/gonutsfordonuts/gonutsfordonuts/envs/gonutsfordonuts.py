@@ -219,7 +219,7 @@ class GoNutsGame:
     def __init__(self, n_players):
         self.n_players = n_players
 
-    def setup_game(self, shuffle=True, deck_order=None):
+    def setup_game(self, shuffle=True, deck_order=None, deck_filter=None):
         self.no_donut_decks = self.n_players + 1
         self.card_types = 9
         
@@ -229,14 +229,16 @@ class GoNutsGame:
 
         self.total_cards = sum([x['count'] for x in self.contents])
 
-        self.reset_game(shuffle, deck_order)
+        self.reset_game(shuffle=shuffle, deck_order=deck_order, deck_filter=deck_filter)
 
-    def reset_game(self, shuffle=True, deck_order=None):
+    def reset_game(self, shuffle=True, deck_order=None, deck_filter=None):
         self.deck = Deck(self.n_players, GoNutsGame.standard_deck_contents())
         if shuffle:
             self.deck.shuffle()
         elif deck_order:
             self.deck.reorder(deck_order)
+        elif deck_filter:
+            self.deck.filter(deck_filter)
         
         self.discard = Discard()
         self.players = []
