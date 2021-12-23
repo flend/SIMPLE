@@ -192,14 +192,21 @@ class GoNutsGameGymTranslator:
         ret = positions_rolled
 
         # The discard deck
-        # Just the top card of the discard pile
         discard = np.zeros(self.total_possible_cards)
-        #for i, card in enumerate(list(reversed(self.game.discard.cards))[:self.discard_size]):
-        if self.game.discard.size():
-            discard[self.game.discard.peek_one().id] = 1
 
-        ret = np.append(ret, discard)
+        for card in self.game.discard.cards:
+            discard[card.id] = 1
         
+        ret = np.append(ret, discard)
+
+        # The top discard card [for eclair]
+        top_discard = np.zeros(self.total_possible_cards)
+
+        if self.game.discard.size():
+            top_discard[self.game.discard.peek_one().id] = 1
+        
+        ret = np.append(ret, top_discard)
+
         # Current player scores [to guide the agent to which players to target]
         player_scores = np.zeros(self.total_possible_players)
 

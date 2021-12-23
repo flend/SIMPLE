@@ -228,6 +228,12 @@ RF_FIRST = 62
 SG_FIRST = 64
 FC_FIRST = 66
 
+OBVS_POSITIONS_START = 0
+OBVS_ALL_DISCARD_START = 350
+OBVS_TOP_DISCARD_START = 420
+OBVS_SCORES_START = 490
+OBVS_LEGAL_ACTIONS_START = 495
+
 class TestGoNutsForDonutsGymTranslator:
 
     def fixture_card_order(self):
@@ -290,6 +296,7 @@ class TestGoNutsForDonutsGymTranslator:
 
         # Discard
         ret = np.append(ret, np.zeros(translator.total_possible_cards))
+        ret = np.append(ret, np.zeros(translator.total_possible_cards))
 
         # Scores
         ret = np.append(ret, np.zeros(translator.total_possible_players))
@@ -303,6 +310,15 @@ class TestGoNutsForDonutsGymTranslator:
         expected_observations = ret
         
         assert (translator.get_observations(0) == expected_observations).all()
+
+    def observation_comparer(self, actual, expected):
+
+        assert (actual[OBVS_POSITIONS_START:OBVS_ALL_DISCARD_START] == expected[OBVS_POSITIONS_START:OBVS_ALL_DISCARD_START]).all()
+        assert (actual[OBVS_ALL_DISCARD_START:OBVS_TOP_DISCARD_START] == expected[OBVS_ALL_DISCARD_START:OBVS_TOP_DISCARD_START]).all()
+        assert (actual[OBVS_TOP_DISCARD_START:OBVS_SCORES_START] == expected[OBVS_TOP_DISCARD_START:OBVS_SCORES_START]).all()
+        assert (actual[OBVS_SCORES_START:OBVS_LEGAL_ACTIONS_START] == expected[OBVS_SCORES_START:OBVS_LEGAL_ACTIONS_START]).all()
+        assert (actual[OBVS_LEGAL_ACTIONS_START:] == expected[OBVS_LEGAL_ACTIONS_START:]).all()
+        assert (actual == expected).all()
 
     def test_observations_correct_for_game_after_one_turn_from_player_index_zero_perspective(self):
 
@@ -342,6 +358,7 @@ class TestGoNutsForDonutsGymTranslator:
         discard = np.zeros(translator.total_possible_cards)
         discard[DH_FIRST] = 1
         ret = np.append(ret, discard)
+        ret = np.append(ret, discard)
 
         # Scores
         ret = np.append(ret, np.array([0, 0, 0, 2 / test_game.max_score, 0]))
@@ -356,11 +373,64 @@ class TestGoNutsForDonutsGymTranslator:
         ret = np.append(ret, legal_actions)
 
         expected_observations = ret
-
-        print(len(expected_observations))
-        print(len(translator.get_observations(3)))
         
-        assert (translator.get_observations(0) == expected_observations).all()
+        self.observation_comparer(translator.get_observations(0), expected_observations)
+
+    def test_observations_correct_for_multiple_discards(self):
+
+        no_players = 4
+        test_game = GoNutsGame(no_players)
+        translator = GoNutsGameGymTranslator(test_game)
+
+        test_game.setup_game(shuffle=False, deck_order=self.fixture_card_order())
+        test_game.start_game() # deals top 5
+        # d1: 0 CF, d2: 3 DH, d3: 9 ECL, d4: 12 G, d5: 17 JF; draw: [23 MB, 25 P, 32 PWD, 66 FC]; discard: []
+        test_game.do_player_actions([CF_FIRST, DH_FIRST, DH_FIRST, CF_FIRST])
+        # p1: [], p2: [], p3: [], p4: []; draw: [23 MB, 25 P, 32 PWD, 66 FC]
+        test_game.reset_turn()
+        # d1: 23 MB, d2: 25 P, d3: 9 ECL, d4: 12 G, d5: 17 JF; draw: [32 PWD, 66 FC]; discard: [0 CF, 3 DH]
+
+        # Positions (from player 0 perspective)
+        no_cards = translator.total_possible_cards
+        obs = np.array([])
+        # p0  
+        obs = np.append(obs, np.zeros(no_cards))
+        # p1
+        obs = np.append(obs, np.zeros(no_cards))
+        # p2
+        obs = np.append(obs, np.zeros(no_cards))
+        # p3
+        obs = np.append(obs, np.zeros(no_cards))
+        # p4 (not in the game but included in the obvs space)
+        obs = np.append(obs, np.zeros(no_cards))
+        ret = obs
+
+        # Discard
+        # All
+        discard = np.zeros(translator.total_possible_cards)
+        discard[DH_FIRST] = 1
+        discard[CF_FIRST] = 1
+        ret = np.append(ret, discard)
+        # Top
+        discard = np.zeros(translator.total_possible_cards)
+        discard[DH_FIRST] = 1
+        ret = np.append(ret, discard)
+
+        # Scores
+        ret = np.append(ret, np.array([0, 0, 0, 0, 0]))
+        
+        # Legal actions
+        legal_actions = np.zeros(no_cards)
+        legal_actions[MB_FIRST] = 1
+        legal_actions[P_FIRST] = 1
+        legal_actions[ECL_FIRST] = 1
+        legal_actions[GZ_FIRST] = 1
+        legal_actions[JF_FIRST] = 1
+        ret = np.append(ret, legal_actions)
+
+        expected_observations = ret
+
+        self.observation_comparer(translator.get_observations(0), expected_observations)
 
     def test_observations_correct_for_game_after_one_turn_from_player_index_three_perspective(self):
 
@@ -401,6 +471,7 @@ class TestGoNutsForDonutsGymTranslator:
         discard = np.zeros(translator.total_possible_cards)
         discard[DH_FIRST] = 1
         ret = np.append(ret, discard)
+        ret = np.append(ret, discard)
 
         # Scores
         ret = np.append(ret, np.array([2 / test_game.max_score, 0, 0, 0, 0]))
@@ -415,11 +486,8 @@ class TestGoNutsForDonutsGymTranslator:
         ret = np.append(ret, legal_actions)
 
         expected_observations = ret
-
-        print(len(expected_observations))
-        print(len(translator.get_observations(3)))
         
-        assert (translator.get_observations(3) == expected_observations).all()
+        self.observation_comparer(translator.get_observations(3), expected_observations)
 
 class TestGoNutsForDonuts:
     
