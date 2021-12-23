@@ -174,20 +174,22 @@ class GoNutsGameGymTranslator:
 
         n_players = self.game.n_players
 
-        obs = np.zeros([self.total_possible_players, self.total_possible_cards])
+        positions = np.zeros([self.total_possible_players, self.total_possible_cards])
 
         # Each player's current position (tableau)
         # starting from the current player and cycling to higher-numbered players
-        player_num = current_player_num
+
+        # create from player 0 perspective
         for i in range(n_players):
-            player = self.game.players[player_num]
+            player = self.game.players[i]
 
             for card in player.position.cards:
-                obs[i][card.id] = 1
+                positions[i][card.id] = 1
 
-            player_num = (player_num + 1) % n_players
-
-        ret = obs.flatten()
+        positions_flat = positions.flatten()
+        # roll forward (+wrap) to put this player's numbers at the start
+        positions_rolled = np.roll(positions_flat, (self.total_possible_players - current_player_num) * self.total_possible_cards)
+        ret = positions_rolled
 
         # The discard deck
         # Just the top card of the discard pile
@@ -201,13 +203,13 @@ class GoNutsGameGymTranslator:
         # Current player scores [to guide the agent to which players to target]
         player_scores = np.zeros(self.total_possible_players)
 
-        player_num = current_player_num
         for i in range(n_players):
-            player = self.game.players[player_num]
+            player = self.game.players[i]
             player_scores[i] = player.score / self.game.max_score
-            player_num = (player_num + 1) % n_players
 
-        ret = np.append(ret, player_scores)
+        scores_rolled = np.roll(player_scores, self.total_possible_players - current_player_num)
+
+        ret = np.append(ret, scores_rolled)
 
         # Legal actions, representing the donut choices
         ret = np.append(ret, self.get_legal_actions())
