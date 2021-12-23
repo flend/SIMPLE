@@ -258,7 +258,7 @@ class GoNutsGame:
         self.players = []
         self.turns_taken = 0
         self.game_ends = False
-        self.donut_pick_action_bank = []
+        self.donut_picks_action_bank = []
         self.donut_player = 0
 
         self.game_state = GoNutsGameState.PICK_DONUT
@@ -348,45 +348,40 @@ class GoNutsGame:
 
             if card_ids_counter[card_id] > 1:
                 deck.set_to_discard()
-                logger.debug(f'Discarding {deck.card.symbol}')
+                logger.info(f'Discarding {deck.card.symbol}')
                 cards_picked.append(None)
             else:
                 player.position.add_one(deck.card)
-                logger.debug(f'Player {player.id} picks {deck.card.symbol}')
+                logger.info(f'Player {player.id} picks {deck.card.symbol}')
 
                 cards_picked.append(deck.card)
                 deck.set_taken()
         
         return cards_picked
 
-    def do_immediate_card_special_effects(self, cards_picked):
+    def do_immediate_card_special_effects(self, player_no, card):
         """Do card special effects that don't need a game state change"""
 
-        if len(cards_picked) != self.n_players:
-            logger.debug('do_immediate_card_special_effects() called with wrong number of card_ids')
-            raise Exception('do_immediate_card_special_effects() called with wrong number of card_ids')
-
-        for p, card in enumerate(cards_picked):
-            if card:
-                if card.name == "chocolate_frosted":
-                    self.card_action_chocolate_frosted(p)
-                elif card.name == "eclair":
-                    self.card_action_eclair(p)
+        if card:
+            if card.name == "chocolate_frosted":
+                self.card_action_chocolate_frosted(player_no)
+            elif card.name == "eclair":
+                self.card_action_eclair(player_no)
 
     def card_action_chocolate_frosted(self, player_no):
         # Draw the top card from the draw deck
-        print(f'deck size {self.deck.size()}')
         if self.deck.size() > 0:
+            logger.debug(f"Adding {self.deck.peek_one().symbol} to position of {player_no}")
             self.players[player_no].position.add_one(self.deck.draw_one())
 
     def card_action_eclair(self, player_no):
         if self.discard.size() > 0:
+            logger.debug(f"Adding {self.discard.peek_one().symbol} to position of {player_no}")
             self.players[player_no].position.add_one(self.discard.draw_one())
 
     def reset_turn(self):
 
-        self.game_state = GoNutsGameState.PICK_DONUT
-        self.donut_pick_action_bank = []
+        self.donut_picks_action_bank = []
 
         self.turns_taken += 1
 
@@ -436,6 +431,10 @@ class GoNutsGame:
         self.record_player_actions(player_card_picks)
         self.cards_picked = self.pick_cards(player_card_picks)
 
+    def do_pick_discard_action(self, player_discard_pick):
+        # TODO
+        pass
+
     def do_end_turn_after_all_player_actions(self):
 
         self.reset_turn()
@@ -456,26 +455,14 @@ class GoNutsGame:
 
     def execute_game_loop(self, step_action):
 
-        next_player_no = 0
+        next_player_no = self.execute_game_state_action(step_action)
 
+        # If we are now in a state that doesn't require a step, keep looping until we need a step
         while self.game_state_is_non_step_action():
-            # Note that step_action is the last action from the env, but we may process a lot of other actions for which it is not relevant
-            next_player_no = self.execute_game_state_action(step_action)
+            next_player_no = self.execute_game_state_action(None)
         
         # Return the player number that is next required to do a step (could be getting a donut or some other action)
         return next_player_no
-
-    def set_donut_player(self, player_no):
-        self.donut_player = player_no
-
-    def set_action_player(self, player_no):
-        self.action_player = player_no
-
-    def action_player(self):
-        return self.action_player
-
-    def donut_player(self):
-        return self.donut_player
 
     def move_to_next_action_player(self):
         self.action_player += 1
@@ -485,32 +472,40 @@ class GoNutsGame:
         # Instant actions (including no-op for cards that have no action)
         new_state = GoNutsGameState.INSTANT_ACTION
 
-        if self.action_player > self.n_players:
+        if self.action_player == self.n_players:
             # Leave action state and go back to picking donuts
             self.game_state = GoNutsGameState.PICK_DONUT
+            self.donut_player = 0
+            self.do_end_turn_after_all_player_actions()
             return
         
-        # Examine donut pick and set state
-        for p, card in enumerate(self.card_picked):
-            if card:
-                if card.name == "red_velvet":
-                    new_state = GoNutsGameState.PICK_DISCARD
-        
+        # Examine donut pick for this player and set state
+        card = self.cards_picked[self.action_player]
+        if card:
+            if card.name == "red_velvet":
+                new_state = GoNutsGameState.PICK_DISCARD
+
         self.game_state = new_state
+
+    def execute_game_loop_with_actions(self, step_actions):
+        """Used in testing"""
+        for action in step_actions:
+            self.execute_game_loop(action)
 
     def execute_game_state_action(self, step_action):
         
         # CHECK ACTION STATES
 
         # Do instant actions - does not require step, action state
-        if self.game.game_state == GoNutsGameState.INSTANT_ACTION:
+        logger.debug(f'Game state: {repr(self.game_state)}')
+        if self.game_state == GoNutsGameState.INSTANT_ACTION:
             # TODO - includes no-op actions
-            self.do_instant_actions(self.action_player())
+            self.do_immediate_card_special_effects(self.action_player, self.cards_picked[self.action_player])
             self.move_to_next_action_player()
             self.check_action_for_this_action_player_and_set_state() # will set back to DONUT state if all actions complete
         
         # Discard action - requires step, action state
-        elif self.game.game_state == GoNutsGameState.PICK_DISCARD:
+        elif self.game_state == GoNutsGameState.PICK_DISCARD:
             self.do_pick_discard_action(self.action_player(), step_action)
             # Move to the next player to have an action
             self.move_to_next_action_player()
@@ -519,26 +514,25 @@ class GoNutsGame:
         # CHECK DONUT STATES
 
         # Do player picks card - requires step, donut state
-        if self.game.game_state == GoNutsGameState.PICK_DONUT:
+        if self.game_state == GoNutsGameState.PICK_DONUT:
 
             self.donut_picks_action_bank.append(step_action)
             
             # All players have picked a card, process actions
-            if len(self.donut_pick_action_bank) == self.n_players:
+            if len(self.donut_picks_action_bank) == self.n_players:
 
-                self.game.do_pick_cards_action(self.donut_picks_action_bank)
+                self.do_pick_cards_action(self.donut_picks_action_bank)
                 self.donut_picks_action_bank = []
 
-                self.set_action_player(0)
-                self.check_action_for_next_player_and_set_state()
+                self.action_player = 0
+                self.check_action_for_this_action_player_and_set_state()
 
-                self.set_donut_player(0)
             else:
-                self.set_donut_player(self.donut_player() + 1)      
+                self.donut_player =+ 1      
             
-            return self.donut_player()
+            return self.donut_player
 
-        return self.action_player()
+        return self.action_player
 
 
 class GoNutsForDonutsEnvUtility:

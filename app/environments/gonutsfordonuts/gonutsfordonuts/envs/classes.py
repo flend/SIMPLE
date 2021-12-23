@@ -228,6 +228,11 @@ class Deck():
     
     def draw_one(self):
         return self.cards.pop()
+
+    def peek_one(self):
+        if not len(self.cards):
+            return None
+        return self.cards[-1]
     
     def add(self, cards):
         for card in cards:
