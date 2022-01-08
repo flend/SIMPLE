@@ -247,13 +247,14 @@ class GoNutsGame:
 
     def reset_game(self, shuffle=True, deck_order=None, deck_filter=None):
         self.deck = Deck(self.n_players, GoNutsGame.standard_deck_contents())
+        
+        if deck_order:
+            self.deck.reorder(deck_order)
+        if deck_filter:
+            self.deck.filter(deck_filter)        
         if shuffle:
             self.deck.shuffle()
-        elif deck_order:
-            self.deck.reorder(deck_order)
-        elif deck_filter:
-            self.deck.filter(deck_filter)
-        
+         
         self.discard = Discard()
         self.players = []
         self.turns_taken = 0
@@ -273,6 +274,11 @@ class GoNutsGame:
         self.donut_decks = []
         for i in range (0, self.no_donut_decks):
             self.donut_decks.append(DonutDeckPosition(self.deck.draw_one()))
+
+    @classmethod
+    def teal_deck_filter(self):
+        return [ ]
+
 
     @classmethod
     def standard_deck_contents(self):
@@ -572,7 +578,9 @@ class GoNutsForDonutsEnv(gym.Env):
         self.n_players = no_players
 
         self.game = GoNutsGame(no_players)
-        self.game.setup_game()
+        # for testing human play with original deck
+        deck_filter = None
+        self.game.setup_game(shuffle=True, deck_filter=deck_filter)
         self.game.start_game()
 
         self.translator = GoNutsGameGymTranslator(self.game)

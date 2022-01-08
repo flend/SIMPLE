@@ -3,6 +3,7 @@ import numpy as np
 from gonutsfordonuts.envs.gonutsfordonuts import GoNutsGame, GoNutsScorer, GoNutsGameGymTranslator, GoNutsForDonutsEnvUtility
 from gonutsfordonuts.envs.classes import ChocolateFrosted, DonutHoles, Eclair, FrenchCruller, Glazed, JellyFilled, MapleBar, Plain, Powdered, BostonCream, DoubleChocolate, RedVelvet, Sprinkled, BearClaw, CinnamonTwist, Coffee, DayOldDonuts, Milk, OldFashioned, MapleFrosted, MuchoMatcha, RaspberryFrosted, StrawberryGlazed
 from gonutsfordonuts.envs.classes import Position, Player, Deck
+import gonutsfordonuts.envs.cards as cards
 
 class TestDeck:
 
@@ -57,7 +58,7 @@ class TestDeck:
 
         d = Deck(2, GoNutsGame.standard_deck_contents())
 
-        desired_ordered_cards = [CF_FIRST, DH_FIRST, GZ_FIRST, POW_FIRST]
+        desired_ordered_cards = [cards.CF_FIRST, cards.DH_FIRST, cards.GZ_FIRST, cards.POW_FIRST]
 
         d.reorder(desired_ordered_cards)
     
@@ -204,30 +205,6 @@ class TestGoNutsForDonutsScorer:
         scores = GoNutsScorer.score_turn(positions)
         assert (scores == [10, 5, 10]).all()
 
-CF_FIRST = 0
-DH_FIRST = 3
-ECL_FIRST = 9
-GZ_FIRST = 12
-JF_FIRST = 17
-MB_FIRST = 23
-P_FIRST = 25
-POW_FIRST = 32
-BC_FIRST = 36
-DC_FIRST = 42
-RV_FIRST = 44
-SPR_FIRST = 46
-BEAR_FIRST = 48
-CT_FIRST = 50
-CFF_FIRST = 52
-DOD_FIRST = 54
-MILK_FIRST = 55
-OLD_FIRST = 56
-MF_FIRST = 58
-MM_FIRST = 60
-RF_FIRST = 62
-SG_FIRST = 64
-FC_FIRST = 66
-
 OBVS_POSITIONS_START = 0
 OBVS_ALL_DISCARD_START = 350
 OBVS_TOP_DISCARD_START = 420
@@ -264,7 +241,7 @@ class TestGoNutsForDonutsGymTranslator:
         # ].reverse()
 
         #       CF  DH ECL GLZ JF  MB  P   PWD FC
-        return [ CF_FIRST, DH_FIRST, ECL_FIRST, GZ_FIRST, JF_FIRST, MB_FIRST, P_FIRST, POW_FIRST, FC_FIRST ]
+        return [ cards.CF_FIRST, cards.DH_FIRST, cards.ECL_FIRST, cards.GZ_FIRST, cards.JF_FIRST, cards.MB_FIRST, cards.P_FIRST, cards.POW_FIRST, cards.FC_FIRST ]
 
     def test_legal_actions_have_only_donut_deck_picks(self):
 
@@ -329,7 +306,7 @@ class TestGoNutsForDonutsGymTranslator:
         test_game.setup_game(shuffle=False, deck_order=self.fixture_card_order())
         test_game.start_game() # deals top 5
         # d1: 0 CF, d2: 3 DH, d3: 9 ECL, d4: 12 G, d5: 17 JF; draw: [23 MB, 25 P, 32 PWD, 66 FC]; discard: []
-        test_game.execute_game_loop_with_actions(TestHelpers.step_action(ACTION_DONUT, [CF_FIRST, DH_FIRST, DH_FIRST, GZ_FIRST]))
+        test_game.execute_game_loop_with_actions(TestHelpers.step_action(ACTION_DONUT, [cards.CF_FIRST, cards.DH_FIRST, cards.DH_FIRST, cards.GZ_FIRST]))
         # p1: [0 CF, 23 MB], p2: [], p3: [], p4: [12 G]; draw: [25 P, 32 PWD, 66 FC]
         test_game.reset_turn()
         # d1: 25 P, d2: 32 PWD, d3: 9 ECL, d4: 66 FC, d5: 17 JF; draw: []; discard: [3 DH]
@@ -339,8 +316,8 @@ class TestGoNutsForDonutsGymTranslator:
         obs = np.array([])
         # p0
         p0position = np.zeros(no_cards)
-        p0position[CF_FIRST] = 1
-        p0position[MB_FIRST] = 1
+        p0position[cards.CF_FIRST] = 1
+        p0position[cards.MB_FIRST] = 1
         obs = np.append(obs, p0position)
         # p1
         obs = np.append(obs, np.zeros(no_cards))
@@ -348,7 +325,7 @@ class TestGoNutsForDonutsGymTranslator:
         obs = np.append(obs, np.zeros(no_cards))
         # p3
         p3position = np.zeros(no_cards)
-        p3position[GZ_FIRST] = 1
+        p3position[cards.GZ_FIRST] = 1
         obs = np.append(obs, p3position)
         # p4 (not in the game but included in the obvs space)
         obs = np.append(obs, np.zeros(no_cards))
@@ -356,7 +333,7 @@ class TestGoNutsForDonutsGymTranslator:
 
         # Discard
         discard = np.zeros(translator.total_possible_cards)
-        discard[DH_FIRST] = 1
+        discard[cards.DH_FIRST] = 1
         ret = np.append(ret, discard)
         ret = np.append(ret, discard)
 
@@ -365,11 +342,11 @@ class TestGoNutsForDonutsGymTranslator:
         
         # Legal actions
         legal_actions = np.zeros(no_cards)
-        legal_actions[P_FIRST] = 1
-        legal_actions[POW_FIRST] = 1
-        legal_actions[ECL_FIRST] = 1
-        legal_actions[FC_FIRST] = 1
-        legal_actions[JF_FIRST] = 1
+        legal_actions[cards.P_FIRST] = 1
+        legal_actions[cards.POW_FIRST] = 1
+        legal_actions[cards.ECL_FIRST] = 1
+        legal_actions[cards.FC_FIRST] = 1
+        legal_actions[cards.JF_FIRST] = 1
         ret = np.append(ret, legal_actions)
 
         expected_observations = ret
@@ -385,7 +362,7 @@ class TestGoNutsForDonutsGymTranslator:
         test_game.setup_game(shuffle=False, deck_order=self.fixture_card_order())
         test_game.start_game() # deals top 5
         # d1: 0 CF, d2: 3 DH, d3: 9 ECL, d4: 12 G, d5: 17 JF; draw: [23 MB, 25 P, 32 PWD, 66 FC]; discard: []
-        test_game.execute_game_loop_with_actions(TestHelpers.step_action(ACTION_DONUT, [CF_FIRST, DH_FIRST, DH_FIRST, CF_FIRST]))
+        test_game.execute_game_loop_with_actions(TestHelpers.step_action(ACTION_DONUT, [cards.CF_FIRST, cards.DH_FIRST, cards.DH_FIRST, cards.CF_FIRST]))
         # p1: [], p2: [], p3: [], p4: []; draw: [23 MB, 25 P, 32 PWD, 66 FC]
         test_game.reset_turn()
         # d1: 23 MB, d2: 25 P, d3: 9 ECL, d4: 12 G, d5: 17 JF; draw: [32 PWD, 66 FC]; discard: [0 CF, 3 DH]
@@ -408,12 +385,12 @@ class TestGoNutsForDonutsGymTranslator:
         # Discard
         # All
         discard = np.zeros(translator.total_possible_cards)
-        discard[DH_FIRST] = 1
-        discard[CF_FIRST] = 1
+        discard[cards.DH_FIRST] = 1
+        discard[cards.CF_FIRST] = 1
         ret = np.append(ret, discard)
         # Top
         discard = np.zeros(translator.total_possible_cards)
-        discard[DH_FIRST] = 1
+        discard[cards.DH_FIRST] = 1
         ret = np.append(ret, discard)
 
         # Scores
@@ -421,11 +398,11 @@ class TestGoNutsForDonutsGymTranslator:
         
         # Legal actions
         legal_actions = np.zeros(no_cards)
-        legal_actions[MB_FIRST] = 1
-        legal_actions[P_FIRST] = 1
-        legal_actions[ECL_FIRST] = 1
-        legal_actions[GZ_FIRST] = 1
-        legal_actions[JF_FIRST] = 1
+        legal_actions[cards.MB_FIRST] = 1
+        legal_actions[cards.P_FIRST] = 1
+        legal_actions[cards.ECL_FIRST] = 1
+        legal_actions[cards.GZ_FIRST] = 1
+        legal_actions[cards.JF_FIRST] = 1
         ret = np.append(ret, legal_actions)
 
         expected_observations = ret
@@ -441,7 +418,7 @@ class TestGoNutsForDonutsGymTranslator:
         test_game.setup_game(shuffle=False, deck_order=self.fixture_card_order())
         test_game.start_game() # deals top 5
         # d1: 0 CF, d2: 3 DH, d3: 9 ECL, d4: 12 G, d5: 17 JF; draw: [23 MB, 25 P, 32 PWD, 66 FC]; discard: []
-        test_game.execute_game_loop_with_actions(TestHelpers.step_action(ACTION_DONUT, [CF_FIRST, DH_FIRST, DH_FIRST, GZ_FIRST]))
+        test_game.execute_game_loop_with_actions(TestHelpers.step_action(ACTION_DONUT, [cards.CF_FIRST, cards.DH_FIRST, cards.DH_FIRST, cards.GZ_FIRST]))
         # p1: [0 CF, 23 MB], p2: [], p3: [], p4: [12 G]; draw: [25 P, 32 PWD, 66 FC]
         test_game.reset_turn()
         # d1: 25 P, d2: 32 PWD, d3: 9 ECL, d4: 66 FC, d5: 17 JF; draw: []; discard: [3 DH]
@@ -451,14 +428,14 @@ class TestGoNutsForDonutsGymTranslator:
         obs = np.array([])
         # p3
         p3position = np.zeros(no_cards)
-        p3position[GZ_FIRST] = 1
+        p3position[cards.GZ_FIRST] = 1
         obs = np.append(obs, p3position)
         # p4 (not in the game but included in the obvs space)
         obs = np.append(obs, np.zeros(no_cards))
         # p0
         p0position = np.zeros(no_cards)
-        p0position[CF_FIRST] = 1
-        p0position[MB_FIRST] = 1
+        p0position[cards.CF_FIRST] = 1
+        p0position[cards.MB_FIRST] = 1
         obs = np.append(obs, p0position)
         # p1
         obs = np.append(obs, np.zeros(no_cards))
@@ -469,7 +446,7 @@ class TestGoNutsForDonutsGymTranslator:
 
         # Discard
         discard = np.zeros(translator.total_possible_cards)
-        discard[DH_FIRST] = 1
+        discard[cards.DH_FIRST] = 1
         ret = np.append(ret, discard)
         ret = np.append(ret, discard)
 
@@ -478,11 +455,11 @@ class TestGoNutsForDonutsGymTranslator:
         
         # Legal actions
         legal_actions = np.zeros(no_cards)
-        legal_actions[P_FIRST] = 1
-        legal_actions[POW_FIRST] = 1
-        legal_actions[ECL_FIRST] = 1
-        legal_actions[FC_FIRST] = 1
-        legal_actions[JF_FIRST] = 1
+        legal_actions[cards.P_FIRST] = 1
+        legal_actions[cards.POW_FIRST] = 1
+        legal_actions[cards.ECL_FIRST] = 1
+        legal_actions[cards.FC_FIRST] = 1
+        legal_actions[cards.JF_FIRST] = 1
         ret = np.append(ret, legal_actions)
 
         expected_observations = ret
@@ -502,11 +479,11 @@ class TestGoNutsForDonuts:
     
     def fixture_card_filter(self):
         #       CF  DH ECL GLZ JF  MB  P   PWD FC
-        return [ CF_FIRST, DH_FIRST, ECL_FIRST, GZ_FIRST, JF_FIRST, MB_FIRST, P_FIRST, POW_FIRST, FC_FIRST ]
+        return [ cards.CF_FIRST, cards.DH_FIRST, cards.ECL_FIRST, cards.GZ_FIRST, cards.JF_FIRST, cards.MB_FIRST, cards.P_FIRST, cards.POW_FIRST, cards.FC_FIRST ]
 
     def fixture_card_order(self):
         #       CF  DH ECL GLZ JF  MB  P   PWD FC
-        return [ CF_FIRST, DH_FIRST, ECL_FIRST, GZ_FIRST, JF_FIRST, MB_FIRST, P_FIRST, POW_FIRST, FC_FIRST ]
+        return [ cards.CF_FIRST, cards.DH_FIRST, cards.ECL_FIRST, cards.GZ_FIRST, cards.JF_FIRST, cards.MB_FIRST, cards.P_FIRST, cards.POW_FIRST, cards.FC_FIRST ]
 
     def test_standard_deck_contents_size(self):
 
@@ -526,19 +503,19 @@ class TestGoNutsForDonuts:
         test_game.setup_game(shuffle=False, deck_order=self.fixture_card_order())
         test_game.start_game()
 
-        assert test_game.donut_decks[0].card.id == CF_FIRST
+        assert test_game.donut_decks[0].card.id == cards.CF_FIRST
         assert test_game.donut_decks[0].card.symbol == 'CF'
 
-        assert test_game.donut_decks[1].card.id == DH_FIRST
+        assert test_game.donut_decks[1].card.id == cards.DH_FIRST
         assert test_game.donut_decks[1].card.symbol == 'DH'
 
-        assert test_game.donut_decks[2].card.id == ECL_FIRST
+        assert test_game.donut_decks[2].card.id == cards.ECL_FIRST
         assert test_game.donut_decks[2].card.symbol == 'ECL'
 
-        assert test_game.donut_decks[3].card.id == GZ_FIRST
+        assert test_game.donut_decks[3].card.id == cards.GZ_FIRST
         assert test_game.donut_decks[3].card.symbol == 'GZ'
 
-        assert test_game.donut_decks[4].card.id == JF_FIRST
+        assert test_game.donut_decks[4].card.id == cards.JF_FIRST
         assert test_game.donut_decks[4].card.symbol == 'JF'
     
     def test_uncontested_picks_go_to_positions(self):
@@ -547,12 +524,12 @@ class TestGoNutsForDonuts:
         test_game.setup_game(shuffle=False, deck_order=self.fixture_card_order())
         test_game.start_game()
 
-        test_game.pick_cards([CF_FIRST, DH_FIRST, ECL_FIRST, GZ_FIRST])
+        test_game.pick_cards([cards.CF_FIRST, cards.DH_FIRST, cards.ECL_FIRST, cards.GZ_FIRST])
 
-        assert test_game.players[0].position.cards[0].id == CF_FIRST
-        assert test_game.players[1].position.cards[0].id == DH_FIRST
-        assert test_game.players[2].position.cards[0].id == ECL_FIRST
-        assert test_game.players[3].position.cards[0].id == GZ_FIRST
+        assert test_game.players[0].position.cards[0].id == cards.CF_FIRST
+        assert test_game.players[1].position.cards[0].id == cards.DH_FIRST
+        assert test_game.players[2].position.cards[0].id == cards.ECL_FIRST
+        assert test_game.players[3].position.cards[0].id == cards.GZ_FIRST
 
     def test_2nd_round_picks_go_to_positions(self):
 
@@ -560,15 +537,15 @@ class TestGoNutsForDonuts:
         test_game.setup_game(shuffle=False, deck_order=self.fixture_card_order())
         test_game.start_game()
 
-        test_game.pick_cards([CF_FIRST, DH_FIRST, ECL_FIRST, GZ_FIRST])
+        test_game.pick_cards([cards.CF_FIRST, cards.DH_FIRST, cards.ECL_FIRST, cards.GZ_FIRST])
         test_game.reset_turn()
 
-        test_game.pick_cards([JF_FIRST, MB_FIRST, P_FIRST, POW_FIRST])
+        test_game.pick_cards([cards.JF_FIRST, cards.MB_FIRST, cards.P_FIRST, cards.POW_FIRST])
 
-        assert test_game.players[0].position.cards[1].id == JF_FIRST
-        assert test_game.players[1].position.cards[1].id == MB_FIRST
-        assert test_game.players[2].position.cards[1].id == P_FIRST
-        assert test_game.players[3].position.cards[1].id == POW_FIRST
+        assert test_game.players[0].position.cards[1].id == cards.JF_FIRST
+        assert test_game.players[1].position.cards[1].id == cards.MB_FIRST
+        assert test_game.players[2].position.cards[1].id == cards.P_FIRST
+        assert test_game.players[3].position.cards[1].id == cards.POW_FIRST
 
     def test_game_ends_when_not_enough_donuts_to_refill_positions(self):
 
@@ -577,10 +554,10 @@ class TestGoNutsForDonuts:
         test_game.start_game()
 
         # 5 out, 4 in deck
-        test_game.pick_cards([CF_FIRST, CF_FIRST, DH_FIRST, DH_FIRST])
+        test_game.pick_cards([cards.CF_FIRST, cards.CF_FIRST, cards.DH_FIRST, cards.DH_FIRST])
         test_game.reset_turn()
         # 2 removed, 5 out, 2 in deck
-        test_game.pick_cards([ECL_FIRST, GZ_FIRST, JF_FIRST, JF_FIRST])
+        test_game.pick_cards([cards.ECL_FIRST, cards.GZ_FIRST, cards.JF_FIRST, cards.JF_FIRST])
         test_game.reset_turn()
         # 3 removed, 5 out, -1 in deck
 
@@ -593,10 +570,10 @@ class TestGoNutsForDonuts:
         test_game.start_game()
 
         # 5 out, 4 in deck
-        test_game.pick_cards([CF_FIRST, CF_FIRST, DH_FIRST, DH_FIRST])
+        test_game.pick_cards([cards.CF_FIRST, cards.CF_FIRST, cards.DH_FIRST, cards.DH_FIRST])
         test_game.reset_turn()
         # 2 removed, 5 out, 2 in deck
-        test_game.pick_cards([ECL_FIRST, JF_FIRST, JF_FIRST, JF_FIRST])
+        test_game.pick_cards([cards.ECL_FIRST, cards.JF_FIRST, cards.JF_FIRST, cards.JF_FIRST])
         test_game.reset_turn()
         # 2 removed, 5 out, 0 in deck
 
@@ -608,19 +585,19 @@ class TestGoNutsForDonuts:
         test_game.setup_game(shuffle=False, deck_filter=self.fixture_card_filter())
         test_game.start_game()
 
-        test_game.pick_cards([CF_FIRST, DH_FIRST, ECL_FIRST, GZ_FIRST])
+        test_game.pick_cards([cards.CF_FIRST, cards.DH_FIRST, cards.ECL_FIRST, cards.GZ_FIRST])
         test_game.reset_turn()
 
-        assert test_game.donut_decks[0].card.id == MB_FIRST
+        assert test_game.donut_decks[0].card.id == cards.MB_FIRST
         assert test_game.donut_decks[0].card.symbol == 'MB'
 
-        assert test_game.donut_decks[1].card.id == P_FIRST
+        assert test_game.donut_decks[1].card.id == cards.P_FIRST
         assert test_game.donut_decks[1].card.symbol == 'P'
 
-        assert test_game.donut_decks[2].card.id == POW_FIRST
+        assert test_game.donut_decks[2].card.id == cards.POW_FIRST
         assert test_game.donut_decks[2].card.symbol == 'POW'
 
-        assert test_game.donut_decks[3].card.id == FC_FIRST
+        assert test_game.donut_decks[3].card.id == cards.FC_FIRST
         assert test_game.donut_decks[3].card.symbol == 'FC'
 
     def test_contested_picks_dont_go_to_positions(self):
@@ -629,7 +606,7 @@ class TestGoNutsForDonuts:
         test_game.setup_game(shuffle=False, deck_filter=self.fixture_card_filter())
         test_game.start_game()
 
-        test_game.pick_cards([CF_FIRST, CF_FIRST, ECL_FIRST, ECL_FIRST])
+        test_game.pick_cards([cards.CF_FIRST, cards.CF_FIRST, cards.ECL_FIRST, cards.ECL_FIRST])
 
         assert len(test_game.players[0].position.cards) == 0
         assert len(test_game.players[1].position.cards) == 0
@@ -642,12 +619,12 @@ class TestGoNutsForDonuts:
         test_game.setup_game(shuffle=False, deck_filter=self.fixture_card_filter())
         test_game.start_game()
 
-        cards_picked = test_game.pick_cards([CF_FIRST, CF_FIRST, ECL_FIRST, GZ_FIRST])
+        cards_picked = test_game.pick_cards([cards.CF_FIRST, cards.CF_FIRST, cards.ECL_FIRST, cards.GZ_FIRST])
 
         assert cards_picked[0] == None
         assert cards_picked[1] == None
-        assert cards_picked[2].id == ECL_FIRST
-        assert cards_picked[3].id == GZ_FIRST
+        assert cards_picked[2].id == cards.ECL_FIRST
+        assert cards_picked[3].id == cards.GZ_FIRST
 
     def test_empty_decks_get_refilled_partial_picks(self):
 
@@ -655,23 +632,23 @@ class TestGoNutsForDonuts:
         test_game.setup_game(shuffle=False, deck_filter=self.fixture_card_filter())
         test_game.start_game()
 
-        test_game.pick_cards([CF_FIRST, CF_FIRST, ECL_FIRST, GZ_FIRST])
+        test_game.pick_cards([cards.CF_FIRST, cards.CF_FIRST, cards.ECL_FIRST, cards.GZ_FIRST])
         test_game.reset_turn()
 
         # Deck 1 - 8 - discarded and refilled
-        assert test_game.donut_decks[0].card.id == MB_FIRST
+        assert test_game.donut_decks[0].card.id == cards.MB_FIRST
         assert test_game.donut_decks[0].card.symbol == 'MB'
 
         # Deck 2 - 7 - retained
-        assert test_game.donut_decks[1].card.id == DH_FIRST
+        assert test_game.donut_decks[1].card.id == cards.DH_FIRST
         assert test_game.donut_decks[1].card.symbol == 'DH'
 
         # Deck 3 - 6 - taken and refilled
-        assert test_game.donut_decks[2].card.id == P_FIRST
+        assert test_game.donut_decks[2].card.id == cards.P_FIRST
         assert test_game.donut_decks[2].card.symbol == 'P'
 
         # Deck 4 - 5 - taken and refilled
-        assert test_game.donut_decks[3].card.id == POW_FIRST
+        assert test_game.donut_decks[3].card.id == cards.POW_FIRST
         assert test_game.donut_decks[3].card.symbol == 'POW'
 
     def test_discard_pile_populated_with_contested_picks(self):
@@ -681,13 +658,13 @@ class TestGoNutsForDonuts:
 
         test_game.start_game()
 
-        test_game.pick_cards([CF_FIRST, CF_FIRST, DH_FIRST, DH_FIRST])
+        test_game.pick_cards([cards.CF_FIRST, cards.CF_FIRST, cards.DH_FIRST, cards.DH_FIRST])
         test_game.reset_turn()
 
         assert len(test_game.discard.cards) == 2
-        assert test_game.discard.cards[0].id == CF_FIRST
-        assert test_game.discard.cards[1].id == DH_FIRST
-        assert test_game.discard.peek_one().id == DH_FIRST
+        assert test_game.discard.cards[0].id == cards.CF_FIRST
+        assert test_game.discard.cards[1].id == cards.DH_FIRST
+        assert test_game.discard.peek_one().id == cards.DH_FIRST
 
     def test_card_action_chocolate_frosted_draws_one_from_deck(self):
 
@@ -697,8 +674,8 @@ class TestGoNutsForDonuts:
 
         test_game.card_action_chocolate_frosted(player_no=0)
 
-        # first from top of deck is MB_FIRST
-        assert test_game.players[0].position.cards[0].id == MB_FIRST
+        # first from top of deck is cards.MB_FIRST
+        assert test_game.players[0].position.cards[0].id == cards.MB_FIRST
         # 3 cards left in deck
         assert test_game.deck.size() == 3
 
@@ -708,7 +685,7 @@ class TestGoNutsForDonuts:
         test_game.setup_game(shuffle=False, deck_filter=self.fixture_card_filter())
         test_game.start_game()
         # deck 9, deal 5, redeal 4, empty deck
-        test_game.pick_cards([CF_FIRST, DH_FIRST, ECL_FIRST, GZ_FIRST])
+        test_game.pick_cards([cards.CF_FIRST, cards.DH_FIRST, cards.ECL_FIRST, cards.GZ_FIRST])
         test_game.reset_turn()
 
         test_game.card_action_chocolate_frosted(0)
@@ -721,7 +698,7 @@ class TestGoNutsForDonuts:
         test_game = GoNutsGame(4)
         test_game.setup_game(shuffle=False, deck_filter=self.fixture_card_filter())
         test_game.start_game() # deals top 5
-        test_game.pick_cards([CF_FIRST, CF_FIRST, DH_FIRST, DH_FIRST]) # adds 8 then 7 to discard pile
+        test_game.pick_cards([cards.CF_FIRST, cards.CF_FIRST, cards.DH_FIRST, cards.DH_FIRST]) # adds 8 then 7 to discard pile
         test_game.reset_turn()
 
         assert len(test_game.discard.cards) == 2
@@ -729,9 +706,9 @@ class TestGoNutsForDonuts:
         test_game.card_action_eclair(0)
 
         # first from top of discard pile is card DH
-        assert test_game.players[0].position.cards[0].id == DH_FIRST
+        assert test_game.players[0].position.cards[0].id == cards.DH_FIRST
         assert len(test_game.discard.cards) == 1
-        assert test_game.discard.cards[0].id == CF_FIRST
+        assert test_game.discard.cards[0].id == cards.CF_FIRST
 
     def test_card_action_eclair_draws_none_from_empty_discard_pile(self):
 
@@ -749,11 +726,11 @@ class TestGoNutsForDonuts:
         test_game.setup_game(shuffle=False, deck_filter=self.fixture_card_filter())
         test_game.start_game() # deals top 5
         # d1: 8 CF, d2: 7 DH, d3: 6 ECL, d4: 5 G, d5: 4 JF; draw: [3 MB, 2 P, 1 PWD, 0 FC]; discard: []
-        test_game.execute_game_loop_with_actions(TestHelpers.step_action(ACTION_DONUT, [CF_FIRST, DH_FIRST, DH_FIRST, GZ_FIRST]))
+        test_game.execute_game_loop_with_actions(TestHelpers.step_action(ACTION_DONUT, [cards.CF_FIRST, cards.DH_FIRST, cards.DH_FIRST, cards.GZ_FIRST]))
         # p1: [8 CF, 3 MB], p2: [], p3: [], p4: [5 G]; draw: [2 P, 1 PWD, 0 FC];
         test_game.reset_turn()
         # d1: 2 P, d2: 1 PWD, d3: 6 ECL, d4: 0 FC, d5: 4 JF; draw: []; discard: [7 DH]
-        test_game.execute_game_loop_with_actions(TestHelpers.step_action(ACTION_DONUT, [JF_FIRST, P_FIRST, POW_FIRST, ECL_FIRST]))
+        test_game.execute_game_loop_with_actions(TestHelpers.step_action(ACTION_DONUT, [cards.JF_FIRST, cards.P_FIRST, cards.POW_FIRST, cards.ECL_FIRST]))
         # p1: [8 CF, 3 MB, 4 JF], p2: [2 P], p3: [1 PWD], p4: [5 G, 6 ECL, 7 DH]; draw: []; discard: []
 
         assert test_game.is_game_over() == True
