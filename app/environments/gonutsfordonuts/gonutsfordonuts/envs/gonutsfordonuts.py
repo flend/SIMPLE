@@ -3,6 +3,7 @@ from gonutsfordonuts.envs.classes import ChocolateFrosted, DonutDeckPosition, Do
 import gym
 import numpy as np
 import math
+import gonutsfordonuts.envs.cards as cards
 
 import config
 
@@ -264,7 +265,7 @@ class GoNutsGame:
 
         self.game_state = GoNutsGameState.PICK_DONUT
 
-        player_id = 1
+        player_id = 0
         for p in range(self.n_players):
             self.players.append(Player(str(player_id)))
             player_id += 1
@@ -277,7 +278,11 @@ class GoNutsGame:
 
     @classmethod
     def teal_deck_filter(self):
-        return [ ]
+        return [ cards.CF_FIRST, cards.CF_2, cards.CF_3, cards.DH_FIRST, cards.DH_2, cards.DH_3, cards.DH_4, cards.DH_5, cards.DH_6,
+        cards.ECL_FIRST, cards.ECL_2, cards.ECL_3, cards.GZ_FIRST, cards.GZ_2, cards.GZ_3, cards.GZ_4, cards.GZ_5,
+        cards.JF_FIRST, cards.JF_2, cards.JF_3, cards.JF_4, cards.JF_5, cards.JF_6, cards.MB_FIRST, cards.MB_2,
+        cards.P_FIRST, cards.P_2, cards.P_3, cards.P_4, cards.P_5, cards.P_6, cards.P_7,
+        cards.POW_FIRST, cards.POW_2, cards.POW_3, cards.POW_4, cards.FC_FIRST, cards.FC_2 ]
 
 
     @classmethod
@@ -578,9 +583,8 @@ class GoNutsForDonutsEnv(gym.Env):
         self.n_players = no_players
 
         self.game = GoNutsGame(no_players)
-        # for testing human play with original deck
-        deck_filter = None
-        self.game.setup_game(shuffle=True, deck_filter=deck_filter)
+       
+        self.game.setup_game()
         self.game.start_game()
 
         self.translator = GoNutsGameGymTranslator(self.game)
@@ -619,7 +623,9 @@ class GoNutsForDonutsEnv(gym.Env):
 
         # do actions; vote for a card; pick cards if all players have voted
         else:
-            self.current_player_num = self.game.execute_game_loop(action)
+            next_player = self.game.execute_game_loop(action)
+            logger.debug(f"Moving to player id: {next_player}")
+            self.current_player_num = next_player
             
             # Check end-of-game condition (no donuts less than no of spaces)
             if self.game.is_game_over():
@@ -634,7 +640,9 @@ class GoNutsForDonutsEnv(gym.Env):
 
     def reset(self):
 
-        self.game.reset_game()
+        # for testing human play with original deck
+        deck_filter = GoNutsGame.teal_deck_filter()
+        self.game.reset_game(shuffle=True, deck_filter=deck_filter)
         self.game.start_game()
 
         self.current_player_num = 0
