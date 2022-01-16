@@ -537,12 +537,12 @@ class GoNutsGame:
 
                 self.action_player = 0
                 self.check_action_for_this_action_player_and_set_state()
+                return self.action_player
 
             else:
-                self.donut_player =+ 1      
+                self.donut_player += 1
+                return self.donut_player     
             
-            return self.donut_player
-
         return self.action_player
 
 
