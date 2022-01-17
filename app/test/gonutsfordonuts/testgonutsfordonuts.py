@@ -1,9 +1,10 @@
 import numpy as np
 
-from gonutsfordonuts.envs.gonutsfordonuts import GoNutsGame, GoNutsScorer, GoNutsGameGymTranslator, GoNutsForDonutsEnvUtility
+from gonutsfordonuts.envs.gonutsfordonuts import GoNutsGame, GoNutsScorer, GoNutsGameGymTranslator, GoNutsForDonutsEnvUtility, GoNutsGameState
 from gonutsfordonuts.envs.classes import ChocolateFrosted, DonutHoles, Eclair, FrenchCruller, Glazed, JellyFilled, MapleBar, Plain, Powdered, BostonCream, DoubleChocolate, RedVelvet, Sprinkled, BearClaw, CinnamonTwist, Coffee, DayOldDonuts, Milk, OldFashioned, MapleFrosted, MuchoMatcha, RaspberryFrosted, StrawberryGlazed
 from gonutsfordonuts.envs.classes import Position, Player, Deck
 import gonutsfordonuts.envs.cards as cards
+import gonutsfordonuts.envs.obvs as obvs
 
 class TestDeck:
 
@@ -205,12 +206,6 @@ class TestGoNutsForDonutsScorer:
         scores = GoNutsScorer.score_turn(positions)
         assert (scores == [10, 5, 10]).all()
 
-OBVS_POSITIONS_START = 0
-OBVS_ALL_DISCARD_START = 350
-OBVS_TOP_DISCARD_START = 420
-OBVS_SCORES_START = 490
-OBVS_LEGAL_ACTIONS_START = 495
-
 class TestGoNutsForDonutsGymTranslator:
 
     def fixture_card_order(self):
@@ -290,11 +285,11 @@ class TestGoNutsForDonutsGymTranslator:
 
     def observation_comparer(self, actual, expected):
 
-        assert (actual[OBVS_POSITIONS_START:OBVS_ALL_DISCARD_START] == expected[OBVS_POSITIONS_START:OBVS_ALL_DISCARD_START]).all()
-        assert (actual[OBVS_ALL_DISCARD_START:OBVS_TOP_DISCARD_START] == expected[OBVS_ALL_DISCARD_START:OBVS_TOP_DISCARD_START]).all()
-        assert (actual[OBVS_TOP_DISCARD_START:OBVS_SCORES_START] == expected[OBVS_TOP_DISCARD_START:OBVS_SCORES_START]).all()
-        assert (actual[OBVS_SCORES_START:OBVS_LEGAL_ACTIONS_START] == expected[OBVS_SCORES_START:OBVS_LEGAL_ACTIONS_START]).all()
-        assert (actual[OBVS_LEGAL_ACTIONS_START:] == expected[OBVS_LEGAL_ACTIONS_START:]).all()
+        assert (actual[obvs.OBVS_POSITIONS_START:obvs.OBVS_ALL_DISCARD_START] == expected[obvs.OBVS_POSITIONS_START:obvs.OBVS_ALL_DISCARD_START]).all()
+        assert (actual[obvs.OBVS_ALL_DISCARD_START:obvs.OBVS_TOP_DISCARD_START] == expected[obvs.OBVS_ALL_DISCARD_START:obvs.OBVS_TOP_DISCARD_START]).all()
+        assert (actual[obvs.OBVS_TOP_DISCARD_START:obvs.OBVS_SCORES_START] == expected[obvs.OBVS_TOP_DISCARD_START:obvs.OBVS_SCORES_START]).all()
+        assert (actual[obvs.OBVS_SCORES_START:obvs.OBVS_LEGAL_ACTIONS_START] == expected[obvs.OBVS_SCORES_START:obvs.OBVS_LEGAL_ACTIONS_START]).all()
+        assert (actual[obvs.OBVS_LEGAL_ACTIONS_START:] == expected[obvs.OBVS_LEGAL_ACTIONS_START:]).all()
         assert (actual == expected).all()
 
     def test_observations_correct_for_game_after_one_turn_from_player_index_zero_perspective(self):
@@ -761,6 +756,16 @@ class TestGoNutsForDonutsGame:
 
         next_player_it3 = test_game.execute_game_loop(TestHelpers.step_action(ACTION_DONUT, cards.ECL_FIRST))
         assert next_player_it3 == 0
+
+    def test_step_action_translate_for_discard(self):
+
+        assert GoNutsGame.translate_step_action(GoNutsGameState.PICK_DISCARD, 351) == 1
+
+    def test_step_action_translate_for_donut_pick(self):
+
+        assert GoNutsGame.translate_step_action(GoNutsGameState.PICK_DONUT, 2) == 2
+
+    
 
         
     

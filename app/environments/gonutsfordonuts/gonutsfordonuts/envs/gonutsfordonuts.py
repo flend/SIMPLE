@@ -4,6 +4,7 @@ import gym
 import numpy as np
 import math
 import gonutsfordonuts.envs.cards as cards
+import gonutsfordonuts.envs.obvs as obvs
 
 import config
 
@@ -374,18 +375,25 @@ class GoNutsGame:
         """Do card special effects that don't need a game state change"""
 
         if card:
+            
             if card.name == "chocolate_frosted":
                 self.card_action_chocolate_frosted(player_no)
             elif card.name == "eclair":
                 self.card_action_eclair(player_no)
+            else:
+                logger.info(f"No special effect for card {card.symbol} for player {player_no}")
+
 
     def card_action_chocolate_frosted(self, player_no):
         # Draw the top card from the draw deck
+        logger.info(f"Card action Chocolate Frosted (draw one from deck) for player {player_no}")
         if self.deck.size() > 0:
             logger.debug(f"Adding {self.deck.peek_one().symbol} to position of {player_no}")
             self.players[player_no].position.add_one(self.deck.draw_one())
 
     def card_action_eclair(self, player_no):
+        logger.info(f"Card action Eclair (draw top from discard) for player {player_no}")
+
         if self.discard.size() > 0:
             logger.debug(f"Adding {self.discard.peek_one().symbol} to position of {player_no}")
             self.players[player_no].position.add_one(self.discard.draw_one())
@@ -513,15 +521,15 @@ class GoNutsGame:
         # Do instant actions - does not require step, action state
         logger.debug(f'Game state: {repr(self.game_state)}')
         if self.game_state == GoNutsGameState.INSTANT_ACTION:
-            # TODO - includes no-op actions
-            logger.info(f"Doing immediate card effect for card {self.cards_picked[self.action_player]} for player {self.action_player}")
             self.do_immediate_card_special_effects(self.action_player, self.cards_picked[self.action_player])
             self.move_to_next_action_player()
             return self.check_action_for_this_action_player_and_set_state() # will set back to DONUT state if all actions complete
         
         # Discard action - requires step, action state
         elif self.game_state == GoNutsGameState.PICK_DISCARD:
-            self.do_pick_discard_action(self.action_player(), step_action)
+
+            discard_action = GoNutsGame.translate_step_action(self.game_state, step_action)
+            self.do_pick_discard_action(self.action_player(), discard_action)
             # Move to the next player to have an action
             self.move_to_next_action_player()
             return self.check_action_for_this_action_player_and_set_state()
@@ -531,7 +539,8 @@ class GoNutsGame:
         # Do player picks card - requires step, donut state
         elif self.game_state == GoNutsGameState.PICK_DONUT:
 
-            self.donut_picks_action_bank.append(step_action)
+            donut_action = GoNutsGame.translate_step_action(self.game_state, step_action)
+            self.donut_picks_action_bank.append(donut_action)
 
             # All players have picked a card, process actions
             if len(self.donut_picks_action_bank) == self.n_players:
@@ -547,6 +556,17 @@ class GoNutsGame:
             
         logger.error(f"Unknown game state {self.game_state}")
         raise RuntimeError(f"Unknown game state {self.game_state}")
+    
+    @classmethod
+    def translate_step_action(cls, game_state, step_action):
+        if game_state == GoNutsGameState.PICK_DONUT:
+            return step_action - obvs.OBVS_POSITIONS_START
+        elif game_state == GoNutsGameState.PICK_DISCARD:
+            return step_action - obvs.OBVS_ALL_DISCARD_START
+        else:
+            logger.error(f"Can't translate action {step_action} from game state {game_state}")
+            raise RuntimeError(f"Unknown game state {game_state}")
+    
 
 
 class GoNutsForDonutsEnvUtility:
