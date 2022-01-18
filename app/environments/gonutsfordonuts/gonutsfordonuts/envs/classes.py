@@ -1,4 +1,5 @@
 import random
+from stable_baselines import logger
 
 class Player():
     def __init__(self, id):
@@ -12,6 +13,11 @@ class Card():
         self.id = id
         self.order = order
         self.name = name
+
+    def __eq__(self, __o: object) -> bool:
+        if (isinstance(__o, Card)):
+            return self.id == __o.id and self.order == __o.order and self.name == __o.name
+        return False
         
 class ChocolateFrosted(Card):
     def __init__(self, id, order):
@@ -313,6 +319,9 @@ class Discard():
 
     def draw_one(self):
         return self.cards.pop()
+
+    def remove_one(self, card):
+        self.cards.remove(card)
 
     def peek_one(self):
         if not len(self.cards):

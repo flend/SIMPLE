@@ -340,6 +340,14 @@ class GoNutsGame:
         logger.info(f'Cannot find deck for card_id {card_id}')
         raise Exception(f'Cannot find deck for card_id {card_id}')
 
+    def discard_card_for_card_id(self, card_id):
+        for card in self.discard:
+            if card.id == card_id:
+                return card
+
+        logger.info(f'Cannot find card_id {card_id} in discard')
+        raise Exception(f'Cannot find card_id {card_id} in discard')
+
     def pick_cards(self, cards_ids_picked):
         
         if not self.game_state == GoNutsGameState.PICK_DONUT:
@@ -450,9 +458,14 @@ class GoNutsGame:
         self.record_player_actions(player_card_picks)
         self.cards_picked = self.pick_cards(player_card_picks)
 
-    def do_pick_discard_action(self, player_discard_pick):
-        # TODO
-        pass
+    def do_pick_discard_action(self, player_no, player_discard_pick):
+        logger.info(f"Card action Red Velvet (draw card from discard) for player {player_no}")
+
+        discard_card_to_pick = self.discard_card_for_card_id(player_discard_pick)
+
+        logger.debug(f"Adding {discard_card_to_pick.symbol} to position of {player_no}")
+        self.players[player_no].position.add_one(discard_card_to_pick)
+        self.discard.remove_one(player_discard_pick)
 
     def do_end_turn_after_all_player_actions(self):
 

@@ -2,9 +2,31 @@ import numpy as np
 
 from gonutsfordonuts.envs.gonutsfordonuts import GoNutsGame, GoNutsScorer, GoNutsGameGymTranslator, GoNutsForDonutsEnvUtility, GoNutsGameState
 from gonutsfordonuts.envs.classes import ChocolateFrosted, DonutHoles, Eclair, FrenchCruller, Glazed, JellyFilled, MapleBar, Plain, Powdered, BostonCream, DoubleChocolate, RedVelvet, Sprinkled, BearClaw, CinnamonTwist, Coffee, DayOldDonuts, Milk, OldFashioned, MapleFrosted, MuchoMatcha, RaspberryFrosted, StrawberryGlazed
-from gonutsfordonuts.envs.classes import Position, Player, Deck
+from gonutsfordonuts.envs.classes import Position, Player, Deck, Discard
 import gonutsfordonuts.envs.cards as cards
 import gonutsfordonuts.envs.obvs as obvs
+
+class TestDiscard:
+    def test_remove_contained_card_from_discard(self):
+        d = Discard()
+        list_of_cards = [Powdered(1,1), Glazed(2,1), Eclair(3,1), ChocolateFrosted(4,1), ChocolateFrosted(5,1),
+        DonutHoles(6,1), FrenchCruller(7,1), MapleBar(8,1), MapleBar(9,1)]
+        d.add(list_of_cards)
+
+        assert d.size() == 9
+        d.remove_one(list_of_cards[1])
+        assert d.size() == 8
+
+    def test_remove_non_contained_card_from_discard_by_equality(self):
+        d = Discard()
+        list_of_cards = [Powdered(1,1), Glazed(2,1), Eclair(3,1), ChocolateFrosted(4,1), ChocolateFrosted(5,1),
+        DonutHoles(6,1), FrenchCruller(7,1), MapleBar(8,1), MapleBar(9,1)]
+        d.add(list_of_cards)
+
+        assert d.size() == 9
+        d.remove_one(Glazed(2,1))
+        assert d.size() == 8
+
 
 class TestDeck:
 
@@ -485,6 +507,10 @@ class TestGoNutsForDonutsGame:
         #       CF  DH ECL GLZ JF  MB  P   PWD FC
         return [ cards.CF_FIRST, cards.DH_FIRST, cards.ECL_FIRST, cards.GZ_FIRST, cards.JF_FIRST, cards.MB_FIRST, cards.P_FIRST, cards.POW_FIRST, cards.FC_FIRST ]
 
+    def fixture_card_filter_with_red_velvet(self):
+        #       CF  DH ECL GLZ JF  RV  P   PWD FC
+        return [ cards.CF_FIRST, cards.DH_FIRST, cards.ECL_FIRST, cards.GZ_FIRST, cards.JF_FIRST, cards.RV_FIRST, cards.P_FIRST, cards.POW_FIRST, cards.FC_FIRST ]
+
     def test_standard_deck_contents_size(self):
 
         test_game = GoNutsGame(2)
@@ -765,6 +791,19 @@ class TestGoNutsForDonutsGame:
 
         assert GoNutsGame.translate_step_action(GoNutsGameState.PICK_DONUT, 2) == 2
 
+    def test_red_velvet_draws_correct_card_from_discard(self):
+        test_game = GoNutsGame(4)
+
+        test_game.setup_game(shuffle=False, deck_filter=self.fixture_card_filter_with_red_velvet())
+        test_game.start_game() # deals top 5
+        # d1: CF, d2: DH, d3: ECL, d4: G, d5: JF; draw: [RV, P, PWD, FC]; discard: []
+        test_game.execute_game_loop_with_actions(TestHelpers.step_actions(ACTION_DONUT, [cards.CF_FIRST, cards.DH_FIRST, cards.DH_FIRST, cards.CF_FIRST]))
+        # p1: [], p2: [], p3: [], p4: []; draw: [RV, P, PWD, FC]; discard: [CF, DH] (draw from back)
+        test_game.reset_turn()
+        # d1: RV, d2: P d3: 6 ECL, d4: G, d5: JF; draw: [PWD, FC]; discard: [CF, DH] (draw from back)
+        test_game.execute_game_loop_with_actions(TestHelpers.step_actions(ACTION_DONUT, [cards.RV_FIRST, cards.P_FIRST, cards.P_FIRST, cards.P_FIRST]))
+
+        assert False == True
     
 
         
