@@ -4,7 +4,7 @@ import gym
 import numpy as np
 import math
 import gonutsfordonuts.envs.cards as cards
-import gonutsfordonuts.envs.obvs as obvs
+import gonutsfordonuts.envs.actions as actions
 
 import config
 
@@ -163,8 +163,15 @@ class GoNutsGameGymTranslator:
         
         legal_actions = np.zeros(self.action_space_size())
 
-        for i in range(self.game.no_donut_decks):
-            legal_actions[self.game.donut_decks[i].card.id] = 1
+        if self.game.game_state == GoNutsGameState.PICK_DONUT:
+            for i in range(self.game.no_donut_decks):
+                legal_actions[self.game.donut_decks[i].card.id] = 1
+        elif self.game.game_state == GoNutsGameState.PICK_DISCARD:
+            for card in self.game.discard.cards:
+                legal_actions[card.id] = 1
+        else:
+            logger.info(f'get_legal_actions called in inappropriate game state {self.game.game_state}')
+            raise Exception(f'get_legal_actions called in inappropriate game state {self.game.game_state}')
         
         return legal_actions
 
@@ -220,7 +227,10 @@ class GoNutsGameGymTranslator:
 
         ret = np.append(ret, scores_rolled)
 
-        # Legal actions, representing the donut choices
+        # TODO
+        # Add game state as an observation since actions may be interpreted differently for different states
+
+        # Legal actions, representing the donut choices or other actions
         ret = np.append(ret, self.get_legal_actions())
 
         return ret
@@ -341,7 +351,7 @@ class GoNutsGame:
         raise Exception(f'Cannot find deck for card_id {card_id}')
 
     def discard_card_for_card_id(self, card_id):
-        for card in self.discard:
+        for card in self.discard.cards:
             if card.id == card_id:
                 return card
 
@@ -465,7 +475,7 @@ class GoNutsGame:
 
         logger.debug(f"Adding {discard_card_to_pick.symbol} to position of {player_no}")
         self.players[player_no].position.add_one(discard_card_to_pick)
-        self.discard.remove_one(player_discard_pick)
+        self.discard.remove_one(discard_card_to_pick)
 
     def do_end_turn_after_all_player_actions(self):
 
@@ -542,7 +552,7 @@ class GoNutsGame:
         elif self.game_state == GoNutsGameState.PICK_DISCARD:
 
             discard_action = GoNutsGame.translate_step_action(self.game_state, step_action)
-            self.do_pick_discard_action(self.action_player(), discard_action)
+            self.do_pick_discard_action(self.action_player, discard_action)
             # Move to the next player to have an action
             self.move_to_next_action_player()
             return self.check_action_for_this_action_player_and_set_state()
@@ -573,9 +583,9 @@ class GoNutsGame:
     @classmethod
     def translate_step_action(cls, game_state, step_action):
         if game_state == GoNutsGameState.PICK_DONUT:
-            return step_action - obvs.OBVS_POSITIONS_START
+            return step_action - actions.ACTION_DONUT
         elif game_state == GoNutsGameState.PICK_DISCARD:
-            return step_action - obvs.OBVS_ALL_DISCARD_START
+            return step_action - actions.ACTION_DISCARD
         else:
             logger.error(f"Can't translate action {step_action} from game state {game_state}")
             raise RuntimeError(f"Unknown game state {game_state}")

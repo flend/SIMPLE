@@ -5,6 +5,7 @@ from gonutsfordonuts.envs.classes import ChocolateFrosted, DonutHoles, Eclair, F
 from gonutsfordonuts.envs.classes import Position, Player, Deck, Discard
 import gonutsfordonuts.envs.cards as cards
 import gonutsfordonuts.envs.obvs as obvs
+import gonutsfordonuts.envs.actions as actions
 
 class TestDiscard:
     def test_remove_contained_card_from_discard(self):
@@ -260,7 +261,7 @@ class TestGoNutsForDonutsGymTranslator:
         #       CF  DH ECL GLZ JF  MB  P   PWD FC
         return [ cards.CF_FIRST, cards.DH_FIRST, cards.ECL_FIRST, cards.GZ_FIRST, cards.JF_FIRST, cards.MB_FIRST, cards.P_FIRST, cards.POW_FIRST, cards.FC_FIRST ]
 
-    def test_legal_actions_have_only_donut_deck_picks(self):
+    def test_legal_actions_have_only_donut_deck_picks_in_donut_state(self):
 
         test_game = GoNutsGame(5)
         translator = GoNutsGameGymTranslator(test_game)
@@ -273,6 +274,26 @@ class TestGoNutsForDonutsGymTranslator:
         for i in self.fixture_card_order()[:6]:
             expected_legal_actions[i] = 1
 
+        assert (translator.get_legal_actions() == expected_legal_actions).all()
+
+    def test_legal_actions_have_only_discards_picks_in_discard_state(self):
+
+        test_game = GoNutsGame(4)
+        translator = GoNutsGameGymTranslator(test_game)
+
+        test_game.setup_game(shuffle=False, deck_order=self.fixture_card_order())
+        test_game.start_game()
+
+        test_game.pick_cards([cards.CF_FIRST, cards.CF_FIRST, cards.DH_FIRST, cards.DH_FIRST]) # adds CF_FIRST then DH_FIRST to discard pile
+        test_game.reset_turn()
+
+        test_game.game_state = GoNutsGameState.PICK_DISCARD
+
+        # legal actions are the two discarded cards
+        expected_legal_actions = np.zeros(translator.total_possible_cards)
+        expected_legal_actions[cards.CF_FIRST] = 1
+        expected_legal_actions[cards.DH_FIRST] = 1
+        
         assert (translator.get_legal_actions() == expected_legal_actions).all()
 
     def test_observations_correct_for_started_game(self):
@@ -323,7 +344,7 @@ class TestGoNutsForDonutsGymTranslator:
         test_game.setup_game(shuffle=False, deck_order=self.fixture_card_order())
         test_game.start_game() # deals top 5
         # d1: 0 CF, d2: 3 DH, d3: 9 ECL, d4: 12 G, d5: 17 JF; draw: [23 MB, 25 P, 32 PWD, 66 FC]; discard: []
-        test_game.execute_game_loop_with_actions(TestHelpers.step_actions(ACTION_DONUT, [cards.CF_FIRST, cards.DH_FIRST, cards.DH_FIRST, cards.GZ_FIRST]))
+        test_game.execute_game_loop_with_actions(TestHelpers.step_actions(actions.ACTION_DONUT, [cards.CF_FIRST, cards.DH_FIRST, cards.DH_FIRST, cards.GZ_FIRST]))
         # p1: [0 CF, 23 MB], p2: [], p3: [], p4: [12 G]; draw: [25 P, 32 PWD, 66 FC]
         test_game.reset_turn()
         # d1: 25 P, d2: 32 PWD, d3: 9 ECL, d4: 66 FC, d5: 17 JF; draw: []; discard: [3 DH]
@@ -379,7 +400,7 @@ class TestGoNutsForDonutsGymTranslator:
         test_game.setup_game(shuffle=False, deck_order=self.fixture_card_order())
         test_game.start_game() # deals top 5
         # d1: 0 CF, d2: 3 DH, d3: 9 ECL, d4: 12 G, d5: 17 JF; draw: [23 MB, 25 P, 32 PWD, 66 FC]; discard: []
-        test_game.execute_game_loop_with_actions(TestHelpers.step_actions(ACTION_DONUT, [cards.CF_FIRST, cards.DH_FIRST, cards.DH_FIRST, cards.CF_FIRST]))
+        test_game.execute_game_loop_with_actions(TestHelpers.step_actions(actions.ACTION_DONUT, [cards.CF_FIRST, cards.DH_FIRST, cards.DH_FIRST, cards.CF_FIRST]))
         # p1: [], p2: [], p3: [], p4: []; draw: [23 MB, 25 P, 32 PWD, 66 FC]
         test_game.reset_turn()
         # d1: 23 MB, d2: 25 P, d3: 9 ECL, d4: 12 G, d5: 17 JF; draw: [32 PWD, 66 FC]; discard: [0 CF, 3 DH]
@@ -435,7 +456,7 @@ class TestGoNutsForDonutsGymTranslator:
         test_game.setup_game(shuffle=False, deck_order=self.fixture_card_order())
         test_game.start_game() # deals top 5
         # d1: 0 CF, d2: 3 DH, d3: 9 ECL, d4: 12 G, d5: 17 JF; draw: [23 MB, 25 P, 32 PWD, 66 FC]; discard: []
-        test_game.execute_game_loop_with_actions(TestHelpers.step_actions(ACTION_DONUT, [cards.CF_FIRST, cards.DH_FIRST, cards.DH_FIRST, cards.GZ_FIRST]))
+        test_game.execute_game_loop_with_actions(TestHelpers.step_actions(actions.ACTION_DONUT, [cards.CF_FIRST, cards.DH_FIRST, cards.DH_FIRST, cards.GZ_FIRST]))
         # p1: [0 CF, 23 MB], p2: [], p3: [], p4: [12 G]; draw: [25 P, 32 PWD, 66 FC]
         test_game.reset_turn()
         # d1: 25 P, d2: 32 PWD, d3: 9 ECL, d4: 66 FC, d5: 17 JF; draw: []; discard: [3 DH]
@@ -483,19 +504,17 @@ class TestGoNutsForDonutsGymTranslator:
         
         self.observation_comparer(translator.get_observations(3), expected_observations)
 
-ACTION_DONUT = 0
-
 class TestHelpers:
 
     @staticmethod
     def step_action(action_type, action_id):
         
-        return ACTION_DONUT + action_id
+        return action_type + action_id
 
     @staticmethod
     def step_actions(action_type, action_ids):
         
-        return [ACTION_DONUT + id for id in action_ids]
+        return [action_type + id for id in action_ids]
 
 class TestGoNutsForDonutsGame:
     
@@ -752,11 +771,11 @@ class TestGoNutsForDonutsGame:
         test_game.setup_game(shuffle=False, deck_filter=self.fixture_card_filter())
         test_game.start_game() # deals top 5
         # d1: 8 CF, d2: 7 DH, d3: 6 ECL, d4: 5 G, d5: 4 JF; draw: [3 MB, 2 P, 1 PWD, 0 FC]; discard: []
-        test_game.execute_game_loop_with_actions(TestHelpers.step_actions(ACTION_DONUT, [cards.CF_FIRST, cards.DH_FIRST, cards.DH_FIRST, cards.GZ_FIRST]))
+        test_game.execute_game_loop_with_actions(TestHelpers.step_actions(actions.ACTION_DONUT, [cards.CF_FIRST, cards.DH_FIRST, cards.DH_FIRST, cards.GZ_FIRST]))
         # p1: [8 CF, 3 MB], p2: [], p3: [], p4: [5 G]; draw: [2 P, 1 PWD, 0 FC];
         test_game.reset_turn()
         # d1: 2 P, d2: 1 PWD, d3: 6 ECL, d4: 0 FC, d5: 4 JF; draw: []; discard: [7 DH]
-        test_game.execute_game_loop_with_actions(TestHelpers.step_actions(ACTION_DONUT, [cards.JF_FIRST, cards.P_FIRST, cards.POW_FIRST, cards.ECL_FIRST]))
+        test_game.execute_game_loop_with_actions(TestHelpers.step_actions(actions.ACTION_DONUT, [cards.JF_FIRST, cards.P_FIRST, cards.POW_FIRST, cards.ECL_FIRST]))
         # p1: [8 CF, 3 MB, 4 JF], p2: [2 P], p3: [1 PWD], p4: [5 G, 6 ECL, 7 DH]; draw: []; discard: []
 
         assert test_game.is_game_over() == True
@@ -771,21 +790,21 @@ class TestGoNutsForDonutsGame:
         test_game.setup_game(shuffle=False, deck_filter=self.fixture_card_filter())
         test_game.start_game() # deals top 5
         # d1: CF, d2: DH, d3: ECL, d4: G, d5: JF; draw: [MB, P, PWD, FC]; discard: []
-        next_player_it0 = test_game.execute_game_loop(TestHelpers.step_action(ACTION_DONUT, cards.CF_FIRST))
+        next_player_it0 = test_game.execute_game_loop(TestHelpers.step_action(actions.ACTION_DONUT, cards.CF_FIRST))
         assert next_player_it0 == 1
 
-        next_player_it1 = test_game.execute_game_loop(TestHelpers.step_action(ACTION_DONUT, cards.DH_FIRST))
+        next_player_it1 = test_game.execute_game_loop(TestHelpers.step_action(actions.ACTION_DONUT, cards.DH_FIRST))
         assert next_player_it1 == 2
 
-        next_player_it2 = test_game.execute_game_loop(TestHelpers.step_action(ACTION_DONUT, cards.DH_FIRST))
+        next_player_it2 = test_game.execute_game_loop(TestHelpers.step_action(actions.ACTION_DONUT, cards.DH_FIRST))
         assert next_player_it2 == 3
 
-        next_player_it3 = test_game.execute_game_loop(TestHelpers.step_action(ACTION_DONUT, cards.ECL_FIRST))
+        next_player_it3 = test_game.execute_game_loop(TestHelpers.step_action(actions.ACTION_DONUT, cards.ECL_FIRST))
         assert next_player_it3 == 0
 
     def test_step_action_translate_for_discard(self):
 
-        assert GoNutsGame.translate_step_action(GoNutsGameState.PICK_DISCARD, 351) == 1
+        assert GoNutsGame.translate_step_action(GoNutsGameState.PICK_DISCARD, 3) == 3
 
     def test_step_action_translate_for_donut_pick(self):
 
@@ -796,15 +815,24 @@ class TestGoNutsForDonutsGame:
 
         test_game.setup_game(shuffle=False, deck_filter=self.fixture_card_filter_with_red_velvet())
         test_game.start_game() # deals top 5
-        # d1: CF, d2: DH, d3: ECL, d4: G, d5: JF; draw: [RV, P, PWD, FC]; discard: []
-        test_game.execute_game_loop_with_actions(TestHelpers.step_actions(ACTION_DONUT, [cards.CF_FIRST, cards.DH_FIRST, cards.DH_FIRST, cards.CF_FIRST]))
+        # d1: CF, d2: DH, d3: ECL, d4: GZ, d5: JF; draw: [RV, P, PWD, FC]; discard: []
+        test_game.execute_game_loop_with_actions(TestHelpers.step_actions(actions.ACTION_DONUT, [cards.CF_FIRST, cards.DH_FIRST, cards.DH_FIRST, cards.CF_FIRST]))
         # p1: [], p2: [], p3: [], p4: []; draw: [RV, P, PWD, FC]; discard: [CF, DH] (draw from back)
         test_game.reset_turn()
-        # d1: RV, d2: P d3: 6 ECL, d4: G, d5: JF; draw: [PWD, FC]; discard: [CF, DH] (draw from back)
-        test_game.execute_game_loop_with_actions(TestHelpers.step_actions(ACTION_DONUT, [cards.RV_FIRST, cards.P_FIRST, cards.P_FIRST, cards.P_FIRST]))
+        # d1: RV, d2: P d3: 6 ECL, d4: GZ, d5: JF; draw: [PWD, FC]; discard: [CF, DH] (draw from back)
+        test_game.execute_game_loop(TestHelpers.step_action(actions.ACTION_DONUT, cards.P_FIRST))
+        test_game.execute_game_loop(TestHelpers.step_action(actions.ACTION_DONUT, cards.RV_FIRST))
+        test_game.execute_game_loop(TestHelpers.step_action(actions.ACTION_DONUT, cards.P_FIRST))
+        next_player = test_game.execute_game_loop(TestHelpers.step_action(actions.ACTION_DONUT, cards.GZ_FIRST))
+        # RV action requested for player 1
+        assert next_player == 1
 
-        assert False == True
-    
+        # Pick CF as the choice from the discards
+        test_game.execute_game_loop(TestHelpers.step_action(actions.ACTION_DISCARD, cards.CF_FIRST))
+        
+        assert test_game.players[1].position.size() == 2
+        assert test_game.players[1].position.cards[0].id == cards.RV_FIRST
+        assert test_game.players[1].position.cards[1].id == cards.CF_FIRST    
 
         
     
