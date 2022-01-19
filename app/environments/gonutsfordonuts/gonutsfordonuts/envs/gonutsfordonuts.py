@@ -46,6 +46,10 @@ class GoNutsScorer:
             score_pwdr = GoNutsScorer.score_powdered(position)
             logger.debug(f'Powdered: {score_pwdr}')
             player_scores[p] += score_pwdr
+
+            score_rv = GoNutsScorer.score_red_velvet(position)
+            logger.debug(f'Red Velvet: {score_rv}')
+            player_scores[p] += score_rv
         
         logger.info(f'All without plain (all players): {player_scores}')
         score_plain = GoNutsScorer.score_plain(positions)
@@ -124,6 +128,12 @@ class GoNutsScorer:
         card_counter = Counter([ c.name for c in position.cards ])
         dn_count = card_counter["powdered"]
         return dn_count * 3
+
+    @staticmethod
+    def score_red_velvet(position):
+        card_counter = Counter([ c.name for c in position.cards ])
+        dn_count = card_counter["red_velvet"]
+        return dn_count * -2
 
     @staticmethod
     def score_maple_bar(position):

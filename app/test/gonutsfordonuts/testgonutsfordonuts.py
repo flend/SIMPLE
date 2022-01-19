@@ -193,6 +193,12 @@ class TestGoNutsForDonutsScorer:
 
         assert GoNutsScorer.score_maple_bar(position) == 0
 
+    def test_score_two_red_velvet(self):
+        position = Position()
+        position.add([RedVelvet(1,1), RedVelvet(2,1)])
+
+        assert GoNutsScorer.score_red_velvet(position) == -4
+
     def test_score_plain_no_winners(self):
         positions = [ Position(), Position(), Position()]
         positions[0].add([Glazed(2,1)])
