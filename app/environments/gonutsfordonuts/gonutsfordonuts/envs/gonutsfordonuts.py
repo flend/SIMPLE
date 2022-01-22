@@ -249,6 +249,7 @@ class GoNutsGameState:
     PICK_DONUT = 0
     PICK_DISCARD = 1
     INSTANT_ACTION = 2
+    PICK_ONE_FROM_TWO = 3
 
 class GoNutsGame:
 

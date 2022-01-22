@@ -536,6 +536,10 @@ class TestGoNutsForDonutsGame:
         #       CF  DH ECL GLZ JF  RV  P   PWD FC
         return [ cards.CF_FIRST, cards.DH_FIRST, cards.ECL_FIRST, cards.GZ_FIRST, cards.JF_FIRST, cards.RV_FIRST, cards.P_FIRST, cards.POW_FIRST, cards.FC_FIRST ]
 
+    def fixture_card_filter_with_double_chocolate(self):
+        #       CF  DH ECL GLZ JF  RV  P   PWD FC
+        return [ cards.CF_FIRST, cards.DC_FIRST, cards.ECL_FIRST, cards.GZ_FIRST, cards.JF_FIRST, cards.RV_FIRST, cards.P_FIRST, cards.POW_FIRST, cards.FC_FIRST ]
+
     def test_standard_deck_contents_size(self):
 
         test_game = GoNutsGame(2)
@@ -824,7 +828,6 @@ class TestGoNutsForDonutsGame:
         # d1: CF, d2: DH, d3: ECL, d4: GZ, d5: JF; draw: [RV, P, PWD, FC]; discard: []
         test_game.execute_game_loop_with_actions(TestHelpers.step_actions(actions.ACTION_DONUT, [cards.CF_FIRST, cards.DH_FIRST, cards.DH_FIRST, cards.CF_FIRST]))
         # p1: [], p2: [], p3: [], p4: []; draw: [RV, P, PWD, FC]; discard: [CF, DH] (draw from back)
-        test_game.reset_turn()
         # d1: RV, d2: P d3: 6 ECL, d4: GZ, d5: JF; draw: [PWD, FC]; discard: [CF, DH] (draw from back)
         test_game.execute_game_loop(TestHelpers.step_action(actions.ACTION_DONUT, cards.P_FIRST))
         test_game.execute_game_loop(TestHelpers.step_action(actions.ACTION_DONUT, cards.RV_FIRST))
@@ -838,7 +841,29 @@ class TestGoNutsForDonutsGame:
         
         assert test_game.players[1].position.size() == 2
         assert test_game.players[1].position.cards[0].id == cards.RV_FIRST
-        assert test_game.players[1].position.cards[1].id == cards.CF_FIRST    
+        assert test_game.players[1].position.cards[1].id == cards.CF_FIRST
+
+    def test_double_chocolate_draws_correct_card_from_deck(self):
+        test_game = GoNutsGame(4)
+
+        test_game.setup_game(shuffle=False, deck_filter=self.fixture_card_filter_with_double_chocolate())
+        test_game.start_game() # deals top 5
+        # d1: CF, d2: DC, d3: ECL, d4: GZ, d5: JF; draw: [RV, P, PWD, FC]; discard: []
+        test_game.execute_game_loop_with_actions(TestHelpers.step_actions(actions.ACTION_DONUT, [cards.CF_FIRST, cards.DC_FIRST, cards.CF_FIRST]))
+        next_player = test_game.execute_game_loop(TestHelpers.step_action(actions.ACTION_DONUT, cards.CF_FIRST))
+        # p1: [], p2: [], p3: [], p4: []; draw: [RV, P, PWD, FC]; discard: [CF, DH] (draw from back)
+        # After all donuts are picked, the game expects the DC player to choose from the top 2 deck cards
+        assert next_player == 1
+        assert test_game.game_state == GoNutsGameState.PICK_ONE_FROM_TWO_DECK_CARDS
+        next_player = test_game.execute_game_loop(TestHelpers.step_action(actions.ACTION_DECK, cards.P_FIRST))
+        # Return to picking donuts
+        assert next_player == 0
+        assert test_game.game_state == GoNutsGameState.PICK_DONUT
+
+        # Check player 1 has correct position
+        assert test_game.players[1].position.size() == 2
+        assert test_game.players[1].position.cards[0].id == cards.DC_FIRST
+        assert test_game.players[1].position.cards[1].id == cards.P_FIRST
 
         
     
