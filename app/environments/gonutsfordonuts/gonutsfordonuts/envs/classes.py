@@ -239,7 +239,15 @@ class Deck():
         if not len(self.cards):
             return None
         return self.cards[-1]
+
+    def peek_in_nth_position(self, n):
+        if len(self.cards) < n:
+            return None
+        return self.cards[-n]
     
+    def remove_one(self, card):
+        self.cards.remove(card)
+
     def add(self, cards):
         for card in cards:
             self.cards.append(card)

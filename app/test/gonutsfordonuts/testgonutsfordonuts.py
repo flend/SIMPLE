@@ -7,6 +7,10 @@ import gonutsfordonuts.envs.cards as cards
 import gonutsfordonuts.envs.obvs as obvs
 import gonutsfordonuts.envs.actions as actions
 
+from stable_baselines import logger
+
+logger.set_level(10)
+
 class TestDiscard:
     def test_remove_contained_card_from_discard(self):
         d = Discard()
@@ -267,11 +271,20 @@ class TestGoNutsForDonutsGymTranslator:
         #       CF  DH ECL GLZ JF  MB  P   PWD FC
         return [ cards.CF_FIRST, cards.DH_FIRST, cards.ECL_FIRST, cards.GZ_FIRST, cards.JF_FIRST, cards.MB_FIRST, cards.P_FIRST, cards.POW_FIRST, cards.FC_FIRST ]
 
+    def fixture_card_filter_for_double_chocolate_two_picks(self):
+        return [ cards.GZ_FIRST, cards.DC_FIRST, cards.ECL_FIRST, cards.JF_FIRST, cards.MB_FIRST, cards.P_FIRST ]
+
+    def fixture_card_filter_for_double_chocolate_one_pick(self):
+        return [ cards.GZ_FIRST, cards.DC_FIRST, cards.ECL_FIRST, cards.JF_FIRST, cards.FC_FIRST ]
+
+    def fixture_card_filter_for_double_chocolate_no_picks(self):
+        return [ cards.GZ_FIRST, cards.DC_FIRST, cards.ECL_FIRST, cards.JF_FIRST ]
+
     def test_legal_actions_have_only_donut_deck_picks_in_donut_state(self):
 
         test_game = GoNutsGame(5)
         translator = GoNutsGameGymTranslator(test_game)
-
+        
         test_game.setup_game(shuffle=False, deck_order=self.fixture_card_order())
         test_game.start_game()
 
@@ -299,6 +312,54 @@ class TestGoNutsForDonutsGymTranslator:
         expected_legal_actions = np.zeros(translator.total_possible_cards)
         expected_legal_actions[cards.CF_FIRST] = 1
         expected_legal_actions[cards.DH_FIRST] = 1
+        
+        assert (translator.get_legal_actions() == expected_legal_actions).all()
+
+    def test_legal_actions_have_only_two_deck_picks_in_pick_one_of_two_state(self):
+
+        test_game = GoNutsGame(3)
+        translator = GoNutsGameGymTranslator(test_game)
+
+        test_game.setup_game(shuffle=False, deck_filter=self.fixture_card_filter_for_double_chocolate_two_picks())
+        test_game.start_game()
+
+        test_game.game_state = GoNutsGameState.PICK_ONE_FROM_TWO_DECK_CARDS
+
+        # legal actions are the two top deck cards
+        expected_legal_actions = np.zeros(translator.total_possible_cards)
+        expected_legal_actions[cards.MB_FIRST] = 1
+        expected_legal_actions[cards.P_FIRST] = 1
+        
+        assert (translator.get_legal_actions() == expected_legal_actions).all()
+
+    def test_legal_actions_have_only_one_deck_picks_in_pick_one_of_two_state_with_one_remaining_card(self):
+
+        test_game = GoNutsGame(3)
+        translator = GoNutsGameGymTranslator(test_game)
+
+        test_game.setup_game(shuffle=False, deck_filter=self.fixture_card_filter_for_double_chocolate_one_pick())
+        test_game.start_game()
+
+        test_game.game_state = GoNutsGameState.PICK_ONE_FROM_TWO_DECK_CARDS
+
+        # legal actions are the one remaining deck card
+        expected_legal_actions = np.zeros(translator.total_possible_cards)
+        expected_legal_actions[cards.FC_FIRST] = 1
+        
+        assert (translator.get_legal_actions() == expected_legal_actions).all()
+
+    def test_legal_actions_are_empty_in_pick_one_of_two_state_with_zero_remaining_cards(self):
+
+        test_game = GoNutsGame(3)
+        translator = GoNutsGameGymTranslator(test_game)
+
+        test_game.setup_game(shuffle=False, deck_filter=self.fixture_card_filter_for_double_chocolate_no_picks())
+        test_game.start_game()
+
+        test_game.game_state = GoNutsGameState.PICK_ONE_FROM_TWO_DECK_CARDS
+
+        # no legal actions since no cards left in deck
+        expected_legal_actions = np.zeros(translator.total_possible_cards)
         
         assert (translator.get_legal_actions() == expected_legal_actions).all()
 
@@ -525,20 +586,19 @@ class TestHelpers:
 class TestGoNutsForDonutsGame:
     
     def fixture_card_filter(self):
-        #       CF  DH ECL GLZ JF  MB  P   PWD FC
         return [ cards.CF_FIRST, cards.DH_FIRST, cards.ECL_FIRST, cards.GZ_FIRST, cards.JF_FIRST, cards.MB_FIRST, cards.P_FIRST, cards.POW_FIRST, cards.FC_FIRST ]
 
     def fixture_card_order(self):
-        #       CF  DH ECL GLZ JF  MB  P   PWD FC
         return [ cards.CF_FIRST, cards.DH_FIRST, cards.ECL_FIRST, cards.GZ_FIRST, cards.JF_FIRST, cards.MB_FIRST, cards.P_FIRST, cards.POW_FIRST, cards.FC_FIRST ]
 
     def fixture_card_filter_with_red_velvet(self):
-        #       CF  DH ECL GLZ JF  RV  P   PWD FC
         return [ cards.CF_FIRST, cards.DH_FIRST, cards.ECL_FIRST, cards.GZ_FIRST, cards.JF_FIRST, cards.RV_FIRST, cards.P_FIRST, cards.POW_FIRST, cards.FC_FIRST ]
 
     def fixture_card_filter_with_double_chocolate(self):
-        #       CF  DH ECL GLZ JF  RV  P   PWD FC
         return [ cards.CF_FIRST, cards.DC_FIRST, cards.ECL_FIRST, cards.GZ_FIRST, cards.JF_FIRST, cards.RV_FIRST, cards.P_FIRST, cards.POW_FIRST, cards.FC_FIRST ]
+
+    def fixture_card_filter_with_double_chocolate_and_no_chocolate_frosted(self):
+        return [ cards.GZ_FIRST, cards.DC_FIRST, cards.ECL_FIRST, cards.GZ_2, cards.JF_FIRST, cards.RV_FIRST, cards.P_FIRST, cards.POW_FIRST, cards.FC_FIRST ]
 
     def test_standard_deck_contents_size(self):
 
@@ -851,10 +911,11 @@ class TestGoNutsForDonutsGame:
         # d1: CF, d2: DC, d3: ECL, d4: GZ, d5: JF; draw: [RV, P, PWD, FC]; discard: []
         test_game.execute_game_loop_with_actions(TestHelpers.step_actions(actions.ACTION_DONUT, [cards.CF_FIRST, cards.DC_FIRST, cards.CF_FIRST]))
         next_player = test_game.execute_game_loop(TestHelpers.step_action(actions.ACTION_DONUT, cards.CF_FIRST))
-        # p1: [], p2: [], p3: [], p4: []; draw: [RV, P, PWD, FC]; discard: [CF, DH] (draw from back)
         # After all donuts are picked, the game expects the DC player to choose from the top 2 deck cards
         assert next_player == 1
         assert test_game.game_state == GoNutsGameState.PICK_ONE_FROM_TWO_DECK_CARDS
+        # deck cards: [RV, P]
+        # choose P
         next_player = test_game.execute_game_loop(TestHelpers.step_action(actions.ACTION_DECK, cards.P_FIRST))
         # Return to picking donuts
         assert next_player == 0
@@ -865,5 +926,48 @@ class TestGoNutsForDonutsGame:
         assert test_game.players[1].position.cards[0].id == cards.DC_FIRST
         assert test_game.players[1].position.cards[1].id == cards.P_FIRST
 
-        
+    def test_double_chocolate_draws_correct_card_from_deck_when_only_one_card_left(self):
+        test_game = GoNutsGame(4)
+
+        test_game.setup_game(shuffle=False, deck_filter=self.fixture_card_filter_with_double_chocolate())
+        test_game.start_game() # deals top 5
+        # d1: CF, d2: DC, d3: ECL, d4: GZ, d5: JF; draw: [RV, P, PWD, FC]; discard: []
+        test_game.execute_game_loop_with_actions(TestHelpers.step_actions(actions.ACTION_DONUT, [cards.CF_FIRST, cards.ECL_FIRST, cards.CF_FIRST, cards.GZ_FIRST]))
+        # d1: RV, d2: DC, d3: P, d4: PWD, d5: JF; draw: [FC]; discard: [CF]
+        test_game.execute_game_loop_with_actions(TestHelpers.step_actions(actions.ACTION_DONUT, [cards.DC_FIRST, cards.JF_FIRST, cards.JF_FIRST]))
+        next_player = test_game.execute_game_loop(TestHelpers.step_action(actions.ACTION_DONUT, cards.JF_FIRST))
+        # After all donuts are picked, the game expects the DC player to choose from the top 2 deck cards (but there's only one left)
+        assert next_player == 0
+        assert test_game.game_state == GoNutsGameState.PICK_ONE_FROM_TWO_DECK_CARDS
+        # deck cards: [FC]
+        # choose P
+        next_player = test_game.execute_game_loop(TestHelpers.step_action(actions.ACTION_DECK, cards.FC_FIRST))
+        # Return to picking donuts
+        assert next_player == 0
+        assert test_game.game_state == GoNutsGameState.PICK_DONUT
+
+        # Check player with DC has correct position
+        assert test_game.players[0].position.size() == 2
+        assert test_game.players[0].position.cards[0].id == cards.DC_FIRST
+        assert test_game.players[0].position.cards[1].id == cards.FC_FIRST
+
+    def test_double_chocolate_draws_correct_card_from_deck_when_only_no_cards_left(self):
+        test_game = GoNutsGame(4)
+
+        test_game.setup_game(shuffle=False, deck_filter=self.fixture_card_filter_with_double_chocolate_and_no_chocolate_frosted())
+        test_game.start_game() # deals top 5
+        # d1: GZ, d2: DC, d3: ECL, d4: GZ, d5: JF; draw: [RV, P, PWD, FC]; discard: []
+        test_game.execute_game_loop_with_actions(TestHelpers.step_actions(actions.ACTION_DONUT, [cards.GZ_FIRST, cards.ECL_FIRST, cards.GZ_2, cards.JF_FIRST]))
+        # d1: RV, d2: DC, d3: P, d4: PWD, d5: FC; draw: []; discard: []
+        test_game.execute_game_loop_with_actions(TestHelpers.step_actions(actions.ACTION_DONUT, [cards.DC_FIRST, cards.FC_FIRST, cards.FC_FIRST]))
+        next_player = test_game.execute_game_loop(TestHelpers.step_action(actions.ACTION_DONUT, cards.FC_FIRST))
+        # After all donuts are picked, the game expects the DC player to choose from the top 2 deck cards. But there are no cards to pick from, so the action is skipped
+        # Return to picking donuts
+        assert next_player == 0
+        assert test_game.game_state == GoNutsGameState.PICK_DONUT
+
+        # Check player with DC has correct position
+        assert test_game.players[0].position.size() == 2
+        assert test_game.players[0].position.cards[0].id == cards.GZ_FIRST
+        assert test_game.players[0].position.cards[1].id == cards.DC_FIRST
     

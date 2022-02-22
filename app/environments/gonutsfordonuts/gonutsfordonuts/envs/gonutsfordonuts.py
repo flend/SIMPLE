@@ -179,6 +179,11 @@ class GoNutsGameGymTranslator:
         elif self.game.game_state == GoNutsGameState.PICK_DISCARD:
             for card in self.game.discard.cards:
                 legal_actions[card.id] = 1
+        elif self.game.game_state == GoNutsGameState.PICK_ONE_FROM_TWO_DECK_CARDS:
+            if self.game.deck.size():
+                legal_actions[self.game.deck.peek_one().id] = 1
+            if self.game.deck.peek_in_nth_position(2):
+                legal_actions[self.game.deck.peek_in_nth_position(2).id] = 1
         else:
             logger.info(f'get_legal_actions called in inappropriate game state {self.game.game_state}')
             raise Exception(f'get_legal_actions called in inappropriate game state {self.game.game_state}')
@@ -249,7 +254,7 @@ class GoNutsGameState:
     PICK_DONUT = 0
     PICK_DISCARD = 1
     INSTANT_ACTION = 2
-    PICK_ONE_FROM_TWO = 3
+    PICK_ONE_FROM_TWO_DECK_CARDS = 3
 
 class GoNutsGame:
 
@@ -368,6 +373,14 @@ class GoNutsGame:
 
         logger.info(f'Cannot find card_id {card_id} in discard')
         raise Exception(f'Cannot find card_id {card_id} in discard')
+
+    def deck_card_for_card_id(self, card_id):
+        for card in self.deck.cards:
+            if card.id == card_id:
+                return card
+
+        logger.info(f'Cannot find card_id {card_id} in deck')
+        raise Exception(f'Cannot find card_id {card_id} in deck')
 
     def pick_cards(self, cards_ids_picked):
         
@@ -488,6 +501,15 @@ class GoNutsGame:
         self.players[player_no].position.add_one(discard_card_to_pick)
         self.discard.remove_one(discard_card_to_pick)
 
+    def do_pick_one_from_two_deck_action(self, player_no, player_deck_pick):
+        logger.info(f"Card action Double Chocolate (draw one of two cards from deck) for player {player_no}")
+
+        deck_card_to_pick = self.deck_card_for_card_id(player_deck_pick)
+
+        logger.debug(f"Adding {deck_card_to_pick.symbol} to position of {player_no}")
+        self.players[player_no].position.add_one(deck_card_to_pick)
+        self.deck.remove_one(deck_card_to_pick)
+
     def do_end_turn_after_all_player_actions(self):
 
         self.reset_turn()
@@ -537,8 +559,16 @@ class GoNutsGame:
         # Examine donut pick for this player and set state
         card = self.cards_picked[self.action_player]
         if card:
+            logger.debug(f"Checking special cards for player {self.action_player}, card is {card.name}")
             if card.name == "red_velvet":
                 new_state = GoNutsGameState.PICK_DISCARD
+            if card.name == "double_chocolate":
+                # skip the state if there are no deck cards left
+                if self.deck.size() > 0:
+                    logger.debug(f"Double chocolate, sufficient ({self.deck.size()}) cards left for action")
+                    new_state = GoNutsGameState.PICK_ONE_FROM_TWO_DECK_CARDS
+                else:
+                    logger.debug(f"Double chocolate, insufficient ({self.deck.size()}) cards left for action")
 
         self.game_state = new_state
         return self.action_player
@@ -564,6 +594,15 @@ class GoNutsGame:
 
             discard_action = GoNutsGame.translate_step_action(self.game_state, step_action)
             self.do_pick_discard_action(self.action_player, discard_action)
+            # Move to the next player to have an action
+            self.move_to_next_action_player()
+            return self.check_action_for_this_action_player_and_set_state()
+        
+        # Pick one from two deck cards - requires step, action state
+        elif self.game_state == GoNutsGameState.PICK_ONE_FROM_TWO_DECK_CARDS:
+
+            deck_action = GoNutsGame.translate_step_action(self.game_state, step_action)
+            self.do_pick_one_from_two_deck_action(self.action_player, deck_action)
             # Move to the next player to have an action
             self.move_to_next_action_player()
             return self.check_action_for_this_action_player_and_set_state()
@@ -597,6 +636,8 @@ class GoNutsGame:
             return step_action - actions.ACTION_DONUT
         elif game_state == GoNutsGameState.PICK_DISCARD:
             return step_action - actions.ACTION_DISCARD
+        elif game_state == GoNutsGameState.PICK_ONE_FROM_TWO_DECK_CARDS:
+            return step_action - actions.ACTION_DECK
         else:
             logger.error(f"Can't translate action {step_action} from game state {game_state}")
             raise RuntimeError(f"Unknown game state {game_state}")
