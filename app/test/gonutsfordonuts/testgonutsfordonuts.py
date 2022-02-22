@@ -315,6 +315,21 @@ class TestGoNutsForDonutsGymTranslator:
         
         assert (translator.get_legal_actions() == expected_legal_actions).all()
 
+    def test_legal_actions_have_no_picks_when_no_discard_deck_in_discard_state(self):
+
+        test_game = GoNutsGame(4)
+        translator = GoNutsGameGymTranslator(test_game)
+
+        test_game.setup_game(shuffle=False, deck_order=self.fixture_card_order())
+        test_game.start_game()
+
+        test_game.game_state = GoNutsGameState.PICK_DISCARD
+
+        # no legal aations
+        expected_legal_actions = np.zeros(translator.total_possible_cards)
+        
+        assert (translator.get_legal_actions() == expected_legal_actions).all()
+
     def test_legal_actions_have_only_two_deck_picks_in_pick_one_of_two_state(self):
 
         test_game = GoNutsGame(3)
@@ -887,8 +902,8 @@ class TestGoNutsForDonutsGame:
         test_game.start_game() # deals top 5
         # d1: CF, d2: DH, d3: ECL, d4: GZ, d5: JF; draw: [RV, P, PWD, FC]; discard: []
         test_game.execute_game_loop_with_actions(TestHelpers.step_actions(actions.ACTION_DONUT, [cards.CF_FIRST, cards.DH_FIRST, cards.DH_FIRST, cards.CF_FIRST]))
-        # p1: [], p2: [], p3: [], p4: []; draw: [RV, P, PWD, FC]; discard: [CF, DH] (draw from back)
-        # d1: RV, d2: P d3: 6 ECL, d4: GZ, d5: JF; draw: [PWD, FC]; discard: [CF, DH] (draw from back)
+        # p1: [], p2: [], p3: [], p4: []; draw: [RV, P, POW, FC]; discard: [CF, DH] (draw from back)
+        # d1: RV, d2: P d3: 6 ECL, d4: GZ, d5: JF; draw: [POW, FC]; discard: [CF, DH] (draw from back)
         test_game.execute_game_loop(TestHelpers.step_action(actions.ACTION_DONUT, cards.P_FIRST))
         test_game.execute_game_loop(TestHelpers.step_action(actions.ACTION_DONUT, cards.RV_FIRST))
         test_game.execute_game_loop(TestHelpers.step_action(actions.ACTION_DONUT, cards.P_FIRST))
@@ -902,6 +917,26 @@ class TestGoNutsForDonutsGame:
         assert test_game.players[1].position.size() == 2
         assert test_game.players[1].position.cards[0].id == cards.RV_FIRST
         assert test_game.players[1].position.cards[1].id == cards.CF_FIRST
+
+    def test_red_velvet_skips_actions_when_no_discard_cards(self):
+        test_game = GoNutsGame(4)
+
+        test_game.setup_game(shuffle=False, deck_filter=self.fixture_card_filter_with_red_velvet())
+        test_game.start_game() # deals top 5
+        # d1: CF, d2: DH, d3: ECL, d4: GZ, d5: JF; draw: [RV, P, POW, FC]; discard: []
+        test_game.execute_game_loop_with_actions(TestHelpers.step_actions(actions.ACTION_DONUT, [cards.JF_FIRST, cards.ECL_FIRST, cards.DH_FIRST, cards.GZ_FIRST]))
+        # p1: [JF], p2: [ECL], p3: [DH], p4: [GZ]; draw: [RV, P, POW, FC]; discard: [] (draw from back)
+        # d1: CF, d2: RV d3: 6 P, d4: POW, d5: FC; draw: []; discard: [] (draw from back)
+        test_game.execute_game_loop(TestHelpers.step_action(actions.ACTION_DONUT, cards.P_FIRST))
+        test_game.execute_game_loop(TestHelpers.step_action(actions.ACTION_DONUT, cards.RV_FIRST))
+        test_game.execute_game_loop(TestHelpers.step_action(actions.ACTION_DONUT, cards.P_FIRST))
+        next_player = test_game.execute_game_loop(TestHelpers.step_action(actions.ACTION_DONUT, cards.FC_FIRST))
+        # No RV action because no cards in discard after end of turn 1
+        assert next_player == 0
+
+        assert test_game.players[1].position.size() == 2
+        assert test_game.players[1].position.cards[0].id == cards.ECL_FIRST
+        assert test_game.players[1].position.cards[1].id == cards.RV_FIRST
 
     def test_double_chocolate_draws_correct_card_from_deck(self):
         test_game = GoNutsGame(4)

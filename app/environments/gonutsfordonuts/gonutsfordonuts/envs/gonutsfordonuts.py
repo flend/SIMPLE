@@ -311,6 +311,13 @@ class GoNutsGame:
         cards.P_FIRST, cards.P_2, cards.P_3, cards.P_4, cards.P_5, cards.P_6, cards.P_7,
         cards.POW_FIRST, cards.POW_2, cards.POW_3, cards.POW_4, cards.FC_FIRST, cards.FC_2 ]
 
+    @classmethod
+    def test_pink_filter(self):
+        return [ cards.DH_FIRST, cards.DH_2, cards.DH_3, cards.DH_4, cards.DH_5, cards.DH_6,
+        cards.GZ_FIRST, cards.GZ_2, cards.GZ_3, cards.GZ_4, cards.GZ_5,
+        cards.JF_FIRST, cards.JF_2, cards.JF_3, cards.JF_4, cards.JF_5, cards.JF_6, cards.MB_FIRST, cards.MB_2,
+        cards.RV_FIRST, cards.RV_2, cards.DC_FIRST, cards.DC_2 ]
+
 
     @classmethod
     def standard_deck_contents(self):
@@ -423,7 +430,7 @@ class GoNutsGame:
             elif card.name == "eclair":
                 self.card_action_eclair(player_no)
             else:
-                logger.info(f"No special effect for card {card.symbol} for player {player_no}")
+                logger.info(f"No instant effect for card {card.symbol} for player {player_no}")
 
 
     def card_action_chocolate_frosted(self, player_no):
@@ -561,7 +568,12 @@ class GoNutsGame:
         if card:
             logger.debug(f"Checking special cards for player {self.action_player}, card is {card.name}")
             if card.name == "red_velvet":
-                new_state = GoNutsGameState.PICK_DISCARD
+                # skip the state if there are no discard cards
+                if self.discard.size() > 0:
+                    logger.debug(f"Red velvet, sufficient discard ({self.discard.size()}) cards left for action")
+                    new_state = GoNutsGameState.PICK_DISCARD
+                else:
+                    logger.debug(f"Red velvet, insufficient discard ({self.discard.size()}) cards left for action")
             if card.name == "double_chocolate":
                 # skip the state if there are no deck cards left
                 if self.deck.size() > 0:
@@ -738,8 +750,8 @@ class GoNutsForDonutsEnv(gym.Env):
 
     def reset(self):
 
-        # for testing human play with original deck
-        deck_filter = GoNutsGame.teal_deck_filter()
+        # for testing human play while debugging
+        deck_filter = GoNutsGame.test_pink_filter()
         self.game.reset_game(shuffle=True, deck_filter=deck_filter)
         self.game.start_game()
 
