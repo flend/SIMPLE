@@ -181,7 +181,7 @@ class GoNutsGameGymTranslator:
         #      pick-style-actions          give-away-style-actions
         return self.total_possible_cards + self.total_possible_cards
     
-    def get_legal_actions(self):
+    def get_legal_actions(self, current_player_num):
         
         legal_actions = np.zeros(self.action_space_size())
 
@@ -258,7 +258,7 @@ class GoNutsGameGymTranslator:
         # Add game state as an observation since actions may be interpreted differently for different states
 
         # Legal actions, representing the donut choices or other actions
-        ret = np.append(ret, self.get_legal_actions())
+        ret = np.append(ret, self.get_legal_actions(current_player_num))
 
         return ret
 
@@ -724,7 +724,7 @@ class GoNutsForDonutsEnv(gym.Env):
 
     @property
     def legal_actions(self):
-        return self.translator.get_legal_actions()
+        return self.translator.get_legal_actions(self.current_player_num)
 
     def score_game(self):
         return GoNutsForDonutsEnvUtility.score_game_from_players(self.game.players)
