@@ -334,6 +334,18 @@ class TestGoNutsForDonutsGymTranslator:
     def fixture_card_filter_for_two_sprinkled(self):
         return [ cards.CF_FIRST, cards.DH_FIRST, cards.SPR_FIRST, cards.GZ_FIRST, cards.JF_FIRST, cards.SPR_2, cards.P_FIRST, cards.POW_FIRST, cards.FC_FIRST ]
 
+    def test_observations_is_expected_length(self):
+
+        test_game = GoNutsGame(5)
+        translator = GoNutsGameGymTranslator(test_game)
+        assert translator.observation_space_size() == 635
+
+    def test_legal_actions_is_expected_length(self):
+
+        test_game = GoNutsGame(4)
+        translator = GoNutsGameGymTranslator(test_game)
+        assert translator.action_space_size() == 140
+
     def test_legal_actions_have_only_donut_deck_picks_in_donut_state(self):
 
         test_game = GoNutsGame(5)
@@ -529,6 +541,38 @@ class TestGoNutsForDonutsGymTranslator:
         expected_observations = ret
         
         assert (translator.get_observations(0) == expected_observations).all()
+        assert len(expected_observations) == 635
+
+    def test_observations_correct_for_3_player_started_game(self):
+
+        no_players = 3
+        test_game = GoNutsGame(no_players)
+        translator = GoNutsGameGymTranslator(test_game)
+
+        test_game.setup_game(shuffle=False, deck_order=self.fixture_card_order())
+        test_game.start_game()
+
+        # Positions
+        obs = np.zeros([translator.total_possible_players, translator.total_possible_cards])
+        ret = obs.flatten()
+
+        # Discard
+        ret = np.append(ret, np.zeros(translator.total_possible_cards))
+        ret = np.append(ret, np.zeros(translator.total_possible_cards))
+
+        # Scores
+        ret = np.append(ret, np.zeros(translator.total_possible_players))
+
+        # Legal actions
+        legal_actions = np.zeros(translator.action_space_size())
+        for i in self.fixture_card_order()[:4]:
+            legal_actions[i] = 1
+        ret = np.append(ret, legal_actions)
+
+        expected_observations = ret
+        
+        assert (translator.get_observations(0) == expected_observations).all()
+        assert len(expected_observations) == 635
 
     def observation_comparer(self, actual, expected):
 

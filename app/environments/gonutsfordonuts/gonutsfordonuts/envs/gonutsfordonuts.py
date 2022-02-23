@@ -183,8 +183,8 @@ class GoNutsGameGymTranslator:
 
     def observation_space_size(self):
 
-        # player positions / discard / player scores / legal actions
-        return self.total_possible_cards * self.total_possible_players + self.total_possible_cards + self.total_possible_players + self.action_space_size()
+        # player positions / discard / discard top / player scores / legal actions
+        return self.total_possible_cards * self.total_possible_players + self.total_possible_cards + self.total_possible_cards + self.total_possible_players + self.action_space_size()
 
     def action_space_size(self):
         # agents choose a card_id as an action.
