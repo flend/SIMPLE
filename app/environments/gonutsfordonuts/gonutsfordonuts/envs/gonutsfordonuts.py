@@ -865,7 +865,7 @@ class GoNutsForDonutsEnv(gym.Env):
 
             for i,o in enumerate(self.legal_actions):
                 if o:
-                    if o > actions.ACTION_GIVE_CARD:
+                    if i > actions.ACTION_GIVE_CARD:
                         real_card_id = i - actions.ACTION_GIVE_CARD
                     else:
                         real_card_id = i
@@ -873,7 +873,7 @@ class GoNutsForDonutsEnv(gym.Env):
                     if card_for_action:
                         legal_action_str += f"{i}:{card_for_action.symbol} "
                     else:
-                        print(f"Can't find card for action {o}")
+                        print(f"Can't find card for action {i}")
             print(legal_action_str)
 
         if self.done:
