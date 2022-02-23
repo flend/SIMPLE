@@ -200,18 +200,18 @@ class GoNutsGameGymTranslator:
             
             # Sprinkled requires giving a Sprinkled card to only be an option if the player has a sprinkled card already
             if self.game.players[current_player_num].position.contains_id(cards.SPR_FIRST) and self.game.players[current_player_num].position.contains_id(cards.SPR_2):
-                legal_actions[cards.SPR_2] = 1
+                legal_actions[actions.ACTION_GIVE_CARD + cards.SPR_2] = 1
 
             # OR it's the only card in the position
             if self.game.players[current_player_num].position.contains_id(cards.SPR_FIRST) and self.game.players[current_player_num].position.size() == 1:
-                legal_actions[cards.SPR_FIRST] = 1
+                legal_actions[actions.ACTION_GIVE_CARD + cards.SPR_FIRST] = 1
             if self.game.players[current_player_num].position.contains_id(cards.SPR_2) and self.game.players[current_player_num].position.size() == 1:
-                legal_actions[cards.SPR_2] = 1
+                legal_actions[actions.ACTION_GIVE_CARD + cards.SPR_2] = 1
 
             # Otherwise it's all cards in the position, excluding Sprinkles cards
             for card in self.game.players[current_player_num].position.cards:
                 if not card.id == cards.SPR_FIRST and not card.id == cards.SPR_2:
-                    legal_actions[card.id] = 1
+                    legal_actions[actions.ACTION_GIVE_CARD + card.id] = 1
 
         else:
             logger.info(f'get_legal_actions called in inappropriate game state {self.game.game_state}')
@@ -346,7 +346,7 @@ class GoNutsGame:
         return [ cards.DH_FIRST, cards.DH_2, cards.DH_3, cards.DH_4, cards.DH_5, cards.DH_6,
         cards.GZ_FIRST, cards.GZ_2, cards.GZ_3, cards.GZ_4, cards.GZ_5,
         cards.JF_FIRST, cards.JF_2, cards.JF_3, cards.JF_4, cards.JF_5, cards.JF_6, cards.MB_FIRST, cards.MB_2,
-        cards.RV_FIRST, cards.RV_2, cards.DC_FIRST, cards.DC_2 ]
+        cards.RV_FIRST, cards.RV_2, cards.DC_FIRST, cards.DC_2, cards.SPR_FIRST, cards.SPR_2 ]
 
 
     @classmethod
@@ -835,14 +835,14 @@ class GoNutsForDonutsEnv(gym.Env):
             return
 
         print(f'\n\n-------TURN {self.game.turns_taken + 1}-----------')
-        print(f"It is Player {self.current_player.id}'s turn to choose")            
+        print(f"It is Player {self.current_player.id}'s turn to choose in state {self.game.game_state}")            
 
         # Render player positions
 
         for p in self.game.players:
             print(f'Player {p.id}\'s position')
             if p.position.size() > 0:
-                print('  '.join([str(card.order) + ': ' + card.symbol + ': ' + str(card.id) for card in sorted(p.position.cards, key=lambda x: x.id)]))
+                print('  '.join([card.symbol + ': ' + str(card.id) for card in sorted(p.position.cards, key=lambda x: x.id)]))
             else:
                 print('Empty')
 
@@ -865,7 +865,11 @@ class GoNutsForDonutsEnv(gym.Env):
 
             for i,o in enumerate(self.legal_actions):
                 if o:
-                    card_for_action = next((c for c in self.game.deck.base_deck if c.id == i), None)
+                    if o > actions.ACTION_GIVE_CARD:
+                        real_card_id = i - actions.ACTION_GIVE_CARD
+                    else:
+                        real_card_id = i
+                    card_for_action = next((c for c in self.game.deck.base_deck if c.id == real_card_id), None)
                     if card_for_action:
                         legal_action_str += f"{i}:{card_for_action.symbol} "
                     else:

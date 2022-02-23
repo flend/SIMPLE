@@ -408,8 +408,8 @@ class TestGoNutsForDonutsGymTranslator:
 
         # legal actions are position minus the SPR card we just got
         expected_legal_actions = np.zeros(translator.action_space_size())
-        expected_legal_actions[cards.CF_FIRST] = 1
-        expected_legal_actions[cards.JF_FIRST] = 1
+        expected_legal_actions[TestHelpers.step_action(actions.ACTION_GIVE_CARD, cards.CF_FIRST)] = 1
+        expected_legal_actions[TestHelpers.step_action(actions.ACTION_GIVE_CARD, cards.JF_FIRST)] = 1
         
         assert (translator.get_legal_actions(0) == expected_legal_actions).all()
 
@@ -437,7 +437,7 @@ class TestGoNutsForDonutsGymTranslator:
         # legal actions are position minus the SPR card we just got.
         # because giving away any SPR card is equivalent, we just remove from the selection the SPR with the lowest ID
         expected_legal_actions = np.zeros(translator.action_space_size())
-        expected_legal_actions[cards.SPR_2] = 1
+        expected_legal_actions[TestHelpers.step_action(actions.ACTION_GIVE_CARD, cards.SPR_2)] = 1
         
         assert (translator.get_legal_actions(0) == expected_legal_actions).all()
 
@@ -454,7 +454,7 @@ class TestGoNutsForDonutsGymTranslator:
         
         # legal actions are ONLY the SPR card
         expected_legal_actions = np.zeros(translator.action_space_size())
-        expected_legal_actions[cards.SPR_FIRST] = 1
+        expected_legal_actions[TestHelpers.step_action(actions.ACTION_GIVE_CARD, cards.SPR_FIRST)] = 1
         
         assert (translator.get_legal_actions(0) == expected_legal_actions).all()
 
