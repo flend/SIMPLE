@@ -167,7 +167,9 @@ class GoNutsGameGymTranslator:
         # agents choose a card_id as an action.
         # although all card_ids corresponding to the same card type ought to have the same value,
         # it is actual cards we pick and N of them are unmasked each turn
-        return self.total_possible_cards
+        
+        #      pick-style-actions          give-away-style-actions
+        return self.total_possible_cards + self.total_possible_cards
     
     def get_legal_actions(self):
         
@@ -255,6 +257,7 @@ class GoNutsGameState:
     PICK_DISCARD = 1
     INSTANT_ACTION = 2
     PICK_ONE_FROM_TWO_DECK_CARDS = 3
+    GIVE_CARD = 4
 
 class GoNutsGame:
 
@@ -650,6 +653,8 @@ class GoNutsGame:
             return step_action - actions.ACTION_DISCARD
         elif game_state == GoNutsGameState.PICK_ONE_FROM_TWO_DECK_CARDS:
             return step_action - actions.ACTION_DECK
+        elif game_state == GoNutsGameState.GIVE_CARD:
+            return step_action - actions.ACTION_ACTION_GIVE_CARD
         else:
             logger.error(f"Can't translate action {step_action} from game state {game_state}")
             raise RuntimeError(f"Unknown game state {game_state}")

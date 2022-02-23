@@ -612,6 +612,9 @@ class TestGoNutsForDonutsGame:
     def fixture_card_filter_with_double_chocolate(self):
         return [ cards.CF_FIRST, cards.DC_FIRST, cards.ECL_FIRST, cards.GZ_FIRST, cards.JF_FIRST, cards.RV_FIRST, cards.P_FIRST, cards.POW_FIRST, cards.FC_FIRST ]
 
+    def fixture_card_filter_with_sprinkled(self):
+        return [ cards.SPR_FIRST, cards.GZ_FIRST, cards.DH_FIRST, cards.GZ_2, cards.JF_FIRST, cards.P_FIRST, cards.POW_FIRST, cards.FC_FIRST, cards.JF_2 ]
+
     def fixture_card_filter_with_double_chocolate_and_no_chocolate_frosted(self):
         return [ cards.GZ_FIRST, cards.DC_FIRST, cards.ECL_FIRST, cards.GZ_2, cards.JF_FIRST, cards.RV_FIRST, cards.P_FIRST, cards.POW_FIRST, cards.FC_FIRST ]
 
@@ -1005,4 +1008,57 @@ class TestGoNutsForDonutsGame:
         assert test_game.players[0].position.size() == 2
         assert test_game.players[0].position.cards[0].id == cards.GZ_FIRST
         assert test_game.players[0].position.cards[1].id == cards.DC_FIRST
-    
+
+    def test_sprinkled_gives_a_card_when_position_has_more_than_zero_cards(self):
+        test_game = GoNutsGame(4)
+
+        test_game.setup_game(shuffle=False, deck_filter=self.fixture_card_filter_with_sprinkled())
+        test_game.start_game() # deals top 5
+        # d1: SPR, d2: GZ, d3: DH, d4: GZ_2, d5: JF; draw: [P, POW, FC, JF_2]; discard: []
+        test_game.execute_game_loop_with_actions(TestHelpers.step_actions(actions.ACTION_DONUT, [cards.GZ_FIRST, cards.DH_FIRST, cards.GZ_2, cards.JF_FIRST]))
+        # d1: SPR, d2: P, d3: POW, d4: FC, d5: JF_2; draw: []; discard: []
+        test_game.execute_game_loop_with_actions(TestHelpers.step_actions(actions.ACTION_DONUT, [cards.FC_FIRST, cards.SPR_FIRST, cards.FC_FIRST]))
+        next_player = test_game.execute_game_loop(TestHelpers.step_action(actions.ACTION_DONUT, cards.FC_FIRST))
+        # After all donuts are picked, move to SPR action
+        assert next_player == 1
+        assert test_game.game_state == GoNutsGameState.GIVE_CARD
+
+        # choose GZ_FIRST, gives to player with lowest score, lowest id to break ties
+        next_player = test_game.execute_game_loop(TestHelpers.step_action(actions.ACTION_GIVE_CARD, cards.GZ_FIRST))
+        # Return to picking donuts
+
+        # Check player with SPR has correct position
+        assert test_game.players[1].position.size() == 1
+        assert test_game.players[1].position.cards[0].id == cards.SPR_FIRST
+
+        # Check player receiving card has correct position (player 3, has lowest score with JF)
+        assert test_game.players[1].position.size() == 2
+        assert test_game.players[1].position.cards[0].id == cards.JF_FIRST
+        assert test_game.players[1].position.cards[1].id == cards.GZ_FIRST
+
+    def test_sprinkled_gives_spr_card_when_position_has_zero_cards(self):
+        test_game = GoNutsGame(4)
+
+        test_game.setup_game(shuffle=False, deck_filter=self.fixture_card_filter_with_sprinkled())
+        test_game.start_game() # deals top 5
+        # d1: SPR, d2: GZ, d3: DH, d4: GZ_2, d5: JF; draw: [P, POW, FC, JF_2]; discard: []
+        test_game.execute_game_loop_with_actions(TestHelpers.step_actions(actions.ACTION_DONUT, [cards.GZ_FIRST, cards.GZ_FIRST, cards.GZ_2, cards.JF_FIRST]))
+        # d1: SPR, d2: P, d3: DH, d4: POW, d5: FC; draw: []; discard: []
+        test_game.execute_game_loop_with_actions(TestHelpers.step_actions(actions.ACTION_DONUT, [cards.FC_FIRST, cards.SPR_FIRST, cards.FC_FIRST]))
+        next_player = test_game.execute_game_loop(TestHelpers.step_action(actions.ACTION_DONUT, cards.FC_FIRST))
+        # After all donuts are picked, move to SPR action
+        assert next_player == 1
+        assert test_game.game_state == GoNutsGameState.GIVE_CARD
+
+        # must choose SPR_FIRST, gives to player with lowest score, lowest id to break ties
+        next_player = test_game.execute_game_loop(TestHelpers.step_action(actions.ACTION_GIVE_CARD, cards.GZ_FIRST))
+        # Return to picking donuts
+
+        # Check player with SPR has correct position
+        assert test_game.players[1].position.size() == 0
+
+        # Check player receiving card has correct position (player 0, has lowest score, lowest ID to break ties)
+        assert test_game.players[1].position.size() == 0
+        assert test_game.players[1].position.cards[0].id == cards.SPR_FIRST
+
+# TODO test to ensure SPR is not given to the giving player, even when they would be the lowest scored, lowest id-ed target
