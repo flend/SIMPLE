@@ -151,6 +151,48 @@ class TestGoNutsForDonutsScorer:
 
         assert GoNutsScorer.score_jelly_filled(position) == 5
 
+    def test_score_one_boston_cream(self):
+        position = Position()
+        position.add([BostonCream(1,1)])
+
+        assert GoNutsScorer.score_boston_cream(position) == 0
+
+    def test_score_two_boston_creams(self):
+        position = Position()
+        position.add([BostonCream(1,1), BostonCream(2,1)])
+
+        assert GoNutsScorer.score_boston_cream(position) == 3
+
+    def test_score_three_boston_creams(self):
+        position = Position()
+        position.add([BostonCream(1,1), BostonCream(2,1), BostonCream(3,1)])
+
+        assert GoNutsScorer.score_boston_cream(position) == 0
+
+    def test_score_four_boston_creams(self):
+        position = Position()
+        position.add([BostonCream(1,1), BostonCream(2,1), BostonCream(3,1), BostonCream(4,1)])
+
+        assert GoNutsScorer.score_boston_cream(position) == 15
+
+    def test_score_five_boston_creams(self):
+        position = Position()
+        position.add([BostonCream(1,1), BostonCream(2,1), BostonCream(3,1), BostonCream(4,1), BostonCream(5,1)])
+
+        assert GoNutsScorer.score_boston_cream(position) == 0
+
+    def test_score_six_boston_creams(self):
+        position = Position()
+        position.add([BostonCream(1,1), BostonCream(2,1), BostonCream(3,1), BostonCream(4,1), BostonCream(5,1), BostonCream(6,1)])
+
+        assert GoNutsScorer.score_boston_cream(position) == 25
+
+    def test_score_three_jelly_filled(self):
+        position = Position()
+        position.add([JellyFilled(1,1), JellyFilled(2,1), JellyFilled(3,1)])
+
+        assert GoNutsScorer.score_jelly_filled(position) == 5
+
     def test_score_three_glazed(self):
         position = Position()
         position.add([Glazed(1,1), Glazed(2,1), Glazed(3,1)])

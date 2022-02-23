@@ -54,6 +54,10 @@ class GoNutsScorer:
             score_spr = GoNutsScorer.score_sprinkled(position)
             logger.debug(f'Sprinkled: {score_spr}')
             player_scores[p] += score_spr
+
+            score_bc = GoNutsScorer.score_boston_cream(position)
+            logger.debug(f'Boston Cream: {score_bc}')
+            player_scores[p] += score_bc
         
         logger.debug(f'All without plain (all players): {player_scores}')
         score_plain = GoNutsScorer.score_plain(positions)
@@ -144,6 +148,15 @@ class GoNutsScorer:
         card_counter = Counter([ c.name for c in position.cards ])
         dn_count = card_counter["sprinkled"]
         return dn_count * 2
+
+    @staticmethod
+    def score_boston_cream(position):
+        card_counter = Counter([ c.name for c in position.cards ])
+        dn_count = card_counter["boston_cream"]
+        if not dn_count:
+            return 0
+        bc_scores = [0, 3, 0, 15, 0, 25]
+        return bc_scores[dn_count - 1]
 
     @staticmethod
     def score_maple_bar(position):
