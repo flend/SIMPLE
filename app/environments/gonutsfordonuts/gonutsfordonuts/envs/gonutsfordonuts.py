@@ -196,6 +196,23 @@ class GoNutsGameGymTranslator:
                 legal_actions[self.game.deck.peek_one().id] = 1
             if self.game.deck.peek_in_nth_position(2):
                 legal_actions[self.game.deck.peek_in_nth_position(2).id] = 1
+        elif self.game.game_state == GoNutsGameState.GIVE_CARD:
+            
+            # Sprinkled requires giving a Sprinkled card to only be an option if the player has a sprinkled card already
+            if self.game.players[current_player_num].position.contains_id(cards.SPR_FIRST) and self.game.players[current_player_num].position.contains_id(cards.SPR_2):
+                legal_actions[cards.SPR_2] = 1
+
+            # OR it's the only card in the position
+            if self.game.players[current_player_num].position.contains_id(cards.SPR_FIRST) and self.game.players[current_player_num].position.size() == 1:
+                legal_actions[cards.SPR_FIRST] = 1
+            if self.game.players[current_player_num].position.contains_id(cards.SPR_2) and self.game.players[current_player_num].position.size() == 1:
+                legal_actions[cards.SPR_2] = 1
+
+            # Otherwise it's all cards in the position, excluding Sprinkles cards
+            for card in self.game.players[current_player_num].position.cards:
+                if not card.id == cards.SPR_FIRST and not card.id == cards.SPR_2:
+                    legal_actions[card.id] = 1
+
         else:
             logger.info(f'get_legal_actions called in inappropriate game state {self.game.game_state}')
             raise Exception(f'get_legal_actions called in inappropriate game state {self.game.game_state}')
@@ -307,7 +324,7 @@ class GoNutsGame:
 
         player_id = 0
         for p in range(self.n_players):
-            self.players.append(Player(str(player_id)))
+            self.players.append(Player(player_id))
             player_id += 1
 
     def start_game(self):
@@ -378,6 +395,14 @@ class GoNutsGame:
 
         return standard_deck_contents
     
+    def position_card_for_card_id(self, player_no, card_id):
+        for card in self.players[player_no].position.cards:
+            if card.id == card_id:
+                return card
+
+        logger.info(f'Cannot find card_id {card_id} in position of player {player_no}')
+        raise Exception(f'Cannot find card_id {card_id} in position of player {player_no}')
+
     def deck_for_card_id(self, card_id):
         for deck in self.donut_decks:
             if deck.card.id == card_id:
@@ -513,7 +538,7 @@ class GoNutsGame:
         self.cards_picked = self.pick_cards(player_card_picks)
 
     def do_pick_discard_action(self, player_no, player_discard_pick):
-        logger.info(f"Card action Red Velvet (draw card from discard) for player {player_no}")
+        logger.info(f"Card action pick discard [Red Velvet] (draw card from discard) for player {player_no}")
 
         discard_card_to_pick = self.discard_card_for_card_id(player_discard_pick)
 
@@ -522,13 +547,30 @@ class GoNutsGame:
         self.discard.remove_one(discard_card_to_pick)
 
     def do_pick_one_from_two_deck_action(self, player_no, player_deck_pick):
-        logger.info(f"Card action Double Chocolate (draw one of two cards from deck) for player {player_no}")
+        logger.info(f"Card action pick from deck [Double Chocolate] (draw one of two cards from deck) for player {player_no}")
 
         deck_card_to_pick = self.deck_card_for_card_id(player_deck_pick)
 
         logger.debug(f"Adding {deck_card_to_pick.symbol} to position of {player_no}")
         self.players[player_no].position.add_one(deck_card_to_pick)
         self.deck.remove_one(deck_card_to_pick)
+
+    def do_give_card_action(self, player_no, player_card_to_give):
+        logger.info(f"Card action give card [Sprinkled] (give one card from position) for player {player_no}")
+
+        give_card = self.position_card_for_card_id(player_no, player_card_to_give)
+
+        # To simplify in this iteration always give to the player with the lowest score, excluding the current player
+        lowest_score = min([ p.score for p in self.players if not p.id == player_no ])
+        target_player_no = 0
+        for p in self.players:
+            if p.score == lowest_score and not p.id == player_no:
+                target_player_no = p.id
+                break
+        
+        logger.debug(f"Giving card {give_card.symbol} to position of player {target_player_no}")
+        self.players[target_player_no].position.add_one(give_card)
+        self.players[player_no].position.remove_one(give_card)
 
     def do_end_turn_after_all_player_actions(self):
 
@@ -583,18 +625,21 @@ class GoNutsGame:
             if card.name == "red_velvet":
                 # skip the state if there are no discard cards
                 if self.discard.size() > 0:
-                    logger.debug(f"Red velvet, sufficient discard ({self.discard.size()}) cards left for action")
+                    logger.debug(f"Red velvet change state, sufficient discard ({self.discard.size()}) cards left for action")
                     new_state = GoNutsGameState.PICK_DISCARD
                 else:
-                    logger.debug(f"Red velvet, insufficient discard ({self.discard.size()}) cards left for action")
+                    logger.debug(f"Red velvet change state, insufficient discard ({self.discard.size()}) cards left for action")
             if card.name == "double_chocolate":
                 # skip the state if there are no deck cards left
                 if self.deck.size() > 0:
-                    logger.debug(f"Double chocolate, sufficient ({self.deck.size()}) cards left for action")
+                    logger.debug(f"Double chocolate change state, sufficient ({self.deck.size()}) cards left for action")
                     new_state = GoNutsGameState.PICK_ONE_FROM_TWO_DECK_CARDS
                 else:
-                    logger.debug(f"Double chocolate, insufficient ({self.deck.size()}) cards left for action")
-
+                    logger.debug(f"Double chocolate change state, insufficient ({self.deck.size()}) cards left for action")
+            if card.name == "sprinkled":
+                logger.debug(f"Sprinkled, always change state")
+                new_state = GoNutsGameState.GIVE_CARD
+  
         self.game_state = new_state
         return self.action_player
 
@@ -632,6 +677,15 @@ class GoNutsGame:
             self.move_to_next_action_player()
             return self.check_action_for_this_action_player_and_set_state()
 
+        # Give card from position - requires step, action state
+        elif self.game_state == GoNutsGameState.GIVE_CARD:
+
+            give_action = GoNutsGame.translate_step_action(self.game_state, step_action)
+            self.do_give_card_action(self.action_player, give_action)
+            # Move to the next player to have an action
+            self.move_to_next_action_player()
+            return self.check_action_for_this_action_player_and_set_state()
+
         # CHECK DONUT STATES
 
         # Do player picks card - requires step, donut state
@@ -664,7 +718,7 @@ class GoNutsGame:
         elif game_state == GoNutsGameState.PICK_ONE_FROM_TWO_DECK_CARDS:
             return step_action - actions.ACTION_DECK
         elif game_state == GoNutsGameState.GIVE_CARD:
-            return step_action - actions.ACTION_ACTION_GIVE_CARD
+            return step_action - actions.ACTION_GIVE_CARD
         else:
             logger.error(f"Can't translate action {step_action} from game state {game_state}")
             raise RuntimeError(f"Unknown game state {game_state}")

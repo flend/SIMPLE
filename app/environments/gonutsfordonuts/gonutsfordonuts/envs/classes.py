@@ -358,3 +358,9 @@ class Position():
             if c.name == name:
                 self.cards.pop(i)
                 return c
+
+    def remove_one(self, card):
+        self.cards.remove(card)
+
+    def contains_id(self, card_id):
+        return card_id in [c.id for c in self.cards]
