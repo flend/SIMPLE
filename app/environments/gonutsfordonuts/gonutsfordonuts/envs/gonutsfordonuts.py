@@ -355,6 +355,16 @@ class GoNutsGame:
         cards.POW_FIRST, cards.POW_2, cards.POW_3, cards.POW_4, cards.FC_FIRST, cards.FC_2 ]
 
     @classmethod
+    def teal_and_pink_filter(self):
+        return [ cards.CF_FIRST, cards.CF_2, cards.CF_3, cards.DH_FIRST, cards.DH_2, cards.DH_3, cards.DH_4, cards.DH_5, cards.DH_6,
+        cards.ECL_FIRST, cards.ECL_2, cards.ECL_3, cards.GZ_FIRST, cards.GZ_2, cards.GZ_3, cards.GZ_4, cards.GZ_5,
+        cards.JF_FIRST, cards.JF_2, cards.JF_3, cards.JF_4, cards.JF_5, cards.JF_6, cards.MB_FIRST, cards.MB_2,
+        cards.P_FIRST, cards.P_2, cards.P_3, cards.P_4, cards.P_5, cards.P_6, cards.P_7,
+        cards.POW_FIRST, cards.POW_2, cards.POW_3, cards.POW_4, cards.FC_FIRST, cards.FC_2,
+        cards.BC_FIRST, cards.BC_2, cards.BC_3, cards.BC_4, cards.BC_5, cards.BC_6,
+        cards.DC_FIRST, cards.DC_2, cards.RV_FIRST, cards.RV_2, cards.SPR_FIRST, cards.SPR_2 ]
+
+    @classmethod
     def test_pink_filter(self):
         return [ cards.DH_FIRST, cards.DH_2, cards.DH_3, cards.DH_4, cards.DH_5, cards.DH_6,
         cards.GZ_FIRST, cards.GZ_2, cards.GZ_3, cards.GZ_4, cards.GZ_5,
@@ -832,8 +842,8 @@ class GoNutsForDonutsEnv(gym.Env):
 
     def reset(self):
 
-        # for testing human play while debugging
-        deck_filter = GoNutsGame.test_pink_filter()
+        # setup card selection to be used in simulation
+        deck_filter = GoNutsGame.teal_and_pink_filter()
         self.game.reset_game(shuffle=True, deck_filter=deck_filter)
         self.game.start_game()
 
