@@ -203,6 +203,12 @@ class TestGoNutsForDonutsScorer:
 
         assert GoNutsScorer.score_red_velvet(position) == -4
 
+    def test_score_two_sprinkled(self):
+        position = Position()
+        position.add([Sprinkled(1,1), Sprinkled(2,1)])
+
+        assert GoNutsScorer.score_sprinkled(position) == 4
+
     def test_score_plain_no_winners(self):
         positions = [ Position(), Position(), Position()]
         positions[0].add([Glazed(2,1)])

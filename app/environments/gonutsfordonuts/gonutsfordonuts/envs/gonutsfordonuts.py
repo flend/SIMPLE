@@ -50,10 +50,14 @@ class GoNutsScorer:
             score_rv = GoNutsScorer.score_red_velvet(position)
             logger.debug(f'Red Velvet: {score_rv}')
             player_scores[p] += score_rv
+
+            score_spr = GoNutsScorer.score_sprinkled(position)
+            logger.debug(f'Sprinkled: {score_spr}')
+            player_scores[p] += score_spr
         
-        logger.info(f'All without plain (all players): {player_scores}')
+        logger.debug(f'All without plain (all players): {player_scores}')
         score_plain = GoNutsScorer.score_plain(positions)
-        logger.info(f'Plain (all players): {score_plain}')
+        logger.debug(f'Plain (all players): {score_plain}')
         player_scores = np.add(player_scores, score_plain)
         logger.info(f'Final score (all players): {player_scores}')
 
@@ -134,6 +138,12 @@ class GoNutsScorer:
         card_counter = Counter([ c.name for c in position.cards ])
         dn_count = card_counter["red_velvet"]
         return dn_count * -2
+
+    @staticmethod
+    def score_sprinkled(position):
+        card_counter = Counter([ c.name for c in position.cards ])
+        dn_count = card_counter["sprinkled"]
+        return dn_count * 2
 
     @staticmethod
     def score_maple_bar(position):
@@ -282,7 +292,7 @@ class GoNutsGame:
         if deck_order:
             self.deck.reorder(deck_order)
         if deck_filter:
-            self.deck.filter(deck_filter)        
+            self.deck.filter(deck_filter)
         if shuffle:
             self.deck.shuffle()
          
