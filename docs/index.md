@@ -4,6 +4,7 @@ Fork of David Foster's SIMPLE: https://github.com/davidADSP/SIMPLE where I try t
 
 ## Notebooks
 
-[Teal Dec 2022](docs/teal.md)
-[Teal and Pink Feb 2022](docs/teal-and-pink.md)
+- [Teal Dec 2022](teal.md)
+
+- [Teal and Pink Feb 2022](teal-and-pink.md)
 
