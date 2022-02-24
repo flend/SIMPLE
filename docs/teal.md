@@ -17,7 +17,7 @@ For rewards, I copied the simple repo’s standard reward function which broadly
 
 The action space represents the actions the agents can take on any turn. In my simple version of Donuts, these actions are limited to taking a card out of one of the four positions. An example layout is shown below:
 
-<img src="docs/images/donut_positions.png" alt="hi" class="inline"/>
+![Donut Positions](images/donut_positions.png)
 
 An agent playing at this state has 4 choices with this deal:
  - (Pos 1, Donut Holes)
