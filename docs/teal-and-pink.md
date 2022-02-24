@@ -26,3 +26,10 @@ showing that the models are improving and don't appear to have saturated.
 Playing against model 10 it had clearly not trained fully (identical cards had very different weights > 0.1) but it played at a decent level. I wasn't able to judge
 it's play on the difficult pink cards.
 
+## Training run 2 - b113d6e
+
+Try training a model using the same action / observation space only with teal cards and see how it does against the teal/pink trained models.
+
+In the last experiment in Dec, a teal-only model trained very fast, but this is using the full 5-player all-cards obs/action space so may? train slower.
+
+
