@@ -843,7 +843,7 @@ class GoNutsForDonutsEnv(gym.Env):
     def reset(self):
 
         # setup card selection to be used in simulation
-        deck_filter = GoNutsGame.teal_and_pink_filter()
+        deck_filter = GoNutsGame.teal_deck_filter()
         self.game.reset_game(shuffle=True, deck_filter=deck_filter)
         self.game.start_game()
 

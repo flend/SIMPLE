@@ -42,8 +42,9 @@ def main(args):
     set_global_seeds(args.seed)
 
     #load the agents
-    ppo_models = load_all_models_with_names(env, start=args.start, stop=args.stop, step=args.max)
+    ppo_models = load_all_models_with_names(env, start=args.start, stop=args.stop, step=args.step)
     total_agents = len(ppo_models)
+    print(f"Loaded {total_agents} models in total.")
 
     #play all agents against each other
     for game_cell_i in range(total_agents):
@@ -137,9 +138,9 @@ def cli() -> None:
             , help="Manual update of the game state on step")
     parser.add_argument("--seed", "-s",  type = int, default = 17
             , help="Random seed")
-    parser.add_argument("--max", "-x", type = int, default = 1000
+    parser.add_argument("--step", "-sx", type = int, default = 1
             , help="Step no through models to include in tournament")
-    parser.add_argument("--start", "-st", type = int, default = 1000
+    parser.add_argument("--start", "-st", type = int, default = 1
             , help="First model to include")
     parser.add_argument("--stop", "-sp", type = int, default = 1000
             , help="Last model - exclusive")

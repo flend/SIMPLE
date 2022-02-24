@@ -14,6 +14,8 @@ from shutil import rmtree
 from stable_baselines.ppo1 import PPO1
 from stable_baselines.common.policies import MlpPolicy
 
+from collections import OrderedDict
+
 from utils.register import get_network_arch
 
 import config
@@ -21,24 +23,25 @@ import config
 from stable_baselines import logger
 
 def write_tournament_results(filename, x, y, scores):
-    
-    out = { 'x': x, 'y': y}
 
+    fieldnames = OrderedDict([('x', None), ('y', None), ('model0', None), ('score0', None), ('model1', None), ('score1', None), ('model2', None), ('score2', None)])
+    out = { 'x': x, 'y': y}
+    
     for i, p in enumerate(scores):
-        out[f'p{i}'] = p.name
-        out[f'p{i}_mean_points'] = p.mean_score
+        out[f'model{i}'] = p.name
+        out[f'score{i}'] = p.mean_score
 
     resultsfile = f"{config.RESULTSPATH}/{filename}"
 
     logger.info(f"Writing tournament result file: {resultsfile}")
 
-    if not os.path.exists(config.RESULTSPATH):
+    if not os.path.exists(resultsfile):
         with open(resultsfile,'a') as csvfile:
-            writer = csv.DictWriter(csvfile, fieldnames=out.keys())
+            writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
             writer.writeheader()
 
     with open(resultsfile,'a') as csvfile:
-        writer = csv.DictWriter(csvfile, fieldnames=out.keys())
+        writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
         writer.writerow(out)
 
 def write_results(filename, players, game, games, episode_length):
@@ -116,6 +119,7 @@ def load_all_models(env):
 def load_all_models_with_names(env, start=None, stop=None, step=None):
     modellist = [f for f in os.listdir(os.path.join(config.MODELDIR, env.name)) if f.startswith("_model")]
     modellist.sort()
+    print(f"Length of model list {len(modellist)}")
 
     modellist = modellist[slice(start, stop, step)]
     
