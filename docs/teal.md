@@ -17,7 +17,7 @@ For rewards, I copied the simple repo’s standard reward function which broadly
 
 The action space represents the actions the agents can take on any turn. In my simple version of Donuts, these actions are limited to taking a card out of one of the four positions. An example layout is shown below:
 
-![Donut Positions](images/donut_positions.png)
+![Donut Positions](./assets/images/donuts_positions.png)
 
 An agent playing at this state has 4 choices with this deal:
  - (Pos 1, Donut Holes)
@@ -64,13 +64,13 @@ As mentioned above, the model was trained for 3-person play so I set up a tourna
 
 With model1 and model2 picking their best actions from the policy, the tournament results are as follows. The number in each cell is the mean reward for model1 across 50 games, with 1.00 being winning every time and -1.00 being losing every time.
 
-<img src="app/blog/blog1_reinforcement_learning_expt/1_10_best_action.png" alt="hi" class="inline"/>
+<img src="./assets/images/1_10_best_action.png" alt="hi" class="inline"/>
 
 Figure 1: 3–way tournament picking best actions between (model1, model2, base). model1 mean reward over 50 games.
 
 On the far left we see that the trained models 1 through 10 almost always win against two base agents (far left) and models 2 and up almost always win against (model1, base). Whilst models 5 and up typically win against lower models and base, the margin of victory drops quickly to 0.1–0.2 (reds). Once two good models play each other (models 5 and up, bottom right of diagrams) the results are noisy but often go negative. This is where the good agents start blocking each other allowing the base (random element) to win. This is also seen if we plot the mean reward of the base agent during the same tournament.
 
-<img src="app/blog/blog1_reinforcement_learning_expt/1_10_best_action_base_agent.png" alt="hi" class="inline"/>
+<img src="./assets/images/1_10_best_action_base_agent.png" alt="hi" class="inline"/>
 
 Figure 2: 3–way tournament picking best actions [same results as Figure 1] between (model1, model2, base). base mean reward over 50 games.
 
@@ -83,7 +83,7 @@ Now, it’s slightly surprising that the agents have been trained in self-play i
 
 If we relax the requirement that models always pick the best action and instead stochastically pick actions from policy, the additional randomness (or perhaps reflecting the model training) gives better results for the trained models
 
-<img src="app/blog/blog1_reinforcement_learning_expt/1_10_non_best_action.png" alt="hi" class="inline"/>
+<img src="./assets/images/1_10_non_best_action.png" alt="hi" class="inline"/>
 
 Figure 3: 3–way tournament stochastically picking actions between (model1, model2, base). model1 mean reward over 50 games.
 The bottom-right of the figure stays mostly positive showing that even when two good agents are fighting they do better than random play (although not by very much!). The variance in their actions means they block less and get make a position.
