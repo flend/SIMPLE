@@ -175,7 +175,7 @@ class GoNutsGameGymTranslator:
         # Define the maximum card space for the max numbers of players
         # (for lower number of player games, non-player observations are zeroed)
         self.total_possible_cards = 70
-        self.total_possible_players = 5
+        self.total_possible_players = 3
 
     def total_positions(self):
         # player positions / discards
@@ -184,7 +184,7 @@ class GoNutsGameGymTranslator:
     def observation_space_size(self):
 
         # player positions / discard / discard top / player scores / legal actions
-        return self.total_possible_cards * self.total_possible_players + self.total_possible_cards + self.total_possible_cards + self.total_possible_players + self.action_space_size()
+        return self.total_possible_cards * self.total_possible_players + self.total_possible_cards + self.total_possible_players + self.action_space_size()
 
     def action_space_size(self):
         # agents choose a card_id as an action.
@@ -192,7 +192,7 @@ class GoNutsGameGymTranslator:
         # it is actual cards we pick and N of them are unmasked each turn
         
         #      pick-style-actions          give-away-style-actions
-        return self.total_possible_cards + self.total_possible_cards
+        return self.total_possible_cards# + self.total_possible_cards
     
     def get_legal_actions(self, current_player_num):
         
@@ -258,12 +258,12 @@ class GoNutsGameGymTranslator:
         ret = positions_rolled
 
         # The discard deck
-        discard = np.zeros(self.total_possible_cards)
+        #discard = np.zeros(self.total_possible_cards)
 
-        for card in self.game.discard.cards:
-            discard[card.id] = 1
+        #for card in self.game.discard.cards:
+        #    discard[card.id] = 1
         
-        ret = np.append(ret, discard)
+        #ret = np.append(ret, discard)
 
         # The top discard card [for eclair]
         top_discard = np.zeros(self.total_possible_cards)
@@ -288,7 +288,7 @@ class GoNutsGameGymTranslator:
         # Add game state as an observation since actions may be interpreted differently for different states
 
         # Legal actions, representing the donut choices or other actions
-        ret = np.append(ret, self.get_legal_actions(current_player_num))
+        ret = np.append(ret, self.get_legal_actions(current_player_num)[0:70])
 
         return ret
 
