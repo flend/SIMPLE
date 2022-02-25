@@ -56,3 +56,12 @@ Running a tournament just with these 13 models against each other to see if they
 Unclear why training here has been even less successful.
 
 None of these models seem significantly better than base, so not worth proceeding further.
+
+## Training run 3 - 236b9e5
+
+To see if we can restore fast training, using the teal only cards and hacking the obs/action spaces down to:
+
+ACTIONS = 70
+FEATURE_SIZE = 353
+
+by dropping the RV action, reducing to 3 players and dropping the full visibility of the discard deck.
