@@ -1,0 +1,17 @@
+-rw-r--r-- 1 flend flend 8464094 Feb 24 14:21 _model_00001_0_0.235_77824_.zip
+-rw-r--r-- 1 flend flend 8464094 Feb 24 14:26 _model_00002_0_0.258_118784_.zip
+-rw-r--r-- 1 flend flend 8464094 Feb 24 14:48 _model_00003_0_0.21_323584_.zip
+-rw-r--r-- 1 flend flend 8464094 Feb 24 15:08 _model_00004_0_0.252_446464_.zip
+-rw-r--r-- 1 flend flend 8464094 Feb 24 15:20 _model_00005_0_0.242_487424_.zip
+-rw-r--r-- 1 flend flend 8464094 Feb 25 09:15 _model_00006_0_0.205_1957888_.zip
+-rw-r--r-- 1 flend flend 8464094 Feb 25 09:38 _model_00007_0_0.204_2162688_.zip
+-rw-r--r-- 1 flend flend 8464094 Feb 25 09:52 _model_00008_0_0.258_2285568_.zip
+-rw-r--r-- 1 flend flend 8464094 Feb 25 10:35 _model_00009_0_0.209_2654208_.zip
+-rw-r--r-- 1 flend flend 8464094 Feb 25 10:49 _model_00010_0_0.256_2777088_.zip
+-rw-r--r-- 1 flend flend 8464094 Feb 25 11:03 _model_00011_0_0.206_2899968_.zip
+-rw-r--r-- 1 flend flend 8464094 Feb 25 11:12 _model_00012_0_0.325_2981888_.zip
+-rw-r--r-- 1 flend flend 8464094 Feb 25 11:21 _model_00013_0_0.276_3063808_.zip
+-rw-r--r-- 1 flend flend 8464091 Feb 24 14:11 base.zip
+-rw-r--r-- 1 flend flend 8464094 Feb 25 11:21 best_model.zip
+
+No training between 15:20 and 09:15 due to crash
