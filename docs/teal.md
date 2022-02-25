@@ -89,7 +89,9 @@ Figure 3: 3–way tournament stochastically picking actions between (model1, mod
 The bottom-right of the figure stays mostly positive showing that even when two good agents are fighting they do better than random play (although not by very much!). The variance in their actions means they block less and get make a position.
 Does the picture change with better trained agents? Not really, see the same view for a sample of models up to the latest trained.
 
-Figure 3: 3–way tournament stochastically picking actions between (model1, model2, base). model1 mean reward over 50 games. Up to model generation 121.
+<img src="./assets/images/non_best_action.png" alt="hi" class="inline"/>
+
+Figure 4: 3–way tournament stochastically picking actions between (model1, model2, base). model1 mean reward over 50 games. Up to model generation 121.
 
 It’s hard to saw that any model past model 13 has better performance in the tournament setting against a similar agent and random agent.
 
