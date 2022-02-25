@@ -46,6 +46,9 @@ def main(args):
     total_agents = len(ppo_models)
     print(f"Loaded {total_agents} models in total.")
 
+    all_results_filename = args.output + "-all-results.csv"
+    tournament_results_filename = args.output + "-tournament-results.csv"
+
     #play all agents against each other
     for game_cell_i in range(total_agents):
         for game_cell_j in range(total_agents):
@@ -106,7 +109,7 @@ def main(args):
             
                 env.render()
 
-                write_results('results.csv', players, game_str, k, 0)
+                write_results(all_results_filename, players, game_str, k, 0)
 
                 for i, p in enumerate(player_total_scores):
                     p.scores.append(players[i].points)
@@ -115,7 +118,7 @@ def main(args):
             for i, p in enumerate(player_total_scores):
                 p.mean_score = mean(p.scores)
 
-            write_tournament_results('tournament_results.csv', game_cell_i, game_cell_j, player_total_scores)
+            write_tournament_results(tournament_results_filename, game_cell_i, game_cell_j, player_total_scores)
 
     env.close()
 
@@ -148,6 +151,8 @@ def cli() -> None:
                 , help="Number of games to play)")
     parser.add_argument("--env_name", "-e",  type = str, default = 'TicTacToe'
             , help="Which game to play?")
+    parser.add_argument("--output", "-o",  type = str, default = 'tournament_results'
+            , help="Outfile file root (don't add extension) for results")
     # Extract args
     args = parser.parse_args()
 
