@@ -93,8 +93,8 @@ class GoNutsScorer:
 
     @staticmethod
     def score_donut_holes(position):
-        card_counter = Counter([ c.name for c in position.cards ])
-        dh_count = card_counter["donut_holes"]
+        card_counter = Counter([ c.type for c in position.cards ])
+        dh_count = card_counter[cards.TYPE_DH]
         if dh_count == 1:
             return 1
         if dh_count == 2:
@@ -110,8 +110,8 @@ class GoNutsScorer:
 
     @staticmethod
     def score_jelly_filled(position):
-        card_counter = Counter([ c.name for c in position.cards ])
-        dn_count = card_counter["jelly_filled"]
+        card_counter = Counter([ c.type for c in position.cards ])
+        dn_count = card_counter[cards.TYPE_JF]
         if dn_count == 2 or dn_count == 3:
             return 5
         if dn_count == 4 or dn_count == 5:
@@ -121,38 +121,38 @@ class GoNutsScorer:
 
     @staticmethod
     def score_glazed(position):
-        card_counter = Counter([ c.name for c in position.cards ])
-        dn_count = card_counter["glazed"]
+        card_counter = Counter([ c.type for c in position.cards ])
+        dn_count = card_counter[cards.TYPE_GZ]
         return dn_count * 2
 
     @staticmethod
     def score_french_cruller(position):
-        card_counter = Counter([ c.name for c in position.cards ])
-        dn_count = card_counter["french_cruller"]
+        card_counter = Counter([ c.type for c in position.cards ])
+        dn_count = card_counter[cards.TYPE_FC]
         return dn_count * 2
 
     @staticmethod
     def score_powdered(position):
-        card_counter = Counter([ c.name for c in position.cards ])
-        dn_count = card_counter["powdered"]
+        card_counter = Counter([ c.type for c in position.cards ])
+        dn_count = card_counter[cards.TYPE_POW]
         return dn_count * 3
 
     @staticmethod
     def score_red_velvet(position):
-        card_counter = Counter([ c.name for c in position.cards ])
-        dn_count = card_counter["red_velvet"]
+        card_counter = Counter([ c.type for c in position.cards ])
+        dn_count = card_counter[cards.TYPE_RV]
         return dn_count * -2
 
     @staticmethod
     def score_sprinkled(position):
-        card_counter = Counter([ c.name for c in position.cards ])
-        dn_count = card_counter["sprinkled"]
+        card_counter = Counter([ c.type for c in position.cards ])
+        dn_count = card_counter[cards.TYPE_SPR]
         return dn_count * 2
 
     @staticmethod
     def score_boston_cream(position):
-        card_counter = Counter([ c.name for c in position.cards ])
-        dn_count = card_counter["boston_cream"]
+        card_counter = Counter([ c.type for c in position.cards ])
+        dn_count = card_counter[cards.TYPE_BC]
         if not dn_count:
             return 0
         bc_scores = [0, 3, 0, 15, 0, 25]
@@ -160,10 +160,10 @@ class GoNutsScorer:
 
     @staticmethod
     def score_maple_bar(position):
-        card_counter = Counter([ c.name for c in position.cards ])
+        card_counter = Counter([ c.type for c in position.cards ])
         types_of_cards = len(card_counter)
         if types_of_cards > 6:
-            return card_counter["maple_bar"] * 3
+            return card_counter[cards.TYPE_MB] * 3
         return 0
 
 
@@ -486,9 +486,9 @@ class GoNutsGame:
 
         if card:
             
-            if card.name == "chocolate_frosted":
+            if card.type == cards.TYPE_CF:
                 self.card_action_chocolate_frosted(player_no)
-            elif card.name == "eclair":
+            elif card.type == cards.TYPE_ECL:
                 self.card_action_eclair(player_no)
             else:
                 logger.info(f"No instant effect for card {card.symbol} for player {player_no}")
@@ -645,21 +645,21 @@ class GoNutsGame:
         card = self.cards_picked[self.action_player]
         if card:
             logger.debug(f"Checking special cards for player {self.action_player}, card is {card.name}")
-            if card.name == "red_velvet":
+            if card.type == cards.TYPE_RV:
                 # skip the state if there are no discard cards
                 if self.discard.size() > 0:
                     logger.debug(f"Red velvet change state, sufficient discard ({self.discard.size()}) cards left for action")
                     new_state = GoNutsGameState.PICK_DISCARD
                 else:
                     logger.debug(f"Red velvet change state, insufficient discard ({self.discard.size()}) cards left for action")
-            if card.name == "double_chocolate":
+            if card.type == cards.TYPE_DC:
                 # skip the state if there are no deck cards left
                 if self.deck.size() > 0:
                     logger.debug(f"Double chocolate change state, sufficient ({self.deck.size()}) cards left for action")
                     new_state = GoNutsGameState.PICK_ONE_FROM_TWO_DECK_CARDS
                 else:
                     logger.debug(f"Double chocolate change state, insufficient ({self.deck.size()}) cards left for action")
-            if card.name == "sprinkled":
+            if card.type == cards.TYPE_SPR:
                 logger.debug(f"Sprinkled, always change state")
                 new_state = GoNutsGameState.GIVE_CARD
   

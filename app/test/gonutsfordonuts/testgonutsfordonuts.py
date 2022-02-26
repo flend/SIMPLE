@@ -14,8 +14,8 @@ logger.set_level(10)
 class TestDiscard:
     def test_remove_contained_card_from_discard(self):
         d = Discard()
-        list_of_cards = [Powdered(1,1), Glazed(2,1), Eclair(3,1), ChocolateFrosted(4,1), ChocolateFrosted(5,1),
-        DonutHoles(6,1), FrenchCruller(7,1), MapleBar(8,1), MapleBar(9,1)]
+        list_of_cards = [Powdered(cards.POW_FIRST), Glazed(cards.GZ_FIRST), Eclair(cards.ECL_FIRST), ChocolateFrosted(cards.CF_FIRST), ChocolateFrosted(cards.CF_2),
+        DonutHoles(cards.DH_FIRST), FrenchCruller(cards.FC_FIRST), MapleBar(cards.MB_FIRST), MapleBar(cards.MB_2)]
         d.add(list_of_cards)
 
         assert d.size() == 9
@@ -24,12 +24,12 @@ class TestDiscard:
 
     def test_remove_non_contained_card_from_discard_by_equality(self):
         d = Discard()
-        list_of_cards = [Powdered(1,1), Glazed(2,1), Eclair(3,1), ChocolateFrosted(4,1), ChocolateFrosted(5,1),
-        DonutHoles(6,1), FrenchCruller(7,1), MapleBar(8,1), MapleBar(9,1)]
+        list_of_cards = [Powdered(cards.POW_FIRST), Glazed(cards.GZ_FIRST), Eclair(cards.ECL_FIRST), ChocolateFrosted(cards.CF_FIRST), ChocolateFrosted(cards.CF_2),
+        DonutHoles(cards.DH_FIRST), FrenchCruller(cards.FC_FIRST), MapleBar(cards.MB_FIRST), MapleBar(cards.MB_2)]
         d.add(list_of_cards)
 
         assert d.size() == 9
-        d.remove_one(Glazed(2,1))
+        d.remove_one(Glazed(cards.GZ_FIRST))
         assert d.size() == 8
 
 
@@ -136,7 +136,7 @@ class TestGoNutsForDonutsScorer:
 
     def test_score_three_donut_holes(self):
         position = Position()
-        position.add([DonutHoles(1,1), DonutHoles(2,1), DonutHoles(3,1)])
+        position.add([DonutHoles(cards.DH_FIRST), DonutHoles(cards.DH_2), DonutHoles(cards.DH_3)])
 
         assert GoNutsScorer.score_donut_holes(position) == 6
 
@@ -147,142 +147,142 @@ class TestGoNutsForDonutsScorer:
 
     def test_score_three_jelly_filled(self):
         position = Position()
-        position.add([JellyFilled(1,1), JellyFilled(2,1), JellyFilled(3,1)])
+        position.add([JellyFilled(cards.JF_START), JellyFilled(cards.JF_2), JellyFilled(cards.JF_3)])
 
         assert GoNutsScorer.score_jelly_filled(position) == 5
 
     def test_score_one_boston_cream(self):
         position = Position()
-        position.add([BostonCream(1,1)])
+        position.add([BostonCream(cards.BC_FIRST)])
 
         assert GoNutsScorer.score_boston_cream(position) == 0
 
     def test_score_two_boston_creams(self):
         position = Position()
-        position.add([BostonCream(1,1), BostonCream(2,1)])
+        position.add([BostonCream(cards.BC_FIRST), BostonCream(cards.BC_2)])
 
         assert GoNutsScorer.score_boston_cream(position) == 3
 
     def test_score_three_boston_creams(self):
         position = Position()
-        position.add([BostonCream(1,1), BostonCream(2,1), BostonCream(3,1)])
+        position.add([BostonCream(cards.BC_FIRST), BostonCream(cards.BC_2), BostonCream(cards.BC_3)])
 
         assert GoNutsScorer.score_boston_cream(position) == 0
 
     def test_score_four_boston_creams(self):
         position = Position()
-        position.add([BostonCream(1,1), BostonCream(2,1), BostonCream(3,1), BostonCream(4,1)])
+        position.add([BostonCream(cards.BC_FIRST), BostonCream(cards.BC_2), BostonCream(cards.BC_3), BostonCream(cards.BC_4)])
 
         assert GoNutsScorer.score_boston_cream(position) == 15
 
     def test_score_five_boston_creams(self):
         position = Position()
-        position.add([BostonCream(1,1), BostonCream(2,1), BostonCream(3,1), BostonCream(4,1), BostonCream(5,1)])
+        position.add([BostonCream(cards.BC_FIRST), BostonCream(cards.BC_2), BostonCream(cards.BC_3), BostonCream(cards.BC_4), BostonCream(cards.BC_5)])
 
         assert GoNutsScorer.score_boston_cream(position) == 0
 
     def test_score_six_boston_creams(self):
         position = Position()
-        position.add([BostonCream(1,1), BostonCream(2,1), BostonCream(3,1), BostonCream(4,1), BostonCream(5,1), BostonCream(6,1)])
+        position.add([BostonCream(cards.BC_FIRST), BostonCream(cards.BC_2), BostonCream(cards.BC_3), BostonCream(cards.BC_4), BostonCream(cards.BC_5), BostonCream(cards.BC_6)])
 
         assert GoNutsScorer.score_boston_cream(position) == 25
 
     def test_score_three_jelly_filled(self):
         position = Position()
-        position.add([JellyFilled(1,1), JellyFilled(2,1), JellyFilled(3,1)])
+        position.add([JellyFilled(cards.JF_FIRST), JellyFilled(cards.JF_2), JellyFilled(cards.JF_3)])
 
         assert GoNutsScorer.score_jelly_filled(position) == 5
 
     def test_score_three_glazed(self):
         position = Position()
-        position.add([Glazed(1,1), Glazed(2,1), Glazed(3,1)])
+        position.add([Glazed(cards.GZ_FIRST), Glazed(cards.GZ_2), Glazed(cards.GZ_3)])
 
         assert GoNutsScorer.score_glazed(position) == 6
 
     def test_score_two_french_cruller(self):
         position = Position()
-        position.add([FrenchCruller(1,1), FrenchCruller(2,1)])
+        position.add([FrenchCruller(cards.FC_FIRST), FrenchCruller(cards.FC_2)])
 
         assert GoNutsScorer.score_french_cruller(position) == 4
     
     def test_score_two_powdered(self):
         position = Position()
-        position.add([Powdered(1,1), Powdered(2,1)])
+        position.add([Powdered(cards.POW_FIRST), Powdered(cards.POW_2)])
 
         assert GoNutsScorer.score_powdered(position) == 6 
 
     def test_score_maple_bar_with_six_types(self):
         position = Position()
-        position.add([Powdered(1,1), Glazed(2,1), Eclair(3,1), ChocolateFrosted(4,1), ChocolateFrosted(5,1),
-        DonutHoles(6,1), MapleBar(7,1)])
+        position.add([Powdered(cards.POW_FIRST), Glazed(cards.GZ_FIRST), Eclair(cards.ECL_FIRST), ChocolateFrosted(cards.CF_FIRST), ChocolateFrosted(cards.CF_2),
+        DonutHoles(cards.DH_FIRST), MapleBar(cards.MB_FIRST)])
 
         assert GoNutsScorer.score_maple_bar(position) == 0
     
     def test_score_maple_bar_with_seven_types(self):
         position = Position()
-        position.add([Powdered(1,1), Glazed(2,1), Eclair(3,1), ChocolateFrosted(4,1), ChocolateFrosted(5,1),
-        DonutHoles(6,1), FrenchCruller(7,1), MapleBar(8,1)])
+        position.add([Powdered(cards.POW_FIRST), Glazed(cards.GZ_FIRST), Eclair(cards.ECL_FIRST), ChocolateFrosted(cards.CF_FIRST), ChocolateFrosted(cards.CF_2),
+        DonutHoles(cards.DH_FIRST), FrenchCruller(cards.FC_FIRST), MapleBar(cards.MB_FIRST)])
 
         assert GoNutsScorer.score_maple_bar(position) == 3
 
     def test_score_two_maple_bars_with_seven_types(self):
         position = Position()
-        position.add([Powdered(1,1), Glazed(2,1), Eclair(3,1), ChocolateFrosted(4,1), ChocolateFrosted(5,1),
-        DonutHoles(6,1), FrenchCruller(7,1), MapleBar(8,1), MapleBar(9,1)])
+        position.add([Powdered(cards.POW_FIRST), Glazed(cards.GZ_FIRST), Eclair(cards.ECL_FIRST), ChocolateFrosted(cards.CF_FIRST), ChocolateFrosted(cards.CF_2),
+        DonutHoles(cards.DH_FIRST), FrenchCruller(cards.FC_FIRST), MapleBar(cards.MB_FIRST), MapleBar(cards.MB_2)])
 
         assert GoNutsScorer.score_maple_bar(position) == 6
     
     def test_score_zero_maple_bars_with_seven_types(self):
         position = Position()
-        position.add([Powdered(1,1), Glazed(2,1), Eclair(3,1), ChocolateFrosted(4,1), ChocolateFrosted(5,1),
-        DonutHoles(6,1), FrenchCruller(7,1), JellyFilled(8,1)])
+        position.add([Powdered(cards.POW_FIRST), Glazed(cards.GZ_FIRST), Eclair(cards.ECL_FIRST), ChocolateFrosted(cards.CF_FIRST), ChocolateFrosted(cards.CF_2),
+        DonutHoles(cards.DH_FIRST), FrenchCruller(cards.FC_FIRST), JellyFilled(cards.JF_FIRST)])
 
         assert GoNutsScorer.score_maple_bar(position) == 0
 
     def test_score_two_red_velvet(self):
         position = Position()
-        position.add([RedVelvet(1,1), RedVelvet(2,1)])
+        position.add([RedVelvet(cards.RV_FIRST), RedVelvet(cards.RV_2)])
 
         assert GoNutsScorer.score_red_velvet(position) == -4
 
     def test_score_two_sprinkled(self):
         position = Position()
-        position.add([Sprinkled(1,1), Sprinkled(2,1)])
+        position.add([Sprinkled(cards.SPR_FIRST), Sprinkled(cards.SPR_2)])
 
         assert GoNutsScorer.score_sprinkled(position) == 4
 
     def test_score_plain_no_winners(self):
         positions = [ Position(), Position(), Position()]
-        positions[0].add([Glazed(2,1)])
+        positions[0].add([Glazed(cards.GZ_FIRST)])
         positions[1].add([])
-        positions[2].add([Glazed(5,1), Glazed(6,1)])
+        positions[2].add([Glazed(cards.GZ_2), Glazed(cards.GZ_3)])
 
         scores = GoNutsScorer.score_plain(positions)
         assert (scores == [0, 0, 0]).all()
 
     def test_score_plain_one_winner(self):
         positions = [ Position(), Position(), Position()]
-        positions[0].add([Plain(1,1), Glazed(2,1)])
-        positions[1].add([Plain(3,1), Plain(4,1)])
-        positions[2].add([Glazed(5,1), Glazed(6,1), Plain(7,1)])
+        positions[0].add([Plain(cards.P_FIRST), Glazed(cards.GZ_FIRST)])
+        positions[1].add([Plain(cards.P_2), Plain(cards.P_3)])
+        positions[2].add([Glazed(cards.GZ_FIRST), Glazed(cards.GZ_2), Plain(cards.P_4)])
 
         scores = GoNutsScorer.score_plain(positions)
         assert (scores == [1, 5, 1]).all()
 
     def test_score_plain_tied_winners(self):
         positions = [ Position(), Position(), Position()]
-        positions[0].add([Plain(1,1), Glazed(2,1), Plain(7,1)])
-        positions[1].add([Plain(3,1), Plain(4,1)])
-        positions[2].add([Glazed(5,1), Glazed(6,1)])
+        positions[0].add([Plain(cards.P_FIRST), Glazed(cards.GZ_FIRST), Plain(cards.P_2)])
+        positions[1].add([Plain(cards.P_3), Plain(cards.P_4)])
+        positions[2].add([Glazed(cards.GZ_FIRST), Glazed(cards.GZ_2)])
 
         scores = GoNutsScorer.score_plain(positions)
         assert (scores == [3, 3, 0]).all()
 
     def test_turn_scoring(self):
         positions = [ Position(), Position(), Position()]
-        positions[0].add([Plain(1,1), Glazed(2,1), DonutHoles(3,1), DonutHoles(4,1), Plain(16,1)])
-        positions[1].add([Powdered(5,1), JellyFilled(6,1), FrenchCruller(7,1), Eclair(8,1), MapleBar(16,1)])
-        positions[2].add([Glazed(9,1), ChocolateFrosted(10,1), MapleBar(11,1), JellyFilled(12,1), DonutHoles(13,1), Powdered(14,1), Plain(15,1)])
+        positions[0].add([Plain(cards.P_FIRST), Glazed(cards.GZ_FIRST), DonutHoles(cards.DH_FIRST), DonutHoles(cards.DH_2), Plain(cards.P_2)])
+        positions[1].add([Powdered(cards.POW_FIRST), JellyFilled(cards.JF_FIRST), FrenchCruller(cards.FC_FIRST), Eclair(cards.ECL_FIRST), MapleBar(cards.MB_FIRST)])
+        positions[2].add([Glazed(cards.GZ_FIRST), ChocolateFrosted(cards.CF_FIRST), MapleBar(cards.MB_FIRST), JellyFilled(cards.JF_FIRST), DonutHoles(cards.DH_2), Powdered(cards.POW_2), Plain(cards.P_3)])
 
         scores = GoNutsScorer.score_turn(positions)
         assert (scores == [10, 5, 10]).all()

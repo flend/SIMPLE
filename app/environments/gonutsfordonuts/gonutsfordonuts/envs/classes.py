@@ -1,5 +1,6 @@
 import random
 from stable_baselines import logger
+import gonutsfordonuts.envs.cards as cards
 
 class Player():
     def __init__(self, id):
@@ -9,175 +10,152 @@ class Player():
         self.position = Position()
 
 class Card():
-    def __init__(self, id, order, name):
+    def __init__(self, id, type, name):
         self.id = id
-        self.order = order
+        self.type = type
         self.name = name
 
     def __eq__(self, __o: object) -> bool:
         if (isinstance(__o, Card)):
-            return self.id == __o.id and self.order == __o.order and self.name == __o.name
+            return self.id == __o.id and self.type == __o.type and self.name == __o.name
         return False
         
 class ChocolateFrosted(Card):
-    def __init__(self, id, order):
-        super(ChocolateFrosted, self).__init__(id, order, 'chocolate_frosted')
+    def __init__(self, id):
+        super(ChocolateFrosted, self).__init__(id, cards.TYPE_CF, 'chocolate_frosted')
         self.colour = 'green'
-        self.type = self.name
         self.symbol = 'CF'
 
 class DonutHoles(Card):
-    def __init__(self, id, order):
-        super(DonutHoles, self).__init__(id, order, 'donut_holes')
+    def __init__(self, id):
+        super(DonutHoles, self).__init__(id, cards.TYPE_DH, 'donut_holes')
         self.colour = 'green'
-        self.type = self.name
         self.symbol = 'DH'
         
 class Eclair(Card):
-    def __init__(self, id, order):
-        super(Eclair, self).__init__(id, order, 'eclair')
+    def __init__(self, id):
+        super(Eclair, self).__init__(id, cards.TYPE_ECL, 'eclair')
         self.colour = 'green'
-        self.type = self.name
         self.symbol = 'ECL'
 
 class FrenchCruller(Card):
-    def __init__(self, id, order):
-        super(FrenchCruller, self).__init__(id, order, 'french_cruller')
+    def __init__(self, id):
+        super(FrenchCruller, self).__init__(id, cards.TYPE_FC, 'french_cruller')
         self.colour = 'green'
-        self.type = self.name
         self.symbol = 'FC'
 
 class Glazed(Card):
-    def __init__(self, id, order):
-        super(Glazed, self).__init__(id, order, 'glazed')
+    def __init__(self, id):
+        super(Glazed, self).__init__(id, cards.TYPE_GZ, 'glazed')
         self.colour = 'green'
-        self.type = self.name
         self.symbol = 'GZ'
 
 class JellyFilled(Card):
-    def __init__(self, id, order):
-        super(JellyFilled, self).__init__(id, order, 'jelly_filled')
+    def __init__(self, id):
+        super(JellyFilled, self).__init__(id, cards.TYPE_JF, 'jelly_filled')
         self.colour = 'green'
-        self.type = self.name
         self.symbol = 'JF'
 
 class MapleBar(Card):
-    def __init__(self, id, order):
-        super(MapleBar, self).__init__(id, order, 'maple_bar')
+    def __init__(self, id):
+        super(MapleBar, self).__init__(id, cards.TYPE_MB, 'maple_bar')
         self.colour = 'green'
-        self.type = self.name
         self.symbol = 'MB'
 
 class Plain(Card):
-    def __init__(self, id, order):
-        super(Plain, self).__init__(id, order, 'plain')
+    def __init__(self, id):
+        super(Plain, self).__init__(id, cards.TYPE_P, 'plain')
         self.colour = 'green'
-        self.type = self.name
         self.symbol = 'P'
 
 class Powdered(Card):
-    def __init__(self, id, order):
-        super(Powdered, self).__init__(id, order, 'powdered')
+    def __init__(self, id):
+        super(Powdered, self).__init__(id, cards.TYPE_POW, 'powdered')
         self.colour = 'green'
-        self.type = self.name
         self.symbol = 'POW'
 
 class BostonCream(Card):
-    def __init__(self, id, order):
-        super(BostonCream, self).__init__(id, order, 'boston_cream')
+    def __init__(self, id):
+        super(BostonCream, self).__init__(id, cards.TYPE_BC, 'boston_cream')
         self.colour = 'pink'
-        self.type = self.name
         self.symbol = 'BC'
 
 class DoubleChocolate(Card):
-    def __init__(self, id, order):
-        super(DoubleChocolate, self).__init__(id, order, 'double_chocolate')
+    def __init__(self, id):
+        super(DoubleChocolate, self).__init__(id, cards.TYPE_DC, 'double_chocolate')
         self.colour = 'pink'
-        self.type = self.name
         self.symbol = 'DC'
 
 class RedVelvet(Card):
-    def __init__(self, id, order):
-        super(RedVelvet, self).__init__(id, order, 'red_velvet')
+    def __init__(self, id):
+        super(RedVelvet, self).__init__(id, cards.TYPE_RV, 'red_velvet')
         self.colour = 'pink'
-        self.type = self.name
         self.symbol = 'RV'
 
 class Sprinkled(Card):
-    def __init__(self, id, order):
-        super(Sprinkled, self).__init__(id, order, 'sprinkled')
+    def __init__(self, id):
+        super(Sprinkled, self).__init__(id, cards.TYPE_SPR, 'sprinkled')
         self.colour = 'pink'
-        self.type = self.name
         self.symbol = 'SPR'
 
 class BearClaw(Card):
-    def __init__(self, id, order):
-        super(BearClaw, self).__init__(id, order, 'bear_claw')
+    def __init__(self, id):
+        super(BearClaw, self).__init__(id, cards.TYPE_BC, 'bear_claw')
         self.colour = 'purple'
-        self.type = self.name
         self.symbol = 'BEAR'
 
 class CinnamonTwist(Card):
-    def __init__(self, id, order):
-        super(CinnamonTwist, self).__init__(id, order, 'cinnamon_twist')
+    def __init__(self, id):
+        super(CinnamonTwist, self).__init__(id, cards.TYPE_CT, 'cinnamon_twist')
         self.colour = 'purple'
-        self.type = self.name
         self.symbol = 'CT'
 
 class Coffee(Card):
-    def __init__(self, id, order):
-        super(Coffee, self).__init__(id, order, 'coffee')
+    def __init__(self, id):
+        super(Coffee, self).__init__(id, cards.TYPE_CF, 'coffee')
         self.colour = 'purple'
-        self.type = self.name
         self.symbol = 'CFF'
 
 class DayOldDonuts(Card):
-    def __init__(self, id, order):
-        super(DayOldDonuts, self).__init__(id, order, 'day_old_donuts')
+    def __init__(self, id):
+        super(DayOldDonuts, self).__init__(id, cards.TYPE_DOD, 'day_old_donuts')
         self.colour = 'purple'
-        self.type = self.name
         self.symbol = 'DOD'
 
 class Milk(Card):
-    def __init__(self, id, order):
-        super(Milk, self).__init__(id, order, 'milk')
+    def __init__(self, id):
+        super(Milk, self).__init__(id, cards.TYPE_MILK, 'milk')
         self.colour = 'purple'
-        self.type = self.name
         self.symbol = 'MLK'
 
 class OldFashioned(Card):
-    def __init__(self, id, order):
-        super(OldFashioned, self).__init__(id, order, 'old_fashioned')
+    def __init__(self, id):
+        super(OldFashioned, self).__init__(id, cards.TYPE_OLD, 'old_fashioned')
         self.colour = 'purple'
-        self.type = self.name
         self.symbol = 'OLD'
 
 class MapleFrosted(Card):
-    def __init__(self, id, order):
-        super(MapleFrosted, self).__init__(id, order, 'maple_frosted')
+    def __init__(self, id):
+        super(MapleFrosted, self).__init__(id, cards.TYPE_MF, 'maple_frosted')
         self.colour = 'blue'
-        self.type = self.name
         self.symbol = 'MF'
 
 class MuchoMatcha(Card):
-    def __init__(self, id, order):
-        super(MuchoMatcha, self).__init__(id, order, 'mucho_matcha')
+    def __init__(self, id):
+        super(MuchoMatcha, self).__init__(id, cards.TYPE_MM, 'mucho_matcha')
         self.colour = 'blue'
-        self.type = self.name
         self.symbol = 'MM'
 
 class RaspberryFrosted(Card):
-    def __init__(self, id, order):
-        super(RaspberryFrosted, self).__init__(id, order, 'raspberry_frosted')
+    def __init__(self, id):
+        super(RaspberryFrosted, self).__init__(id, cards.TYPE_RF, 'raspberry_frosted')
         self.colour = 'blue'
-        self.type = self.name
         self.symbol = 'RF'
 
 class StrawberryGlazed(Card):
-    def __init__(self, id, order):
-        super(StrawberryGlazed, self).__init__(id, order, 'strawberry_glazed')
+    def __init__(self, id):
+        super(StrawberryGlazed, self).__init__(id, cards.TYPE_SG, 'strawberry_glazed')
         self.colour = 'blue'
-        self.type = self.name
         self.symbol = 'SG'
        
 class Deck():
@@ -267,7 +245,6 @@ class Deck():
         
         card_id = 0
         for order, x in enumerate(self.contents):
-            x['info']['order'] = order
             for i in range(x['count']):
                 x['info']['id'] = card_id
                 card = [x['card'](**x['info'])]
