@@ -65,3 +65,9 @@ ACTIONS = 70
 FEATURE_SIZE = 353
 
 by dropping the RV action, reducing to 3 players and dropping the full visibility of the discard deck.
+
+This trained 34 models after in excess of 6 hrs, but performance seemed no better than noise.
+
+![smaller feature set results](./assets/images/teal_only_smaller_model.png)
+
+I'm not quite sure why this performed SO badly, but it encourages me to make the model just as tiny as possible.
