@@ -758,10 +758,10 @@ class GoNutsGame:
             return random.choice(matching_discards)
         elif game_state == GoNutsGameState.PICK_ONE_FROM_TWO_DECK_CARDS:
             step_action_norm = step_action - actions.ACTION_DECK
-            if self.game.deck.peek_one().type == step_action_norm:
-                return self.game.deck.peek_one().id
-            elif self.game.deck.peek_in_nth_position(2):
-                return self.game.deck.peek_in_nth_position(2).id
+            if self.deck.peek_one().type == step_action_norm:
+                return self.deck.peek_one().id
+            elif self.deck.peek_in_nth_position(2):
+                return self.deck.peek_in_nth_position(2).id
             else:
                 logger.error(f"Can't find donut of type {step_action_norm} in 2-from-deck-pick")
                 raise RuntimeError(f"Can't find donut of type {step_action_norm} in 2-from-deck-pick")
