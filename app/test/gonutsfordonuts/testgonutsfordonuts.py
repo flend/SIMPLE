@@ -338,13 +338,13 @@ class TestGoNutsForDonutsGymTranslator:
 
         test_game = GoNutsGame(5)
         translator = GoNutsGameGymTranslator(test_game)
-        assert translator.observation_space_size() == 635
+        assert translator.observation_space_size() == 72
 
     def test_legal_actions_is_expected_length(self):
 
         test_game = GoNutsGame(4)
         translator = GoNutsGameGymTranslator(test_game)
-        assert translator.action_space_size() == 140
+        assert translator.action_space_size() == 46
 
     def test_legal_actions_have_only_donut_deck_picks_in_donut_state(self):
 
@@ -357,7 +357,7 @@ class TestGoNutsForDonutsGymTranslator:
         # 6 dealt cards will be the top 6
         expected_legal_actions = np.zeros(translator.action_space_size())
         for i in self.fixture_card_order()[:6]:
-            expected_legal_actions[i] = 1
+            expected_legal_actions[cards.get_card_type_for_id(i)] = 1
 
         assert (translator.get_legal_actions(0) == expected_legal_actions).all()
 
@@ -376,8 +376,8 @@ class TestGoNutsForDonutsGymTranslator:
 
         # legal actions are the two discarded cards
         expected_legal_actions = np.zeros(translator.action_space_size())
-        expected_legal_actions[cards.CF_FIRST] = 1
-        expected_legal_actions[cards.DH_FIRST] = 1
+        expected_legal_actions[cards.get_card_type_for_id(cards.CF_FIRST)] = 1
+        expected_legal_actions[cards.get_card_type_for_id(cards.DH_FIRST)] = 1
         
         assert (translator.get_legal_actions(0) == expected_legal_actions).all()
 
@@ -408,8 +408,8 @@ class TestGoNutsForDonutsGymTranslator:
 
         # legal actions are the two top deck cards
         expected_legal_actions = np.zeros(translator.action_space_size())
-        expected_legal_actions[cards.MB_FIRST] = 1
-        expected_legal_actions[cards.P_FIRST] = 1
+        expected_legal_actions[cards.get_card_type_for_id(cards.MB_FIRST)] = 1
+        expected_legal_actions[cards.get_card_type_for_id(cards.P_FIRST)] = 1
         
         assert (translator.get_legal_actions(0) == expected_legal_actions).all()
 
@@ -425,7 +425,7 @@ class TestGoNutsForDonutsGymTranslator:
 
         # legal actions are the one remaining deck card
         expected_legal_actions = np.zeros(translator.action_space_size())
-        expected_legal_actions[cards.FC_FIRST] = 1
+        expected_legal_actions[cards.get_card_type_for_id(cards.FC_FIRST)] = 1
         
         assert (translator.get_legal_actions(0) == expected_legal_actions).all()
 
@@ -453,17 +453,17 @@ class TestGoNutsForDonutsGymTranslator:
         test_game.start_game()
 
         # d1: CF, d2: DH, d3: SPR, d4: GZ; draw: [JF, MB, P, POW, FC]; discard: []
-        test_game.execute_game_loop_with_actions(TestHelpers.step_actions(actions.ACTION_DONUT, [cards.CF_FIRST, cards.DH_FIRST, cards.GZ_FIRST]))
+        test_game.execute_game_loop_with_actions(TestHelpers.step_actions(actions.ACTION_DONUT, [cards.TYPE_CF, cards.TYPE_DH, cards.TYPE_GZ]))
         # p1: [CF, JF], p2: [DH], p3: [GZ]; draw: [MB, P, POW, FC]
         # d1: MB, d2: P, d3: SPR, d4: POW; draw: [FC]; discard: []
-        test_game.execute_game_loop_with_actions(TestHelpers.step_actions(actions.ACTION_DONUT, [cards.SPR_FIRST, cards.P_FIRST, cards.POW_FIRST]))
+        test_game.execute_game_loop_with_actions(TestHelpers.step_actions(actions.ACTION_DONUT, [cards.TYPE_SPR, cards.TYPE_P, cards.TYPE_POW]))
 
         test_game.game_state = GoNutsGameState.GIVE_CARD
 
         # legal actions are position minus the SPR card we just got
         expected_legal_actions = np.zeros(translator.action_space_size())
-        expected_legal_actions[TestHelpers.step_action(actions.ACTION_GIVE_CARD, cards.CF_FIRST)] = 1
-        expected_legal_actions[TestHelpers.step_action(actions.ACTION_GIVE_CARD, cards.JF_FIRST)] = 1
+        expected_legal_actions[TestHelpers.step_action(actions.ACTION_GIVE_CARD, cards.TYPE_CF)] = 1
+        expected_legal_actions[TestHelpers.step_action(actions.ACTION_GIVE_CARD, cards.TYPE_JF)] = 1
         
         assert (translator.get_legal_actions(0) == expected_legal_actions).all()
 
@@ -476,22 +476,22 @@ class TestGoNutsForDonutsGymTranslator:
         test_game.start_game()
 
         # d1: CF, d2: DH, d3: SPR, d4: GZ; draw: [JF, SPR_2, P, POW, FC]; discard: []
-        test_game.execute_game_loop_with_actions(TestHelpers.step_actions(actions.ACTION_DONUT, [cards.GZ_FIRST, cards.DH_FIRST, cards.DH_FIRST]))
+        test_game.execute_game_loop_with_actions(TestHelpers.step_actions(actions.ACTION_DONUT, [cards.TYPE_GZ, cards.TYPE_DH, cards.TYPE_DH]))
         # p1: [GZ], p2: [], p3: []; draw: [SPR_2, P, POW, FC]; discard: [DH]
         # d1: CF, d2: JF, d3: SPR, d4: SPR_2; draw: [P, POW, FC]; discard: [DH]
-        test_game.execute_game_loop_with_actions(TestHelpers.step_actions(actions.ACTION_DONUT, [cards.SPR_FIRST, cards.CF_FIRST, cards.CF_FIRST]))
+        test_game.execute_game_loop_with_actions(TestHelpers.step_actions(actions.ACTION_DONUT, [cards.TYPE_SPR, cards.TYPE_CF, cards.TYPE_CF]))
         # Give GZ to player 1
-        test_game.execute_game_loop(TestHelpers.step_action(actions.ACTION_GIVE_CARD, cards.GZ_FIRST))
+        test_game.execute_game_loop(TestHelpers.step_action(actions.ACTION_GIVE_CARD, cards.TYPE_GZ))
         # p1: [SPR], p2: [GZ], p3: []; draw: [P, POW, FC]; discard: [DH, CF]
         # d1: P, d2: JF, d3: POW, d4: SPR_2; draw: [FC]; discard: [DH, CF]
-        test_game.execute_game_loop_with_actions(TestHelpers.step_actions(actions.ACTION_DONUT, [cards.SPR_2, cards.POW_FIRST, cards.POW_FIRST]))
+        test_game.execute_game_loop_with_actions(TestHelpers.step_actions(actions.ACTION_DONUT, [cards.TYPE_SPR, cards.TYPE_POW, cards.TYPE_POW]))
 
         test_game.game_state = GoNutsGameState.GIVE_CARD
 
         # legal actions are position minus the SPR card we just got.
         # because giving away any SPR card is equivalent, we just remove from the selection the SPR with the lowest ID
         expected_legal_actions = np.zeros(translator.action_space_size())
-        expected_legal_actions[TestHelpers.step_action(actions.ACTION_GIVE_CARD, cards.SPR_2)] = 1
+        expected_legal_actions[TestHelpers.step_action(actions.ACTION_GIVE_CARD, cards.TYPE_SPR)] = 1
         
         assert (translator.get_legal_actions(0) == expected_legal_actions).all()
 
@@ -504,44 +504,13 @@ class TestGoNutsForDonutsGymTranslator:
         test_game.start_game()
 
         # d1: CF, d2: DH, d3: SPR, d4: GZ; draw: [JF, MB, P, POW, FC]; discard: []
-        test_game.execute_game_loop_with_actions(TestHelpers.step_actions(actions.ACTION_DONUT, [cards.SPR_FIRST, cards.DH_FIRST, cards.GZ_FIRST]))
+        test_game.execute_game_loop_with_actions(TestHelpers.step_actions(actions.ACTION_DONUT, [cards.TYPE_SPR, cards.TYPE_DH, cards.TYPE_GZ]))
         
         # legal actions are ONLY the SPR card
         expected_legal_actions = np.zeros(translator.action_space_size())
-        expected_legal_actions[TestHelpers.step_action(actions.ACTION_GIVE_CARD, cards.SPR_FIRST)] = 1
+        expected_legal_actions[TestHelpers.step_action(actions.ACTION_GIVE_CARD, cards.TYPE_SPR)] = 1
         
         assert (translator.get_legal_actions(0) == expected_legal_actions).all()
-
-    def test_observations_correct_for_started_game(self):
-
-        no_players = 4
-        test_game = GoNutsGame(no_players)
-        translator = GoNutsGameGymTranslator(test_game)
-
-        test_game.setup_game(shuffle=False, deck_order=self.fixture_card_order())
-        test_game.start_game()
-
-        # Positions
-        obs = np.zeros([translator.total_possible_players, translator.total_possible_cards])
-        ret = obs.flatten()
-
-        # Discard
-        ret = np.append(ret, np.zeros(translator.total_possible_cards))
-        ret = np.append(ret, np.zeros(translator.total_possible_cards))
-
-        # Scores
-        ret = np.append(ret, np.zeros(translator.total_possible_players))
-
-        # Legal actions
-        legal_actions = np.zeros(translator.action_space_size())
-        for i in self.fixture_card_order()[:5]:
-            legal_actions[i] = 1
-        ret = np.append(ret, legal_actions)
-
-        expected_observations = ret
-        
-        assert (translator.get_observations(0) == expected_observations).all()
-        assert len(expected_observations) == 635
 
     def test_observations_correct_for_3_player_started_game(self):
 
@@ -553,12 +522,13 @@ class TestGoNutsForDonutsGymTranslator:
         test_game.start_game()
 
         # Positions
-        obs = np.zeros([translator.total_possible_players, translator.total_possible_cards])
-        ret = obs.flatten()
+        #obs = np.zeros([translator.total_possible_players, translator.total_possible_cards])
+        #ret = obs.flatten(
+        ret = []
 
         # Discard
         ret = np.append(ret, np.zeros(translator.total_possible_cards))
-        ret = np.append(ret, np.zeros(translator.total_possible_cards))
+        # ret = np.append(ret, np.zeros(translator.total_possible_cards))
 
         # Scores
         ret = np.append(ret, np.zeros(translator.total_possible_players))
@@ -566,7 +536,7 @@ class TestGoNutsForDonutsGymTranslator:
         # Legal actions
         legal_actions = np.zeros(translator.action_space_size())
         for i in self.fixture_card_order()[:4]:
-            legal_actions[i] = 1
+            legal_actions[cards.get_card_type_for_id(i)] = 1
         ret = np.append(ret, legal_actions)
 
         expected_observations = ret
