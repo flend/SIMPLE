@@ -3,6 +3,16 @@
 The repository setup with a full implementation of the teal and pink cards from Go Nuts With Donuts. The card distribution was from the vanilla game (so few pink cards).
 I also note that I made a mistake with the CF implementation - the non-chosen card is not returned to the deck, but I can't see this affecting the model.
 
+The model architecture was set up with a full 5-player, all-cards observation space, including sight of all discards, and 70 (pick) and 70 (discard) actions.
+
+ACTIONS = 140 # 2x number of card (ids) - 70 for the 5-player game
+FEATURE_SIZE = 635
+
+(for reference, in the previous experiments it was a specialised 3-player game space of:
+ACTIONS = 39
+FEATURE_SIZE = 64
+)
+
 ## Training run 1
 
 5 hr training (at that point the trainer crashed with no logs, probably not a GNFD business logic issue).
@@ -26,10 +36,38 @@ showing that the models are improving and don't appear to have saturated.
 Playing against model 10 it had clearly not trained fully (identical cards had very different weights > 0.1) but it played at a decent level. I wasn't able to judge
 it's play on the difficult pink cards.
 
+In terms of absolute performance, the models are getting roughly 0.5 against 2x base models.
+In contrast, the previous teal-only models got > 0.8 and I'd expect it to be harder for random play (base) to achieve such good results in the more complex teal-and-pink scenario. Note that the previous teal models achieved this performance after 2 generations (5 min of training) so training speed with this setup is vastly worse.
+
 ## Training run 2 - b113d6e
 
 Try training a model using the same action / observation space only with teal cards and see how it does against the teal/pink trained models.
 
 In the last experiment in Dec, a teal-only model trained very fast, but this is using the full 5-player all-cards obs/action space so may? train slower.
 
+This trained a lot slower, after about 12 hrs, it had only produced 13 models.
 
+13 models created [model zoo](./../app/viz/teal_only_20220223)
+
+Running a tournament just with these 13 models against each other to see if they have reached saturation (like the previous teal only trials)
+
+![13 model experiment](./assets/images/teal_only_non_best_action.png)
+
+Unclear why training here has been even less successful.
+
+None of these models seem significantly better than base, so not worth proceeding further.
+
+## Training run 3 - 236b9e5
+
+To see if we can restore fast training, using the teal only cards and hacking the obs/action spaces down to:
+
+ACTIONS = 70
+FEATURE_SIZE = 353
+
+by dropping the RV action, reducing to 3 players and dropping the full visibility of the discard deck.
+
+This trained 34 models after in excess of 6 hrs, but performance seemed no better than noise.
+
+![smaller feature set results](./assets/images/teal_only_smaller_model.png)
+
+I'm not quite sure why this performed SO badly, but it encourages me to make the model just as tiny as possible.
