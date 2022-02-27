@@ -561,8 +561,8 @@ class TestGoNutsForDonutsGymTranslator:
 
         test_game.setup_game(shuffle=False, deck_order=self.fixture_card_order())
         test_game.start_game() # deals top 5
-        # d1: 0 CF, d2: 3 DH, d3: 9 ECL, d4: 12 G, d5: 17 JF; draw: [17 JF, 23 MB, 25 P, 32 PWD, 66 FC]; discard: []
-        test_game.execute_game_loop_with_actions(TestHelpers.step_actions(actions.ACTION_DONUT, [cards.GZ_FIRST, cards.DH_FIRST, cards.DH_FIRST]))
+        # d1: 0 CF, d2: 3 DH, d3: 9 ECL, d4: 12 G draw: [17 JF, 23 MB, 25 P, 32 PWD, 66 FC]; discard: []
+        test_game.execute_game_loop_with_actions(TestHelpers.step_actions(actions.ACTION_DONUT, [cards.TYPE_GZ, cards.TYPE_DH, cards.TYPE_DH]))
         # p1: [12 GZ], p2: [], p3: [], p4: []; draw: [17 JF, 23 MB, 25 P, 32 PWD, 66 FC]
         test_game.reset_turn()
         # d1: 0 CF, d2: 17 JF, d3: 9 ECL, d4: 23 MB; draw: []; discard: [3 DH]
@@ -611,116 +611,118 @@ class TestGoNutsForDonutsGymTranslator:
 
     def test_observations_correct_for_multiple_discards(self):
 
-        no_players = 4
+        no_players = 3
         test_game = GoNutsGame(no_players)
         translator = GoNutsGameGymTranslator(test_game)
 
         test_game.setup_game(shuffle=False, deck_order=self.fixture_card_order())
-        test_game.start_game() # deals top 5
-        # d1: 0 CF, d2: 3 DH, d3: 9 ECL, d4: 12 G, d5: 17 JF; draw: [23 MB, 25 P, 32 PWD, 66 FC]; discard: []
-        test_game.execute_game_loop_with_actions(TestHelpers.step_actions(actions.ACTION_DONUT, [cards.CF_FIRST, cards.DH_FIRST, cards.DH_FIRST, cards.CF_FIRST]))
+        test_game.start_game() # deals top 4
+        # d1: 0 CF, d2: 3 DH, d3: 9 ECL, d4: 12 G; draw: [17 JF, 23 MB, 25 P, 32 PWD, 66 FC]; discard: []
+        test_game.execute_game_loop_with_actions(TestHelpers.step_actions(actions.ACTION_DONUT, [cards.TYPE_DH, cards.TYPE_DH, cards.TYPE_DH]))
         # p1: [], p2: [], p3: [], p4: []; draw: [23 MB, 25 P, 32 PWD, 66 FC]
-        test_game.reset_turn()
-        # d1: 23 MB, d2: 25 P, d3: 9 ECL, d4: 12 G, d5: 17 JF; draw: [32 PWD, 66 FC]; discard: [0 CF, 3 DH]
+
+        # d1: 0 CF, d2: 17 JF, d3: 9 ECL, d4: 12 G draw: [23 MB, 25 P, 32 PWD, 66 FC]; discard: [0 CF, 3 DH]
+        test_game.execute_game_loop_with_actions(TestHelpers.step_actions(actions.ACTION_DONUT, [cards.TYPE_CF, cards.TYPE_CF, cards.TYPE_CF]))
+        # d1: 23 MB, d2: 17 JF, d3: 9 ECL, d4: 12 G draw: [25 P, 32 PWD, 66 FC]; discard: [0 CF, 3 DH]
+
 
         # Positions (from player 0 perspective)
-        no_cards = translator.total_possible_cards
-        obs = np.array([])
+        #no_cards = translator.total_possible_cards
+        #obs = np.array([])
         # p0  
-        obs = np.append(obs, np.zeros(no_cards))
+        #obs = np.append(obs, np.zeros(no_cards))
         # p1
-        obs = np.append(obs, np.zeros(no_cards))
+        #obs = np.append(obs, np.zeros(no_cards))
         # p2
-        obs = np.append(obs, np.zeros(no_cards))
+        #obs = np.append(obs, np.zeros(no_cards))
         # p3
-        obs = np.append(obs, np.zeros(no_cards))
+        #obs = np.append(obs, np.zeros(no_cards))
         # p4 (not in the game but included in the obvs space)
-        obs = np.append(obs, np.zeros(no_cards))
-        ret = obs
+        #obs = np.append(obs, np.zeros(no_cards))
+        #ret = obs
+
+        ret = np.zeros(0)
 
         # Discard
         # All
-        discard = np.zeros(translator.total_possible_cards)
-        discard[cards.DH_FIRST] = 1
-        discard[cards.CF_FIRST] = 1
+        discard = np.zeros(translator.total_possible_card_types)
+        discard[cards.TYPE_DH] = 1
+        discard[cards.TYPE_CF] = 1
         ret = np.append(ret, discard)
         # Top
-        discard = np.zeros(translator.total_possible_cards)
-        discard[cards.DH_FIRST] = 1
-        ret = np.append(ret, discard)
+        #discard = np.zeros(translator.total_possible_cards)
+        #discard[cards.DH_FIRST] = 1
+        #ret = np.append(ret, discard)
 
         # Scores
-        ret = np.append(ret, np.array([0, 0, 0, 0, 0]))
+        ret = np.append(ret, np.array([0, 0, 0]))
         
         # Legal actions
         legal_actions = np.zeros(translator.action_space_size())
-        legal_actions[cards.MB_FIRST] = 1
-        legal_actions[cards.P_FIRST] = 1
-        legal_actions[cards.ECL_FIRST] = 1
-        legal_actions[cards.GZ_FIRST] = 1
-        legal_actions[cards.JF_FIRST] = 1
+        legal_actions[cards.TYPE_JF] = 1
+        legal_actions[cards.TYPE_MB] = 1
+        legal_actions[cards.TYPE_ECL] = 1
+        legal_actions[cards.TYPE_GZ] = 1
         ret = np.append(ret, legal_actions)
 
         expected_observations = ret
 
         self.observation_comparer(translator.get_observations(0), expected_observations)
 
-    def test_observations_correct_for_game_after_one_turn_from_player_index_three_perspective(self):
+    def test_observations_correct_for_game_after_one_turn_from_player_index_two_perspective(self):
 
-        no_players = 4
+        no_players = 3
         test_game = GoNutsGame(no_players)
         translator = GoNutsGameGymTranslator(test_game)
 
         test_game.setup_game(shuffle=False, deck_order=self.fixture_card_order())
         test_game.start_game() # deals top 5
-        # d1: 0 CF, d2: 3 DH, d3: 9 ECL, d4: 12 G, d5: 17 JF; draw: [23 MB, 25 P, 32 PWD, 66 FC]; discard: []
-        test_game.execute_game_loop_with_actions(TestHelpers.step_actions(actions.ACTION_DONUT, [cards.CF_FIRST, cards.DH_FIRST, cards.DH_FIRST, cards.GZ_FIRST]))
-        # p1: [0 CF, 23 MB], p2: [], p3: [], p4: [12 G]; draw: [25 P, 32 PWD, 66 FC]
-        test_game.reset_turn()
-        # d1: 25 P, d2: 32 PWD, d3: 9 ECL, d4: 66 FC, d5: 17 JF; draw: []; discard: [3 DH]
+        # d1: 0 CF, d2: 3 DH, d3: 9 ECL, d4: 12 G draw: [17 JF, 23 MB, 25 P, 32 PWD, 66 FC]; discard: []
+        test_game.execute_game_loop_with_actions(TestHelpers.step_actions(actions.ACTION_DONUT, [cards.TYPE_CF, cards.TYPE_DH, cards.TYPE_GZ]))
+        # p1: [0 CF, 17 JF], p2: [3 DH], p3: [12 G] draw: [23 MB, 25 P, 32 PWD, 66 FC]
+        # d1: 23 MB, d2: 25 P, d3: 9 ECL, d4: 32 PWD; draw: [66 FC]; discard: []
 
         # Positions (from player 3 perspective)
-        no_cards = translator.total_possible_cards
-        obs = np.array([])
+        #no_cards = translator.total_possible_cards
+        #obs = np.array([])
         # p3
-        p3position = np.zeros(no_cards)
-        p3position[cards.GZ_FIRST] = 1
-        obs = np.append(obs, p3position)
+        #p3position = np.zeros(no_cards)
+        #p3position[cards.GZ_FIRST] = 1
+        #obs = np.append(obs, p3position)
         # p4 (not in the game but included in the obvs space)
-        obs = np.append(obs, np.zeros(no_cards))
+        #obs = np.append(obs, np.zeros(no_cards))
         # p0
-        p0position = np.zeros(no_cards)
-        p0position[cards.CF_FIRST] = 1
-        p0position[cards.MB_FIRST] = 1
-        obs = np.append(obs, p0position)
+        #p0position = np.zeros(no_cards)
+        #p0position[cards.CF_FIRST] = 1
+        #p0position[cards.MB_FIRST] = 1
+        #obs = np.append(obs, p0position)
         # p1
-        obs = np.append(obs, np.zeros(no_cards))
+        #obs = np.append(obs, np.zeros(no_cards))
         # p2
-        obs = np.append(obs, np.zeros(no_cards))
+        #obs = np.append(obs, np.zeros(no_cards))
         
-        ret = obs
+        #ret = obs
+
+        ret = np.zeros(0)
 
         # Discard
-        discard = np.zeros(translator.total_possible_cards)
-        discard[cards.DH_FIRST] = 1
-        ret = np.append(ret, discard)
+        discard = np.zeros(translator.total_possible_card_types)
         ret = np.append(ret, discard)
 
         # Scores
-        ret = np.append(ret, np.array([2 / test_game.max_score, 0, 0, 0, 0]))
+        ret = np.append(ret, np.array([2 / test_game.max_score, 0, 1 / test_game.max_score]))
         
         # Legal actions
         legal_actions = np.zeros(translator.action_space_size())
-        legal_actions[cards.P_FIRST] = 1
-        legal_actions[cards.POW_FIRST] = 1
-        legal_actions[cards.ECL_FIRST] = 1
-        legal_actions[cards.FC_FIRST] = 1
-        legal_actions[cards.JF_FIRST] = 1
+        legal_actions[cards.TYPE_MB] = 1
+        legal_actions[cards.TYPE_P] = 1
+        legal_actions[cards.TYPE_ECL] = 1
+        legal_actions[cards.TYPE_POW] = 1
         ret = np.append(ret, legal_actions)
 
         expected_observations = ret
         
-        self.observation_comparer(translator.get_observations(3), expected_observations)
+        self.observation_comparer(translator.get_observations(2), expected_observations)
 
 class TestHelpers:
 
@@ -1180,7 +1182,7 @@ class TestGoNutsForDonutsGame:
         test_game.start_game() # deals top 5
         # d1: SPR, d2: GZ, d3: DH, d4: MB, d5: JF; draw: [P, POW, FC, JF_2]; discard: []
         test_game.execute_game_loop_with_actions(TestHelpers.step_actions(actions.ACTION_DONUT, [cards.TYPE_GZ, cards.TYPE_DH, cards.TYPE_MB, cards.TYPE_JF]))
-        # p1: [GZ], p2: [DH], p3: [GZ], p4: [JF]; draw: [P, POW, FC, JF_2]; discard: []
+        # p1: [GZ], p2: [DH], p3: [MB], p4: [JF]; draw: [P, POW, FC, JF_2]; discard: []
 
         # d1: SPR, d2: P, d3: POW, d4: FC, d5: JF_2; draw: []; discard: []
         test_game.execute_game_loop_with_actions(TestHelpers.step_actions(actions.ACTION_DONUT, [cards.TYPE_FC, cards.TYPE_SPR, cards.TYPE_FC]))
@@ -1195,12 +1197,12 @@ class TestGoNutsForDonutsGame:
 
         # Check player with SPR has correct position
         assert test_game.players[1].position.size() == 1
-        assert test_game.players[1].position.cards[0].id == cards.TYPE_SPR
+        assert test_game.players[1].position.cards[0].id == cards.SPR_FIRST
 
-        # Check player receiving card has correct position (player 3, has lowest score with JF)
-        assert test_game.players[3].position.size() == 2
-        assert test_game.players[3].position.cards[0].id == cards.TYPE_JF
-        assert test_game.players[3].position.cards[1].id == cards.TYPE_DH
+        # Check player receiving card has correct position (player 2, has lowest score with MB, equal to player 3 with 0 points but pick lowest ID)
+        assert test_game.players[2].position.size() == 2
+        assert test_game.players[2].position.cards[0].id == cards.MB_FIRST
+        assert test_game.players[2].position.cards[1].id == cards.DH_FIRST
 
     def test_sprinkled_gives_spr_card_when_position_has_zero_cards(self):
         test_game = GoNutsGame(4)
