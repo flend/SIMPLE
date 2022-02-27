@@ -481,7 +481,7 @@ class GoNutsGame:
                 cards_picked.append(None)
             else:
                 player.position.add_one(deck.card)
-                logger.info(f'Player {player.id} picks {deck.card.symbol}')
+                logger.info(f'Player {player.id} picks {deck.card.symbol} ({deck.card.type}:{deck.card.id})')
 
                 cards_picked.append(deck.card)
                 deck.set_taken()
@@ -902,7 +902,7 @@ class GoNutsForDonutsEnv(gym.Env):
         # Render donuts to choose
         for i, d in enumerate(self.game.donut_decks):
             this_card = d.get_card()
-            print(f'Deck {i}: {this_card.symbol}; {this_card.id}')
+            print(f'Deck {i}: {this_card.symbol} ({this_card.type}:{this_card.id})')
 
         # Top of discard
         if self.game.discard.size():
@@ -919,10 +919,11 @@ class GoNutsForDonutsEnv(gym.Env):
             for i,o in enumerate(self.legal_actions):
                 if o:
                     if i > actions.ACTION_GIVE_CARD:
-                        real_card_id = i - actions.ACTION_GIVE_CARD
+                        real_card_type = i - actions.ACTION_GIVE_CARD
                     else:
-                        real_card_id = i
-                    card_for_action = next((c for c in self.game.deck.base_deck if c.id == real_card_id), None)
+                        real_card_type = i
+                    # TODO: Have a sensible lookup for type -> card data rather than looking for the first card of this type
+                    card_for_action = next((c for c in self.game.deck.base_deck if c.type == real_card_type), None)
                     if card_for_action:
                         legal_action_str += f"{i}:{card_for_action.symbol} "
                     else:
