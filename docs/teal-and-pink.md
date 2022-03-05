@@ -154,3 +154,9 @@ FEATURE_SIZE = 64
 
 Trying an observation space of 64 to see if this will give as good results as 079da56 despite the different setup.
 If it's not the obvs size I must have broken something else.
+
+We produced 30 models here in a few hours but bizarrely they NEVER win during training (only draw):
+
+![always drawing](./assets/images/alwaysdraw.png)
+
+I don't know if this happens on other runs
