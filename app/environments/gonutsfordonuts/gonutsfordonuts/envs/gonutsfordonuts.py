@@ -187,7 +187,7 @@ class GoNutsGameGymTranslator:
         # player positions / discard / discard top / player scores / legal actions
         # return self.total_possible_card_types * self.total_possible_players + self.total_possible_card_types + self.total_possible_card_types + self.total_possible_players + self.action_space_size()
         # Simplified version
-        return self.total_possible_card_types + self.total_possible_players + self.action_space_size()
+        return 64# self.total_possible_card_types + self.total_possible_players + self.action_space_size()
 
     def action_space_size(self):
         # agents choose a card_id as an action.
@@ -195,7 +195,7 @@ class GoNutsGameGymTranslator:
         # it is actual cards we pick and N of them are unmasked each turn
         
         #      pick-style-actions          give-away-style-actions
-        return self.total_possible_card_types + self.total_possible_card_types
+        return 7 # self.total_possible_card_types + self.total_possible_card_types
     
     def get_legal_actions(self, current_player_num):
         
@@ -241,49 +241,61 @@ class GoNutsGameGymTranslator:
         # Always assume we are playing with 5 players and just 0 out their observations
         # Always assume we are playing with all the cards, cards we are not playing with will not occur
 
-        # currently remove player's positions to reduce the obvs space
+        # NOW MODELLING 3 players and 7 classes for a smaller obvs space
 
         n_players = self.game.n_players
 
+        # 21 obvs
+
+        card_types_for_obvs = 7
+
         #positions = np.zeros([self.total_possible_players, self.total_possible_cards])
+        positions = np.zeros([self.total_possible_players, card_types_for_obvs])
 
         # Each player's current position (tableau)
         # starting from the current player and cycling to higher-numbered players
         # use '1' if the player has this TYPE of card and 0 if not
 
         # create from player 0 perspective
-        #for i in range(n_players):
-        #    player = self.game.players[i]
+        for i in range(n_players):
+            player = self.game.players[i]
 
-        #    for card in player.position.cards:
-        #        positions[i][card.type] = 1
+            for card in player.position.cards:
+               positions[i][card.type] = 1
 
-        #positions_flat = positions.flatten()
+        positions_flat = positions.flatten()
         # roll forward (+wrap) to put this player's numbers at the start
-        #positions_rolled = np.roll(positions_flat, (self.total_possible_players - current_player_num) * self.total_possible_cards)
-        #ret = positions_rolled
+        positions_rolled = np.roll(positions_flat, (self.total_possible_players - current_player_num) * self.total_possible_cards)
+        ret = positions_rolled
 
-        ret = np.zeros(0)
+        #ret = np.zeros(0)
+
+        # 7 obvs (28 so far)
 
         # The discard deck
         # Again by type
-        discard = np.zeros(self.total_possible_card_types)
+        discard = np.zeros(card_types_for_obvs)
 
         for card in self.game.discard.cards:
             discard[card.type] = 1
         
         ret = np.append(ret, discard)
 
+        # 7 obvs (35 so far)
+
         # The top discard card [for eclair]
         # Currently removed to make the obvs space smaller
-        #top_discard = np.zeros(self.total_possible_cards)
+        top_discard = np.zeros(card_types_for_obvs)
 
-        #if self.game.discard.size():
-        #    top_discard[self.game.discard.peek_one().type] = 1
+        if self.game.discard.size():
+            top_discard[self.game.discard.peek_one().type] = 1
         
-        #ret = np.append(ret, top_discard)
+        ret = np.append(ret, top_discard)
 
         # Current player scores [to guide the agent to which players to target]
+        # 3 obvs (38 so far)
+
+        
         player_scores = np.zeros(self.total_possible_players)
 
         for i in range(n_players):
@@ -294,8 +306,14 @@ class GoNutsGameGymTranslator:
 
         ret = np.append(ret, scores_rolled)
 
+        # 7 obvs (45 so far)
+
         # Legal actions, representing the donut choices or other actions
         ret = np.append(ret, self.get_legal_actions(current_player_num))
+
+        # Make up to 64
+
+        ret = np.append(ret, np.zeros(19))
 
         return ret
 
@@ -360,6 +378,13 @@ class GoNutsGame:
         cards.JF_FIRST, cards.JF_2, cards.JF_3, cards.JF_4, cards.JF_5, cards.JF_6, cards.MB_FIRST, cards.MB_2,
         cards.P_FIRST, cards.P_2, cards.P_3, cards.P_4, cards.P_5, cards.P_6, cards.P_7,
         cards.POW_FIRST, cards.POW_2, cards.POW_3, cards.POW_4, cards.FC_FIRST, cards.FC_2 ]
+
+    def teal_deck_filter_no_fc(self):
+        return [ cards.CF_FIRST, cards.CF_2, cards.CF_3, cards.DH_FIRST, cards.DH_2, cards.DH_3, cards.DH_4, cards.DH_5, cards.DH_6,
+        cards.ECL_FIRST, cards.ECL_2, cards.ECL_3, cards.GZ_FIRST, cards.GZ_2, cards.GZ_3, cards.GZ_4, cards.GZ_5,
+        cards.JF_FIRST, cards.JF_2, cards.JF_3, cards.JF_4, cards.JF_5, cards.JF_6, cards.MB_FIRST, cards.MB_2,
+        cards.P_FIRST, cards.P_2, cards.P_3, cards.P_4, cards.P_5, cards.P_6, cards.P_7,
+        cards.POW_FIRST, cards.POW_2, cards.POW_3, cards.POW_4]
 
     @classmethod
     def teal_and_pink_filter(self):
@@ -873,7 +898,7 @@ class GoNutsForDonutsEnv(gym.Env):
     def reset(self):
 
         # setup card selection to be used in simulation
-        deck_filter = GoNutsGame.teal_deck_filter()
+        deck_filter = GoNutsGame.teal_deck_filter_no_fc()
         self.game.reset_game(shuffle=True, deck_filter=deck_filter)
         self.game.start_game()
 
