@@ -158,5 +158,10 @@ If it's not the obvs size I must have broken something else.
 We produced 30 models here in a few hours but bizarrely they NEVER win during training (only draw):
 
 ![always drawing](./assets/images/alwaysdraw.png)
-
 I don't know if this happens on other runs
+
+The tournament results are dreadful, we have created a model that consistently loses against base. I suspect there is something wrong with the use of random to pick a card when more there is more than 1 of a type.
+
+![results](./assets/images/tournament-7d4f4ab-results.png)
+
+
