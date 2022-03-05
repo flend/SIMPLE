@@ -164,4 +164,10 @@ The tournament results are dreadful, we have created a model that consistently l
 
 ![results](./assets/images/tournament-7d4f4ab-results.png)
 
+As a comparison, here's a training run with 079da56
+
+![training-079da56](./assets/images/trainingcorrectly.png)
+
+This runs -1 to 1 so this is a problem in 7d4f4ab. The tournament results for 7d4f4ab show that the earlier models do win occasionally against base but they never win against any models (model1 or later).
+
 
