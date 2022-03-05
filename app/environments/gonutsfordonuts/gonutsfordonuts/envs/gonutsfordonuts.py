@@ -195,7 +195,7 @@ class GoNutsGameGymTranslator:
         # it is actual cards we pick and N of them are unmasked each turn
         
         #      pick-style-actions          give-away-style-actions
-        return 7 # self.total_possible_card_types + self.total_possible_card_types
+        return 8 # self.total_possible_card_types + self.total_possible_card_types
     
     def get_legal_actions(self, current_player_num):
         
@@ -245,9 +245,9 @@ class GoNutsGameGymTranslator:
 
         n_players = self.game.n_players
 
-        # 21 obvs
+        # 24 obvs
 
-        card_types_for_obvs = 7
+        card_types_for_obvs = 8
 
         #positions = np.zeros([self.total_possible_players, self.total_possible_cards])
         positions = np.zeros([self.total_possible_players, card_types_for_obvs])
@@ -270,7 +270,7 @@ class GoNutsGameGymTranslator:
 
         #ret = np.zeros(0)
 
-        # 7 obvs (28 so far)
+        # 8 obvs (32 so far)
 
         # The discard deck
         # Again by type
@@ -281,7 +281,7 @@ class GoNutsGameGymTranslator:
         
         ret = np.append(ret, discard)
 
-        # 7 obvs (35 so far)
+        # 8 obvs (40 so far)
 
         # The top discard card [for eclair]
         # Currently removed to make the obvs space smaller
@@ -293,7 +293,7 @@ class GoNutsGameGymTranslator:
         ret = np.append(ret, top_discard)
 
         # Current player scores [to guide the agent to which players to target]
-        # 3 obvs (38 so far)
+        # 3 obvs (43 so far)
 
         
         player_scores = np.zeros(self.total_possible_players)
@@ -306,14 +306,14 @@ class GoNutsGameGymTranslator:
 
         ret = np.append(ret, scores_rolled)
 
-        # 7 obvs (45 so far)
+        # 8 obvs (51 so far)
 
         # Legal actions, representing the donut choices or other actions
         ret = np.append(ret, self.get_legal_actions(current_player_num))
 
         # Make up to 64
 
-        ret = np.append(ret, np.zeros(19))
+        ret = np.append(ret, np.zeros(13))
 
         return ret
 
@@ -379,6 +379,7 @@ class GoNutsGame:
         cards.P_FIRST, cards.P_2, cards.P_3, cards.P_4, cards.P_5, cards.P_6, cards.P_7,
         cards.POW_FIRST, cards.POW_2, cards.POW_3, cards.POW_4, cards.FC_FIRST, cards.FC_2 ]
 
+    @classmethod
     def teal_deck_filter_no_fc(self):
         return [ cards.CF_FIRST, cards.CF_2, cards.CF_3, cards.DH_FIRST, cards.DH_2, cards.DH_3, cards.DH_4, cards.DH_5, cards.DH_6,
         cards.ECL_FIRST, cards.ECL_2, cards.ECL_3, cards.GZ_FIRST, cards.GZ_2, cards.GZ_3, cards.GZ_4, cards.GZ_5,
