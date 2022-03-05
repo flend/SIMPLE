@@ -142,3 +142,15 @@ Training speed was also fast (see above)
 Performance seems to have saturated at model 6 (5 step sampling) which was after 45 min of training (4 cores).
 
 My hypothesis is that the obvs space of 64 just works better because it's a power of 2. I'll try the teal only cards with the modern code base at 64 obvs space next to see if I can repeat this performance. Otherwise something else is different in the new code base which is killing performance.
+
+## Training run 5 - 7d4f4ab
+
+Returning to the types codebase, using only the first 8 card types and 3 players.
+
+```
+ACTIONS = 8
+FEATURE_SIZE = 64
+```
+
+Trying an observation space of 64 to see if this will give as good results as 079da56 despite the different setup.
+If it's not the obvs size I must have broken something else.
