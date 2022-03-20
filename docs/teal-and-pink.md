@@ -182,3 +182,5 @@ FEATURE_SIZE = 64
 
 This has the same tapping out at 0.5 issue. But this seems to be that the agents (admittidly I only trained for 10 min or so) always seem to pick invalid actions, causing the game to finish early.
 
+I checked 079da56 and it does not pick illegal actions, even at the start of training
+
