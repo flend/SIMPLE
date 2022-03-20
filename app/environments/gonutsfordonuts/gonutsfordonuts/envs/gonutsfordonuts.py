@@ -175,7 +175,7 @@ class GoNutsGameGymTranslator:
         # Define the maximum card space for the max numbers of players
         # (for lower number of player games, non-player observations are zeroed)
         self.total_possible_cards = 70
-        self.total_possible_card_types = 23
+        self.total_possible_card_types = 8
         self.total_possible_players = 3 # Could be up to 5 but keep to 3 to make the model smaller
 
     def total_positions(self):
@@ -195,7 +195,7 @@ class GoNutsGameGymTranslator:
         # it is actual cards we pick and N of them are unmasked each turn
         
         #      pick-style-actions          give-away-style-actions
-        return 8 # self.total_possible_card_types + self.total_possible_card_types
+        return self.total_possible_card_types # self.total_possible_card_types + self.total_possible_card_types
     
     def get_legal_actions(self, current_player_num):
         
@@ -247,10 +247,8 @@ class GoNutsGameGymTranslator:
 
         # 24 obvs
 
-        card_types_for_obvs = 8
-
         #positions = np.zeros([self.total_possible_players, self.total_possible_cards])
-        positions = np.zeros([self.total_possible_players, card_types_for_obvs])
+        positions = np.zeros([self.total_possible_players, self.total_possible_card_types])
 
         # Each player's current position (tableau)
         # starting from the current player and cycling to higher-numbered players
@@ -265,7 +263,7 @@ class GoNutsGameGymTranslator:
 
         positions_flat = positions.flatten()
         # roll forward (+wrap) to put this player's numbers at the start
-        positions_rolled = np.roll(positions_flat, (self.total_possible_players - current_player_num) * self.total_possible_cards)
+        positions_rolled = np.roll(positions_flat, (self.total_possible_players - current_player_num) * self.total_possible_card_types)
         ret = positions_rolled
 
         #ret = np.zeros(0)
@@ -274,7 +272,7 @@ class GoNutsGameGymTranslator:
 
         # The discard deck
         # Again by type
-        discard = np.zeros(card_types_for_obvs)
+        discard = np.zeros(self.total_possible_card_types)
 
         for card in self.game.discard.cards:
             discard[card.type] = 1
@@ -285,7 +283,7 @@ class GoNutsGameGymTranslator:
 
         # The top discard card [for eclair]
         # Currently removed to make the obvs space smaller
-        top_discard = np.zeros(card_types_for_obvs)
+        top_discard = np.zeros(self.total_possible_card_types)
 
         if self.game.discard.size():
             top_discard[self.game.discard.peek_one().type] = 1
@@ -773,7 +771,10 @@ class GoNutsGame:
             if not matching_donut_positions:
                 logger.error(f"Can't find donut of type {step_action_norm} in positions")
                 raise RuntimeError(f"Can't find donut of type {step_action_norm} in positions")
-            return random.choice(matching_donut_positions)
+            card_id_to_choose = random.choice(matching_donut_positions)
+            if len(matching_donut_positions) > 1:
+                logger.info(f"More than 1 card of type {step_action_norm}, random choice of card id {card_id_to_choose}")
+            return card_id_to_choose
         elif game_state == GoNutsGameState.PICK_DISCARD:
             step_action_norm = step_action - actions.ACTION_DISCARD
             # action is a card type, so pick a random donut of that type from the available discard

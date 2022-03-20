@@ -338,13 +338,13 @@ class TestGoNutsForDonutsGymTranslator:
 
         test_game = GoNutsGame(5)
         translator = GoNutsGameGymTranslator(test_game)
-        assert translator.observation_space_size() == 72
+        assert translator.observation_space_size() == 64
 
     def test_legal_actions_is_expected_length(self):
 
         test_game = GoNutsGame(4)
         translator = GoNutsGameGymTranslator(test_game)
-        assert translator.action_space_size() == 46
+        assert translator.action_space_size() == 8
 
     def test_legal_actions_have_only_donut_deck_picks_in_donut_state(self):
 
@@ -522,14 +522,12 @@ class TestGoNutsForDonutsGymTranslator:
         test_game.start_game()
 
         # Positions
-        #obs = np.zeros([translator.total_possible_players, translator.total_possible_cards])
-        #ret = obs.flatten(
-        ret = np.zeros(0)
-
+        obs = np.zeros([translator.total_possible_players, translator.total_possible_card_types])
+        ret = obs.flatten()
 
         # Discard
         ret = np.append(ret, np.zeros(translator.total_possible_card_types))
-        # ret = np.append(ret, np.zeros(translator.total_possible_cards))
+        ret = np.append(ret, np.zeros(translator.total_possible_card_types))
 
         # Scores
         ret = np.append(ret, np.zeros(translator.total_possible_players))
@@ -539,6 +537,8 @@ class TestGoNutsForDonutsGymTranslator:
         for i in self.fixture_card_order()[:4]:
             legal_actions[cards.get_card_type_for_id(i)] = 1
         ret = np.append(ret, legal_actions)
+
+        ret = np.append(ret, np.zeros(13))
 
         expected_observations = ret
 
@@ -562,48 +562,43 @@ class TestGoNutsForDonutsGymTranslator:
         test_game.setup_game(shuffle=False, deck_order=self.fixture_card_order())
         test_game.start_game() # deals top 5
         # d1: 0 CF, d2: 3 DH, d3: 9 ECL, d4: 12 G draw: [17 JF, 23 MB, 25 P, 32 PWD, 66 FC]; discard: []
-        test_game.execute_game_loop_with_actions(TestHelpers.step_actions(actions.ACTION_DONUT, [cards.TYPE_GZ, cards.TYPE_DH, cards.TYPE_DH]))
-        # p1: [12 GZ], p2: [], p3: [], p4: []; draw: [17 JF, 23 MB, 25 P, 32 PWD, 66 FC]
-        test_game.reset_turn()
-        # d1: 0 CF, d2: 17 JF, d3: 9 ECL, d4: 23 MB; draw: []; discard: [3 DH]
+        test_game.execute_game_loop_with_actions(TestHelpers.step_actions(actions.ACTION_DONUT, [cards.TYPE_GZ, cards.TYPE_DH, cards.TYPE_ECL]))
+        # p1: [12 GZ], p2: [3 DH], p3: [9 ECL], draw: [17 JF, 23 MB, 25 P, 32 PWD, 66 FC]
+        # d1: 0 CF, d2: 17 JF, d3: 23 MB, d4: 25 P; draw: []; discard: []
 
         # Positions (from player 0 perspective)
-        #no_cards = translator.total_possible_cards
-        #obs = np.array([])
+        no_card_types = translator.total_possible_card_types
+        obs = np.array([])
         # p0
-        #p0position = np.zeros(no_cards)
-        #p0position[cards.CF_FIRST] = 1
-        #p0position[cards.MB_FIRST] = 1
-        #obs = np.append(obs, p0position)
+        p0position = np.zeros(no_card_types)
+        p0position[cards.TYPE_GZ] = 1
+        obs = np.append(obs, p0position)
         # p1
-        #obs = np.append(obs, np.zeros(no_cards))
+        p1position = np.zeros(no_card_types)
+        p1position[cards.TYPE_DH] = 1
+        obs = np.append(obs, p1position)
         # p2
-        #obs = np.append(obs, np.zeros(no_cards))
-        # p3
-        #p3position = np.zeros(no_cards)
-        #p3position[cards.GZ_FIRST] = 1
-        #obs = np.append(obs, p3position)
-        # p4 (not in the game but included in the obvs space)
-        #obs = np.append(obs, np.zeros(no_cards))
-        #ret = obs
-
-        ret = np.zeros(0)
+        p2position = np.zeros(no_card_types)
+        p2position[cards.TYPE_ECL] = 1
+        obs = np.append(obs, p2position)
+        ret = obs
 
         # Discard
-        discard = np.zeros(translator.total_possible_card_types)
-        discard[cards.TYPE_DH] = 1
-        ret = np.append(ret, discard)
+        ret = np.append(ret, np.zeros(translator.total_possible_card_types))
+        ret = np.append(ret, np.zeros(translator.total_possible_card_types))
 
         # Scores
-        ret = np.append(ret, np.array([2 / test_game.max_score, 0, 0]))
+        ret = np.append(ret, np.array([2 / test_game.max_score, 1 / test_game.max_score, 0]))
         
         # Legal actions
         legal_actions = np.zeros(translator.action_space_size())
         legal_actions[cards.TYPE_CF] = 1
         legal_actions[cards.TYPE_JF] = 1
-        legal_actions[cards.TYPE_ECL] = 1
         legal_actions[cards.TYPE_MB] = 1
+        legal_actions[cards.TYPE_P] = 1
         ret = np.append(ret, legal_actions)
+
+        ret = np.append(ret, np.zeros(13))
 
         expected_observations = ret
         
@@ -625,23 +620,8 @@ class TestGoNutsForDonutsGymTranslator:
         test_game.execute_game_loop_with_actions(TestHelpers.step_actions(actions.ACTION_DONUT, [cards.TYPE_CF, cards.TYPE_CF, cards.TYPE_CF]))
         # d1: 23 MB, d2: 17 JF, d3: 9 ECL, d4: 12 G draw: [25 P, 32 PWD, 66 FC]; discard: [0 CF, 3 DH]
 
-
-        # Positions (from player 0 perspective)
-        #no_cards = translator.total_possible_cards
-        #obs = np.array([])
-        # p0  
-        #obs = np.append(obs, np.zeros(no_cards))
-        # p1
-        #obs = np.append(obs, np.zeros(no_cards))
-        # p2
-        #obs = np.append(obs, np.zeros(no_cards))
-        # p3
-        #obs = np.append(obs, np.zeros(no_cards))
-        # p4 (not in the game but included in the obvs space)
-        #obs = np.append(obs, np.zeros(no_cards))
-        #ret = obs
-
-        ret = np.zeros(0)
+        no_card_types = translator.total_possible_card_types
+        ret = np.zeros(3 * no_card_types)
 
         # Discard
         # All
@@ -650,9 +630,9 @@ class TestGoNutsForDonutsGymTranslator:
         discard[cards.TYPE_CF] = 1
         ret = np.append(ret, discard)
         # Top
-        #discard = np.zeros(translator.total_possible_cards)
-        #discard[cards.DH_FIRST] = 1
-        #ret = np.append(ret, discard)
+        discard = np.zeros(translator.total_possible_card_types)
+        discard[cards.CF_FIRST] = 1
+        ret = np.append(ret, discard)
 
         # Scores
         ret = np.append(ret, np.array([0, 0, 0]))
@@ -664,6 +644,8 @@ class TestGoNutsForDonutsGymTranslator:
         legal_actions[cards.TYPE_ECL] = 1
         legal_actions[cards.TYPE_GZ] = 1
         ret = np.append(ret, legal_actions)
+
+        ret = np.append(ret, np.zeros(13))
 
         expected_observations = ret
 
@@ -682,32 +664,26 @@ class TestGoNutsForDonutsGymTranslator:
         # p1: [0 CF, 17 JF], p2: [3 DH], p3: [12 G] draw: [23 MB, 25 P, 32 PWD, 66 FC]
         # d1: 23 MB, d2: 25 P, d3: 9 ECL, d4: 32 PWD; draw: [66 FC]; discard: []
 
-        # Positions (from player 3 perspective)
-        #no_cards = translator.total_possible_cards
-        #obs = np.array([])
-        # p3
-        #p3position = np.zeros(no_cards)
-        #p3position[cards.GZ_FIRST] = 1
-        #obs = np.append(obs, p3position)
-        # p4 (not in the game but included in the obvs space)
-        #obs = np.append(obs, np.zeros(no_cards))
+        no_card_types = translator.total_possible_card_types
+        obs = np.array([])
         # p0
-        #p0position = np.zeros(no_cards)
-        #p0position[cards.CF_FIRST] = 1
-        #p0position[cards.MB_FIRST] = 1
-        #obs = np.append(obs, p0position)
+        p0position = np.zeros(no_card_types)
+        p0position[cards.TYPE_GZ] = 1
+        obs = np.append(obs, p0position)
         # p1
-        #obs = np.append(obs, np.zeros(no_cards))
+        p1position = np.zeros(no_card_types)
+        p1position[cards.TYPE_CF] = 1
+        p1position[cards.TYPE_JF] = 1
+        obs = np.append(obs, p1position)
         # p2
-        #obs = np.append(obs, np.zeros(no_cards))
-        
-        #ret = obs
-
-        ret = np.zeros(0)
+        p2position = np.zeros(no_card_types)
+        p2position[cards.TYPE_DH] = 1
+        obs = np.append(obs, p2position)
+        ret = obs
 
         # Discard
-        discard = np.zeros(translator.total_possible_card_types)
-        ret = np.append(ret, discard)
+        ret = np.append(ret, np.zeros(translator.total_possible_card_types))
+        ret = np.append(ret, np.zeros(translator.total_possible_card_types))
 
         # Scores
         ret = np.append(ret, np.array([2 / test_game.max_score, 0, 1 / test_game.max_score]))
@@ -719,6 +695,8 @@ class TestGoNutsForDonutsGymTranslator:
         legal_actions[cards.TYPE_ECL] = 1
         legal_actions[cards.TYPE_POW] = 1
         ret = np.append(ret, legal_actions)
+
+        ret = np.append(ret, np.zeros(13))
 
         expected_observations = ret
         
