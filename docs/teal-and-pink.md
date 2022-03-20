@@ -170,4 +170,14 @@ As a comparison, here's a training run with 079da56
 
 This runs -1 to 1 so this is a problem in 7d4f4ab. The tournament results for 7d4f4ab show that the earlier models do win occasionally against base but they never win against any models (model1 or later).
 
+## Training run 6 - 29664cc
+
+This is as Training run 5 - 7d4f4ab but I fixed a bug in the observation of positions. Honestly I can't see this really affecting anything but I'll give it another go.
+
+
+```
+ACTIONS = 8
+FEATURE_SIZE = 64
+```
+
 
