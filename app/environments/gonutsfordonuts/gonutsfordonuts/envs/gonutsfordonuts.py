@@ -304,14 +304,16 @@ class GoNutsGameGymTranslator:
 
         ret = np.append(ret, scores_rolled)
 
+        # Make up to 64
+
+        ret = np.append(ret, np.zeros(13))
+        
         # 8 obvs (51 so far)
 
         # Legal actions, representing the donut choices or other actions
         ret = np.append(ret, self.get_legal_actions(current_player_num))
 
-        # Make up to 64
 
-        ret = np.append(ret, np.zeros(13))
 
         return ret
 
