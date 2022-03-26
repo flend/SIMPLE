@@ -249,3 +249,5 @@ Results: viz/card-types-50-model-tournament-results.csv
 
 ![training-079da56](./assets/images/card-types-50-model-tournament-results.png)
 
+Results aren't as convincing as previous runs. I played model 36 and it played pretty well, though it's weights showed it hadn't learnt ECL properly and missed a few good opportunities because of that.
+
