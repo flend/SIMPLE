@@ -251,3 +251,6 @@ Results: viz/card-types-50-model-tournament-results.csv
 
 Results aren't as convincing as previous runs. I played model 36 and it played pretty well, though it's weights showed it hadn't learnt ECL properly and missed a few good opportunities because of that.
 
+## Training run 8 - 490b467
+
+This is identical to training run 7 except that I've added a new selfplay type mostly_best_base which always adds a base player. This is what we test against so probably fair to train against it. It may give better performance by avoiding picking a better model due to random flukes against a very similar model - as we know very similar models tend to block each other all the time.
