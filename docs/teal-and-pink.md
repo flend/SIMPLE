@@ -186,3 +186,66 @@ I checked 079da56 and it does not pick illegal actions, even at the start of tra
 
 The issue was that the legal actions need to be at the end of the observation set `obs, legal_actions = split_input(self.processed_obs, ACTIONS)` and they are not in the card_types branch.
 
+## Training run 7 - b59037b
+
+Running the above again with the legal actions fixed.
+
+```
+-rw-r--r-- 1 flend flend 95009 Mar 20 15:40 _model_00001_0_0.271_77824_.zip
+-rw-r--r-- 1 flend flend 95009 Mar 20 17:10 _model_00002_0_0.225_815104_.zip
+-rw-r--r-- 1 flend flend 95009 Mar 20 17:16 _model_00003_0_0.245_856064_.zip
+-rw-r--r-- 1 flend flend 95009 Mar 20 20:09 _model_00004_0_0.206_2043904_.zip
+-rw-r--r-- 1 flend flend 95009 Mar 20 20:23 _model_00005_0_0.201_2084864_.zip
+-rw-r--r-- 1 flend flend 95009 Mar 20 21:36 _model_00006_0_0.23_2371584_.zip
+-rw-r--r-- 1 flend flend 95009 Mar 20 21:41 _model_00007_0_0.256_2412544_.zip
+-rw-r--r-- 1 flend flend 95009 Mar 20 21:46 _model_00008_0_0.238_2453504_.zip
+-rw-r--r-- 1 flend flend 95009 Mar 20 21:55 _model_00009_0_0.224_2535424_.zip
+-rw-r--r-- 1 flend flend 95009 Mar 20 22:00 _model_00010_0_0.266_2576384_.zip
+-rw-r--r-- 1 flend flend 95009 Mar 20 22:54 _model_00011_0_0.214_3108864_.zip
+-rw-r--r-- 1 flend flend 95009 Mar 20 22:57 _model_00012_0_0.295_3149824_.zip
+-rw-r--r-- 1 flend flend 95009 Mar 20 23:09 _model_00013_0_0.218_3313664_.zip
+-rw-r--r-- 1 flend flend 95009 Mar 20 23:15 _model_00014_0_0.332_3395584_.zip
+-rw-r--r-- 1 flend flend 95009 Mar 20 23:18 _model_00015_0_0.311_3436544_.zip
+-rw-r--r-- 1 flend flend 95009 Mar 20 23:24 _model_00016_0_0.231_3518464_.zip
+-rw-r--r-- 1 flend flend 95009 Mar 20 23:27 _model_00017_0_0.289_3559424_.zip
+-rw-r--r-- 1 flend flend 95009 Mar 20 23:44 _model_00018_0_0.218_3805184_.zip
+-rw-r--r-- 1 flend flend 95009 Mar 21 00:08 _model_00019_0_0.203_4132864_.zip
+-rw-r--r-- 1 flend flend 95009 Mar 21 00:11 _model_00020_0_0.264_4173824_.zip
+-rw-r--r-- 1 flend flend 95009 Mar 21 00:20 _model_00021_0_0.207_4296704_.zip
+-rw-r--r-- 1 flend flend 95009 Mar 21 00:23 _model_00022_0_0.305_4337664_.zip
+-rw-r--r-- 1 flend flend 95009 Mar 21 02:06 _model_00023_0_0.201_5771264_.zip
+-rw-r--r-- 1 flend flend 95009 Mar 21 02:15 _model_00024_0_0.242_5894144_.zip
+-rw-r--r-- 1 flend flend 95009 Mar 21 02:18 _model_00025_0_0.211_5935104_.zip
+-rw-r--r-- 1 flend flend 95009 Mar 21 02:48 _model_00026_0_0.208_6344704_.zip
+-rw-r--r-- 1 flend flend 95009 Mar 21 02:51 _model_00027_0_0.252_6385664_.zip
+-rw-r--r-- 1 flend flend 95009 Mar 21 03:12 _model_00028_0_0.238_6672384_.zip
+-rw-r--r-- 1 flend flend 95009 Mar 21 03:18 _model_00029_0_0.225_6754304_.zip
+-rw-r--r-- 1 flend flend 95009 Mar 21 03:21 _model_00030_0_0.31_6795264_.zip
+-rw-r--r-- 1 flend flend 95009 Mar 21 03:47 _model_00031_0_0.265_7163904_.zip
+-rw-r--r-- 1 flend flend 95009 Mar 21 03:56 _model_00032_0_0.316_7286784_.zip
+-rw-r--r-- 1 flend flend 95009 Mar 21 04:34 _model_00033_0_0.246_7819264_.zip
+-rw-r--r-- 1 flend flend 95009 Mar 21 04:37 _model_00034_0_0.229_7860224_.zip
+-rw-r--r-- 1 flend flend 95009 Mar 21 04:40 _model_00035_0_0.205_7901184_.zip
+-rw-r--r-- 1 flend flend 95009 Mar 21 04:46 _model_00036_0_0.209_7983104_.zip
+-rw-r--r-- 1 flend flend 95009 Mar 21 04:49 _model_00037_0_0.245_8024064_.zip
+-rw-r--r-- 1 flend flend 95009 Mar 21 04:58 _model_00038_0_0.315_8146944_.zip
+-rw-r--r-- 1 flend flend 95009 Mar 21 05:01 _model_00039_0_0.281_8187904_.zip
+-rw-r--r-- 1 flend flend 95009 Mar 21 05:15 _model_00040_0_0.225_8392704_.zip
+-rw-r--r-- 1 flend flend 95009 Mar 21 05:18 _model_00041_0_0.22_8433664_.zip
+-rw-r--r-- 1 flend flend 95009 Mar 21 05:24 _model_00042_0_0.256_8515584_.zip
+-rw-r--r-- 1 flend flend 95009 Mar 21 05:30 _model_00043_0_0.234_8597504_.zip
+-rw-r--r-- 1 flend flend 95009 Mar 21 05:36 _model_00044_0_0.218_8679424_.zip
+-rw-r--r-- 1 flend flend 95009 Mar 21 05:42 _model_00045_0_0.221_8761344_.zip
+-rw-r--r-- 1 flend flend 95009 Mar 21 05:45 _model_00046_0_0.224_8802304_.zip
+-rw-r--r-- 1 flend flend 95009 Mar 21 06:17 _model_00047_0_0.211_9252864_.zip
+-rw-r--r-- 1 flend flend 95009 Mar 21 06:23 _model_00048_0_0.236_9334784_.zip
+-rw-r--r-- 1 flend flend 95009 Mar 21 06:29 _model_00049_0_0.328_9416704_.zip
+-rw-r--r-- 1 flend flend 95009 Mar 21 06:32 _model_00050_0_0.352_9457664_.zip
+-rw-r--r-- 1 flend flend 95009 Mar 21 06:46 _model_00051_0_0.204_9621504_.zip
+-rw-r--r-- 1 flend flend 95006 Mar 20 15:32 base.zip
+```
+
+Results: viz/card-types-50-model-tournament-results.csv
+
+![training-079da56](./assets/images/card-types-50-model-tournament-results.png)
+
