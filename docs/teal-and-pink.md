@@ -254,3 +254,9 @@ Results aren't as convincing as previous runs. I played model 36 and it played p
 ## Training run 8 - 490b467
 
 This is identical to training run 7 except that I've added a new selfplay type mostly_best_base which always adds a base player. This is what we test against so probably fair to train against it. It may give better performance by avoiding picking a better model due to random flukes against a very similar model - as we know very similar models tend to block each other all the time.
+
+Results: viz/mostly_base_5.csv-tournament-results.csv
+
+![training-490b467](./assets/images/mostly-base-5.png)
+
+This performed well, perhaps justifying the hypothesis that training models with a performance criterion that we are testing against is a good idea.
