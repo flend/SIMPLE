@@ -9,8 +9,8 @@ from stable_baselines.common.policies import ActorCriticPolicy
 from stable_baselines.common.distributions import CategoricalProbabilityDistribution
 
 
-ACTIONS = 8
-FEATURE_SIZE = 64
+ACTIONS = 26
+FEATURE_SIZE = 94
 
 
 class CustomPolicy(ActorCriticPolicy):

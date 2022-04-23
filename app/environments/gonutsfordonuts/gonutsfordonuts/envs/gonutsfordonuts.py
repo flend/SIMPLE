@@ -175,7 +175,7 @@ class GoNutsGameGymTranslator:
         # Define the maximum card space for the max numbers of players
         # (for lower number of player games, non-player observations are zeroed)
         self.total_possible_cards = 70
-        self.total_possible_card_types = 8
+        self.total_possible_card_types = 13
         self.total_possible_players = 3 # Could be up to 5 but keep to 3 to make the model smaller
 
     def total_positions(self):
@@ -187,7 +187,7 @@ class GoNutsGameGymTranslator:
         # player positions / discard / discard top / player scores / legal actions
         # return self.total_possible_card_types * self.total_possible_players + self.total_possible_card_types + self.total_possible_card_types + self.total_possible_players + self.action_space_size()
         # Simplified version
-        return 64# self.total_possible_card_types + self.total_possible_players + self.action_space_size()
+        return self.total_possible_card_types * self.total_possible_players + self.total_possible_card_types + self.total_possible_card_types + self.total_possible_players + self.action_space_size()
 
     def action_space_size(self):
         # agents choose a card_id as an action.
@@ -195,7 +195,7 @@ class GoNutsGameGymTranslator:
         # it is actual cards we pick and N of them are unmasked each turn
         
         #      pick-style-actions          give-away-style-actions
-        return self.total_possible_card_types # self.total_possible_card_types + self.total_possible_card_types
+        return self.total_possible_card_types + self.total_possible_card_types
     
     def get_legal_actions(self, current_player_num):
         
@@ -245,9 +245,8 @@ class GoNutsGameGymTranslator:
 
         n_players = self.game.n_players
 
-        # 24 obvs
+        # 3 * 13 = 39 obvs
 
-        #positions = np.zeros([self.total_possible_players, self.total_possible_cards])
         positions = np.zeros([self.total_possible_players, self.total_possible_card_types])
 
         # Each player's current position (tableau)
@@ -266,9 +265,7 @@ class GoNutsGameGymTranslator:
         positions_rolled = np.roll(positions_flat, (self.total_possible_players - current_player_num) * self.total_possible_card_types)
         ret = positions_rolled
 
-        #ret = np.zeros(0)
-
-        # 8 obvs (32 so far)
+        # 13 obvs (52 so far)
 
         # The discard deck
         # Again by type
@@ -279,7 +276,7 @@ class GoNutsGameGymTranslator:
         
         ret = np.append(ret, discard)
 
-        # 8 obvs (40 so far)
+        # 13 obvs (65 so far)
 
         # The top discard card [for eclair]
         # Currently removed to make the obvs space smaller
@@ -291,9 +288,7 @@ class GoNutsGameGymTranslator:
         ret = np.append(ret, top_discard)
 
         # Current player scores [to guide the agent to which players to target]
-        # 3 obvs (43 so far)
-
-        
+        # 3 obvs (68 so far)
         player_scores = np.zeros(self.total_possible_players)
 
         for i in range(n_players):
@@ -303,17 +298,11 @@ class GoNutsGameGymTranslator:
         scores_rolled = np.roll(player_scores, self.total_possible_players - current_player_num)
 
         ret = np.append(ret, scores_rolled)
-
-        # Make up to 64
-
-        ret = np.append(ret, np.zeros(13))
         
-        # 8 obvs (51 so far)
+        # 26 obvs (94 so far)
 
         # Legal actions, representing the donut choices or other actions
         ret = np.append(ret, self.get_legal_actions(current_player_num))
-
-
 
         return ret
 
@@ -902,7 +891,7 @@ class GoNutsForDonutsEnv(gym.Env):
     def reset(self):
 
         # setup card selection to be used in simulation
-        deck_filter = GoNutsGame.teal_deck_filter_no_fc()
+        deck_filter = GoNutsGame.teal_and_pink_filter()
         self.game.reset_game(shuffle=True, deck_filter=deck_filter)
         self.game.start_game()
 

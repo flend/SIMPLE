@@ -338,38 +338,38 @@ class TestGoNutsForDonutsGymTranslator:
 
         test_game = GoNutsGame(5)
         translator = GoNutsGameGymTranslator(test_game)
-        assert translator.observation_space_size() == 64
+        assert translator.observation_space_size() == 94
 
     def test_legal_actions_is_expected_length(self):
 
         test_game = GoNutsGame(4)
         translator = GoNutsGameGymTranslator(test_game)
-        assert translator.action_space_size() == 8
+        assert translator.action_space_size() == 26
 
     def test_legal_actions_have_only_donut_deck_picks_in_donut_state(self):
 
-        test_game = GoNutsGame(5)
+        test_game = GoNutsGame(3)
         translator = GoNutsGameGymTranslator(test_game)
         
         test_game.setup_game(shuffle=False, deck_order=self.fixture_card_order())
         test_game.start_game()
 
-        # 6 dealt cards will be the top 6
+        # 4 dealt cards will be the top 4
         expected_legal_actions = np.zeros(translator.action_space_size())
-        for i in self.fixture_card_order()[:6]:
+        for i in self.fixture_card_order()[:4]:
             expected_legal_actions[cards.get_card_type_for_id(i)] = 1
 
         assert (translator.get_legal_actions(0) == expected_legal_actions).all()
 
     def test_legal_actions_have_only_discards_picks_in_discard_state(self):
 
-        test_game = GoNutsGame(4)
+        test_game = GoNutsGame(3)
         translator = GoNutsGameGymTranslator(test_game)
 
         test_game.setup_game(shuffle=False, deck_order=self.fixture_card_order())
         test_game.start_game()
 
-        test_game.pick_cards([cards.CF_FIRST, cards.CF_FIRST, cards.DH_FIRST, cards.DH_FIRST]) # adds CF_FIRST then DH_FIRST to discard pile
+        test_game.pick_cards([cards.CF_FIRST, cards.CF_FIRST, cards.DH_FIRST]) # adds CF_FIRST to discard pile
         test_game.reset_turn()
 
         test_game.game_state = GoNutsGameState.PICK_DISCARD
@@ -377,7 +377,6 @@ class TestGoNutsForDonutsGymTranslator:
         # legal actions are the two discarded cards
         expected_legal_actions = np.zeros(translator.action_space_size())
         expected_legal_actions[cards.get_card_type_for_id(cards.CF_FIRST)] = 1
-        expected_legal_actions[cards.get_card_type_for_id(cards.DH_FIRST)] = 1
         
         assert (translator.get_legal_actions(0) == expected_legal_actions).all()
 
@@ -538,8 +537,6 @@ class TestGoNutsForDonutsGymTranslator:
             legal_actions[cards.get_card_type_for_id(i)] = 1
         ret = np.append(ret, legal_actions)
 
-        ret = np.append(ret, np.zeros(13))
-
         expected_observations = ret
 
         assert (translator.get_observations(0) == expected_observations).all()
@@ -598,8 +595,6 @@ class TestGoNutsForDonutsGymTranslator:
         legal_actions[cards.TYPE_P] = 1
         ret = np.append(ret, legal_actions)
 
-        ret = np.append(ret, np.zeros(13))
-
         expected_observations = ret
         
         self.observation_comparer(translator.get_observations(0), expected_observations)
@@ -644,8 +639,6 @@ class TestGoNutsForDonutsGymTranslator:
         legal_actions[cards.TYPE_ECL] = 1
         legal_actions[cards.TYPE_GZ] = 1
         ret = np.append(ret, legal_actions)
-
-        ret = np.append(ret, np.zeros(13))
 
         expected_observations = ret
 
@@ -695,8 +688,6 @@ class TestGoNutsForDonutsGymTranslator:
         legal_actions[cards.TYPE_ECL] = 1
         legal_actions[cards.TYPE_POW] = 1
         ret = np.append(ret, legal_actions)
-
-        ret = np.append(ret, np.zeros(13))
 
         expected_observations = ret
         
