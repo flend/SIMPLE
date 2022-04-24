@@ -164,4 +164,128 @@ The tournament results are dreadful, we have created a model that consistently l
 
 ![results](./assets/images/tournament-7d4f4ab-results.png)
 
+As a comparison, here's a training run with 079da56
 
+![training-079da56](./assets/images/trainingcorrectly.png)
+
+This runs -1 to 1 so this is a problem in 7d4f4ab. The tournament results for 7d4f4ab show that the earlier models do win occasionally against base but they never win against any models (model1 or later).
+
+## Training run 6 - 29664cc
+
+This is as Training run 5 - 7d4f4ab but I fixed a bug in the observation of positions. Honestly I can't see this really affecting anything but I'll give it another go.
+
+
+```
+ACTIONS = 8
+FEATURE_SIZE = 64
+```
+
+This has the same tapping out at 0.5 issue. But this seems to be that the agents (admittidly I only trained for 10 min or so) always seem to pick invalid actions, causing the game to finish early.
+
+I checked 079da56 and it does not pick illegal actions, even at the start of training.
+
+The issue was that the legal actions need to be at the end of the observation set `obs, legal_actions = split_input(self.processed_obs, ACTIONS)` and they are not in the card_types branch.
+
+## Training run 7 - b59037b
+
+Running the above again with the legal actions fixed.
+
+```
+-rw-r--r-- 1 flend flend 95009 Mar 20 15:40 _model_00001_0_0.271_77824_.zip
+-rw-r--r-- 1 flend flend 95009 Mar 20 17:10 _model_00002_0_0.225_815104_.zip
+-rw-r--r-- 1 flend flend 95009 Mar 20 17:16 _model_00003_0_0.245_856064_.zip
+-rw-r--r-- 1 flend flend 95009 Mar 20 20:09 _model_00004_0_0.206_2043904_.zip
+-rw-r--r-- 1 flend flend 95009 Mar 20 20:23 _model_00005_0_0.201_2084864_.zip
+-rw-r--r-- 1 flend flend 95009 Mar 20 21:36 _model_00006_0_0.23_2371584_.zip
+-rw-r--r-- 1 flend flend 95009 Mar 20 21:41 _model_00007_0_0.256_2412544_.zip
+-rw-r--r-- 1 flend flend 95009 Mar 20 21:46 _model_00008_0_0.238_2453504_.zip
+-rw-r--r-- 1 flend flend 95009 Mar 20 21:55 _model_00009_0_0.224_2535424_.zip
+-rw-r--r-- 1 flend flend 95009 Mar 20 22:00 _model_00010_0_0.266_2576384_.zip
+-rw-r--r-- 1 flend flend 95009 Mar 20 22:54 _model_00011_0_0.214_3108864_.zip
+-rw-r--r-- 1 flend flend 95009 Mar 20 22:57 _model_00012_0_0.295_3149824_.zip
+-rw-r--r-- 1 flend flend 95009 Mar 20 23:09 _model_00013_0_0.218_3313664_.zip
+-rw-r--r-- 1 flend flend 95009 Mar 20 23:15 _model_00014_0_0.332_3395584_.zip
+-rw-r--r-- 1 flend flend 95009 Mar 20 23:18 _model_00015_0_0.311_3436544_.zip
+-rw-r--r-- 1 flend flend 95009 Mar 20 23:24 _model_00016_0_0.231_3518464_.zip
+-rw-r--r-- 1 flend flend 95009 Mar 20 23:27 _model_00017_0_0.289_3559424_.zip
+-rw-r--r-- 1 flend flend 95009 Mar 20 23:44 _model_00018_0_0.218_3805184_.zip
+-rw-r--r-- 1 flend flend 95009 Mar 21 00:08 _model_00019_0_0.203_4132864_.zip
+-rw-r--r-- 1 flend flend 95009 Mar 21 00:11 _model_00020_0_0.264_4173824_.zip
+-rw-r--r-- 1 flend flend 95009 Mar 21 00:20 _model_00021_0_0.207_4296704_.zip
+-rw-r--r-- 1 flend flend 95009 Mar 21 00:23 _model_00022_0_0.305_4337664_.zip
+-rw-r--r-- 1 flend flend 95009 Mar 21 02:06 _model_00023_0_0.201_5771264_.zip
+-rw-r--r-- 1 flend flend 95009 Mar 21 02:15 _model_00024_0_0.242_5894144_.zip
+-rw-r--r-- 1 flend flend 95009 Mar 21 02:18 _model_00025_0_0.211_5935104_.zip
+-rw-r--r-- 1 flend flend 95009 Mar 21 02:48 _model_00026_0_0.208_6344704_.zip
+-rw-r--r-- 1 flend flend 95009 Mar 21 02:51 _model_00027_0_0.252_6385664_.zip
+-rw-r--r-- 1 flend flend 95009 Mar 21 03:12 _model_00028_0_0.238_6672384_.zip
+-rw-r--r-- 1 flend flend 95009 Mar 21 03:18 _model_00029_0_0.225_6754304_.zip
+-rw-r--r-- 1 flend flend 95009 Mar 21 03:21 _model_00030_0_0.31_6795264_.zip
+-rw-r--r-- 1 flend flend 95009 Mar 21 03:47 _model_00031_0_0.265_7163904_.zip
+-rw-r--r-- 1 flend flend 95009 Mar 21 03:56 _model_00032_0_0.316_7286784_.zip
+-rw-r--r-- 1 flend flend 95009 Mar 21 04:34 _model_00033_0_0.246_7819264_.zip
+-rw-r--r-- 1 flend flend 95009 Mar 21 04:37 _model_00034_0_0.229_7860224_.zip
+-rw-r--r-- 1 flend flend 95009 Mar 21 04:40 _model_00035_0_0.205_7901184_.zip
+-rw-r--r-- 1 flend flend 95009 Mar 21 04:46 _model_00036_0_0.209_7983104_.zip
+-rw-r--r-- 1 flend flend 95009 Mar 21 04:49 _model_00037_0_0.245_8024064_.zip
+-rw-r--r-- 1 flend flend 95009 Mar 21 04:58 _model_00038_0_0.315_8146944_.zip
+-rw-r--r-- 1 flend flend 95009 Mar 21 05:01 _model_00039_0_0.281_8187904_.zip
+-rw-r--r-- 1 flend flend 95009 Mar 21 05:15 _model_00040_0_0.225_8392704_.zip
+-rw-r--r-- 1 flend flend 95009 Mar 21 05:18 _model_00041_0_0.22_8433664_.zip
+-rw-r--r-- 1 flend flend 95009 Mar 21 05:24 _model_00042_0_0.256_8515584_.zip
+-rw-r--r-- 1 flend flend 95009 Mar 21 05:30 _model_00043_0_0.234_8597504_.zip
+-rw-r--r-- 1 flend flend 95009 Mar 21 05:36 _model_00044_0_0.218_8679424_.zip
+-rw-r--r-- 1 flend flend 95009 Mar 21 05:42 _model_00045_0_0.221_8761344_.zip
+-rw-r--r-- 1 flend flend 95009 Mar 21 05:45 _model_00046_0_0.224_8802304_.zip
+-rw-r--r-- 1 flend flend 95009 Mar 21 06:17 _model_00047_0_0.211_9252864_.zip
+-rw-r--r-- 1 flend flend 95009 Mar 21 06:23 _model_00048_0_0.236_9334784_.zip
+-rw-r--r-- 1 flend flend 95009 Mar 21 06:29 _model_00049_0_0.328_9416704_.zip
+-rw-r--r-- 1 flend flend 95009 Mar 21 06:32 _model_00050_0_0.352_9457664_.zip
+-rw-r--r-- 1 flend flend 95009 Mar 21 06:46 _model_00051_0_0.204_9621504_.zip
+-rw-r--r-- 1 flend flend 95006 Mar 20 15:32 base.zip
+```
+
+Results: viz/card-types-50-model-tournament-results.csv
+
+![training-079da56](./assets/images/card-types-50-model-tournament-results.png)
+
+Results aren't as convincing as previous runs. I played model 36 and it played pretty well, though it's weights showed it hadn't learnt ECL properly and missed a few good opportunities because of that.
+
+## Training run 8 - 490b467
+
+This is identical to training run 7 except that I've added a new selfplay type mostly_best_base which always adds a base player. This is what we test against so probably fair to train against it. It may give better performance by avoiding picking a better model due to random flukes against a very similar model - as we know very similar models tend to block each other all the time.
+
+Results: viz/mostly_base_5.csv-tournament-results.csv
+
+![training-490b467](./assets/images/mostly-base-5.png)
+
+This performed well, perhaps justifying the hypothesis that training models with a performance criterion that we are testing against is a good idea.
+
+## Training run 9 - d814442
+
+This run uses the teal and pink cards (minus FC because it has a card-id that is right at the end of the ID space and I'm not using all the cards yet).
+
+Training died after 12 hours, last model after 10 hours.
+
+```
+-rw-r--r-- 1 flend flend 199354 Apr 23 07:34 _model_00001_0_0.2_36864_.zip
+-rw-r--r-- 1 flend flend 199354 Apr 23 07:40 _model_00002_0_0.299_118784_.zip
+-rw-r--r-- 1 flend flend 199354 Apr 23 07:49 _model_00003_0_0.218_241664_.zip
+
+-rw-r--r-- 1 flend flend 199354 Apr 23 16:56 _model_00049_0_0.215_6672384_.zip
+-rw-r--r-- 1 flend flend 199354 Apr 23 16:58 _model_00050_0_0.242_6713344_.zip
+-rw-r--r-- 1 flend flend 199354 Apr 23 17:01 _model_00051_0_0.236_6754304_.zip
+-rw-r--r-- 1 flend flend 199354 Apr 23 17:04 _model_00052_0_0.221_6795264_.zip
+```
+
+Results: viz/teal_and_pink_base_4-tournament-results.csv
+
+Looking at the scores, they seem good. Note that this is a 3-way game (always 1 base) and we are just plotting model0 results, so we expect model0 even when playing against itself (the trace) to get >0 results - because base is strongly negative and the delta is shared between the real models.
+
+I played the best_model and it seemed to play well (it beat me). I wasn't convinced it understood the pink (rare) cards very well but it played a good teal game. It might be interesting to train with a higher ratio of pink cards so they are encountered more often and they are more 'worth' learning.
+
+![d814442-results](./assets/images/teal-and-pink-4.png)
+
+Looking at the delta between model0 and model1 scores, this (sort of) removes any shared baseline score received from the base model. Therefore this should be 0 on the trace.
+
+![d814442-delta](./assets/images/teal-and-pink-4-score-diff.png)
