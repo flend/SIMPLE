@@ -260,3 +260,32 @@ Results: viz/mostly_base_5.csv-tournament-results.csv
 ![training-490b467](./assets/images/mostly-base-5.png)
 
 This performed well, perhaps justifying the hypothesis that training models with a performance criterion that we are testing against is a good idea.
+
+## Training run 9 - d814442
+
+This run uses the teal and pink cards (minus FC because it has a card-id that is right at the end of the ID space and I'm not using all the cards yet).
+
+Training died after 12 hours, last model after 10 hours.
+
+```
+-rw-r--r-- 1 flend flend 199354 Apr 23 07:34 _model_00001_0_0.2_36864_.zip
+-rw-r--r-- 1 flend flend 199354 Apr 23 07:40 _model_00002_0_0.299_118784_.zip
+-rw-r--r-- 1 flend flend 199354 Apr 23 07:49 _model_00003_0_0.218_241664_.zip
+
+-rw-r--r-- 1 flend flend 199354 Apr 23 16:56 _model_00049_0_0.215_6672384_.zip
+-rw-r--r-- 1 flend flend 199354 Apr 23 16:58 _model_00050_0_0.242_6713344_.zip
+-rw-r--r-- 1 flend flend 199354 Apr 23 17:01 _model_00051_0_0.236_6754304_.zip
+-rw-r--r-- 1 flend flend 199354 Apr 23 17:04 _model_00052_0_0.221_6795264_.zip
+```
+
+Results: viz/teal_and_pink_base_4-tournament-results.csv
+
+Looking at the scores, they seem good. Note that this is a 3-way game (always 1 base) and we are just plotting model0 results, so we expect model0 even when playing against itself (the trace) to get >0 results - because base is strongly negative and the delta is shared between the real models.
+
+I played the best_model and it seemed to play well (it beat me). I wasn't convinced it understood the pink (rare) cards very well but it played a good teal game. It might be interesting to train with a higher ratio of pink cards so they are encountered more often and they are more 'worth' learning.
+
+![d814442-results](./assets/images/teal-and-pink-4.png)
+
+Looking at the delta between model0 and model1 scores, this (sort of) removes any shared baseline score received from the base model. Therefore this should be 0 on the trace.
+
+![d814442-delta](./assets/images/teal-and-pink-4-score-diff.png)
