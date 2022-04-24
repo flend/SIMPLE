@@ -284,8 +284,17 @@ Looking at the scores, they seem good. Note that this is a 3-way game (always 1 
 
 I played the best_model and it seemed to play well (it beat me). I wasn't convinced it understood the pink (rare) cards very well but it played a good teal game. It might be interesting to train with a higher ratio of pink cards so they are encountered more often and they are more 'worth' learning.
 
+Tournament with 50 games
+
 ![d814442-results](./assets/images/teal-and-pink-4.png)
 
 Looking at the delta between model0 and model1 scores, this (sort of) removes any shared baseline score received from the base model. Therefore this should be 0 on the trace.
 
 ![d814442-delta](./assets/images/teal-and-pink-4-score-diff.png)
+
+Doing 500 games to reduce the noise, again plotting the delta
+
+`docker-compose exec app python3 tournament.py -e gonutsfordonuts -st 0 -sp 53 -sx 5 -g 500 -o teal_and_pink_base_4_long > /dev/null`
+
+![d814442-delta-long](./assets/images/teal-and-pink-4-long-score-diff.png)
+
