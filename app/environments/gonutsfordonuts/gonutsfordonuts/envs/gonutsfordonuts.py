@@ -175,7 +175,8 @@ class GoNutsGameGymTranslator:
         # Define the maximum card space for the max numbers of players
         # (for lower number of player games, non-player observations are zeroed)
         self.total_possible_cards = 70
-        self.total_possible_players = 5
+        self.total_possible_card_types = 13
+        self.total_possible_players = 3 # Could be up to 5 but keep to 3 to make the model smaller
 
     def total_positions(self):
         # player positions / discards
@@ -184,7 +185,9 @@ class GoNutsGameGymTranslator:
     def observation_space_size(self):
 
         # player positions / discard / discard top / player scores / legal actions
-        return self.total_possible_cards * self.total_possible_players + self.total_possible_cards + self.total_possible_cards + self.total_possible_players + self.action_space_size()
+        # return self.total_possible_card_types * self.total_possible_players + self.total_possible_card_types + self.total_possible_card_types + self.total_possible_players + self.action_space_size()
+        # Simplified version
+        return self.total_possible_card_types * self.total_possible_players + self.total_possible_card_types + self.total_possible_card_types + self.total_possible_players + self.action_space_size()
 
     def action_space_size(self):
         # agents choose a card_id as an action.
@@ -192,7 +195,7 @@ class GoNutsGameGymTranslator:
         # it is actual cards we pick and N of them are unmasked each turn
         
         #      pick-style-actions          give-away-style-actions
-        return self.total_possible_cards + self.total_possible_cards
+        return self.total_possible_card_types + self.total_possible_card_types
     
     def get_legal_actions(self, current_player_num):
         
@@ -200,31 +203,31 @@ class GoNutsGameGymTranslator:
 
         if self.game.game_state == GoNutsGameState.PICK_DONUT:
             for i in range(self.game.no_donut_decks):
-                legal_actions[self.game.donut_decks[i].card.id] = 1
+                legal_actions[self.game.donut_decks[i].card.type] = 1
         elif self.game.game_state == GoNutsGameState.PICK_DISCARD:
             for card in self.game.discard.cards:
-                legal_actions[card.id] = 1
+                legal_actions[card.type] = 1
         elif self.game.game_state == GoNutsGameState.PICK_ONE_FROM_TWO_DECK_CARDS:
             if self.game.deck.size():
-                legal_actions[self.game.deck.peek_one().id] = 1
-            if self.game.deck.peek_in_nth_position(2):
-                legal_actions[self.game.deck.peek_in_nth_position(2).id] = 1
+                legal_actions[self.game.deck.peek_one().type] = 1
+            if self.game.deck.size() > 1 and self.game.deck.peek_in_nth_position(2):
+                legal_actions[self.game.deck.peek_in_nth_position(2).type] = 1
         elif self.game.game_state == GoNutsGameState.GIVE_CARD:
             
             # Sprinkled requires giving a Sprinkled card to only be an option if the player has a sprinkled card already
             if self.game.players[current_player_num].position.contains_id(cards.SPR_FIRST) and self.game.players[current_player_num].position.contains_id(cards.SPR_2):
-                legal_actions[actions.ACTION_GIVE_CARD + cards.SPR_2] = 1
+                legal_actions[actions.ACTION_GIVE_CARD + cards.TYPE_SPR] = 1
 
             # OR it's the only card in the position
             if self.game.players[current_player_num].position.contains_id(cards.SPR_FIRST) and self.game.players[current_player_num].position.size() == 1:
-                legal_actions[actions.ACTION_GIVE_CARD + cards.SPR_FIRST] = 1
+                legal_actions[actions.ACTION_GIVE_CARD + cards.TYPE_SPR] = 1
             if self.game.players[current_player_num].position.contains_id(cards.SPR_2) and self.game.players[current_player_num].position.size() == 1:
-                legal_actions[actions.ACTION_GIVE_CARD + cards.SPR_2] = 1
+                legal_actions[actions.ACTION_GIVE_CARD + cards.TYPE_SPR] = 1
 
             # Otherwise it's all cards in the position, excluding Sprinkles cards
             for card in self.game.players[current_player_num].position.cards:
                 if not card.id == cards.SPR_FIRST and not card.id == cards.SPR_2:
-                    legal_actions[actions.ACTION_GIVE_CARD + card.id] = 1
+                    legal_actions[actions.ACTION_GIVE_CARD + card.type] = 1
 
         else:
             logger.info(f'get_legal_actions called in inappropriate game state {self.game.game_state}')
@@ -238,42 +241,54 @@ class GoNutsGameGymTranslator:
         # Always assume we are playing with 5 players and just 0 out their observations
         # Always assume we are playing with all the cards, cards we are not playing with will not occur
 
+        # NOW MODELLING 3 players and 7 classes for a smaller obvs space
+
         n_players = self.game.n_players
 
-        positions = np.zeros([self.total_possible_players, self.total_possible_cards])
+        # 3 * 13 = 39 obvs
+
+        positions = np.zeros([self.total_possible_players, self.total_possible_card_types])
 
         # Each player's current position (tableau)
         # starting from the current player and cycling to higher-numbered players
+        # use '1' if the player has this TYPE of card and 0 if not
 
         # create from player 0 perspective
         for i in range(n_players):
             player = self.game.players[i]
 
             for card in player.position.cards:
-                positions[i][card.id] = 1
+               positions[i][card.type] = 1
 
         positions_flat = positions.flatten()
         # roll forward (+wrap) to put this player's numbers at the start
-        positions_rolled = np.roll(positions_flat, (self.total_possible_players - current_player_num) * self.total_possible_cards)
+        positions_rolled = np.roll(positions_flat, (self.total_possible_players - current_player_num) * self.total_possible_card_types)
         ret = positions_rolled
 
+        # 13 obvs (52 so far)
+
         # The discard deck
-        discard = np.zeros(self.total_possible_cards)
+        # Again by type
+        discard = np.zeros(self.total_possible_card_types)
 
         for card in self.game.discard.cards:
-            discard[card.id] = 1
+            discard[card.type] = 1
         
         ret = np.append(ret, discard)
 
+        # 13 obvs (65 so far)
+
         # The top discard card [for eclair]
-        top_discard = np.zeros(self.total_possible_cards)
+        # Currently removed to make the obvs space smaller
+        top_discard = np.zeros(self.total_possible_card_types)
 
         if self.game.discard.size():
-            top_discard[self.game.discard.peek_one().id] = 1
+            top_discard[self.game.discard.peek_one().type] = 1
         
         ret = np.append(ret, top_discard)
 
         # Current player scores [to guide the agent to which players to target]
+        # 3 obvs (68 so far)
         player_scores = np.zeros(self.total_possible_players)
 
         for i in range(n_players):
@@ -283,9 +298,8 @@ class GoNutsGameGymTranslator:
         scores_rolled = np.roll(player_scores, self.total_possible_players - current_player_num)
 
         ret = np.append(ret, scores_rolled)
-
-        # TODO
-        # Add game state as an observation since actions may be interpreted differently for different states
+        
+        # 26 obvs (94 so far)
 
         # Legal actions, representing the donut choices or other actions
         ret = np.append(ret, self.get_legal_actions(current_player_num))
@@ -355,12 +369,31 @@ class GoNutsGame:
         cards.POW_FIRST, cards.POW_2, cards.POW_3, cards.POW_4, cards.FC_FIRST, cards.FC_2 ]
 
     @classmethod
+    def teal_deck_filter_no_fc(self):
+        return [ cards.CF_FIRST, cards.CF_2, cards.CF_3, cards.DH_FIRST, cards.DH_2, cards.DH_3, cards.DH_4, cards.DH_5, cards.DH_6,
+        cards.ECL_FIRST, cards.ECL_2, cards.ECL_3, cards.GZ_FIRST, cards.GZ_2, cards.GZ_3, cards.GZ_4, cards.GZ_5,
+        cards.JF_FIRST, cards.JF_2, cards.JF_3, cards.JF_4, cards.JF_5, cards.JF_6, cards.MB_FIRST, cards.MB_2,
+        cards.P_FIRST, cards.P_2, cards.P_3, cards.P_4, cards.P_5, cards.P_6, cards.P_7,
+        cards.POW_FIRST, cards.POW_2, cards.POW_3, cards.POW_4]
+
+    @classmethod
     def teal_and_pink_filter(self):
         return [ cards.CF_FIRST, cards.CF_2, cards.CF_3, cards.DH_FIRST, cards.DH_2, cards.DH_3, cards.DH_4, cards.DH_5, cards.DH_6,
         cards.ECL_FIRST, cards.ECL_2, cards.ECL_3, cards.GZ_FIRST, cards.GZ_2, cards.GZ_3, cards.GZ_4, cards.GZ_5,
         cards.JF_FIRST, cards.JF_2, cards.JF_3, cards.JF_4, cards.JF_5, cards.JF_6, cards.MB_FIRST, cards.MB_2,
         cards.P_FIRST, cards.P_2, cards.P_3, cards.P_4, cards.P_5, cards.P_6, cards.P_7,
         cards.POW_FIRST, cards.POW_2, cards.POW_3, cards.POW_4, cards.FC_FIRST, cards.FC_2,
+        cards.BC_FIRST, cards.BC_2, cards.BC_3, cards.BC_4, cards.BC_5, cards.BC_6,
+        cards.DC_FIRST, cards.DC_2, cards.RV_FIRST, cards.RV_2, cards.SPR_FIRST, cards.SPR_2 ]
+
+    # fc is excluded since its card ID is 22 which puts it out-of-range unless using all card types
+    @classmethod
+    def teal_and_pink_filter_no_fc(self):
+        return [ cards.CF_FIRST, cards.CF_2, cards.CF_3, cards.DH_FIRST, cards.DH_2, cards.DH_3, cards.DH_4, cards.DH_5, cards.DH_6,
+        cards.ECL_FIRST, cards.ECL_2, cards.ECL_3, cards.GZ_FIRST, cards.GZ_2, cards.GZ_3, cards.GZ_4, cards.GZ_5,
+        cards.JF_FIRST, cards.JF_2, cards.JF_3, cards.JF_4, cards.JF_5, cards.JF_6, cards.MB_FIRST, cards.MB_2,
+        cards.P_FIRST, cards.P_2, cards.P_3, cards.P_4, cards.P_5, cards.P_6, cards.P_7,
+        cards.POW_FIRST, cards.POW_2, cards.POW_3, cards.POW_4,
         cards.BC_FIRST, cards.BC_2, cards.BC_3, cards.BC_4, cards.BC_5, cards.BC_6,
         cards.DC_FIRST, cards.DC_2, cards.RV_FIRST, cards.RV_2, cards.SPR_FIRST, cards.SPR_2 ]
 
@@ -474,7 +507,7 @@ class GoNutsGame:
                 cards_picked.append(None)
             else:
                 player.position.add_one(deck.card)
-                logger.info(f'Player {player.id} picks {deck.card.symbol}')
+                logger.info(f'Player {player.id} picks {deck.card.symbol} ({deck.card.type}:{deck.card.id})')
 
                 cards_picked.append(deck.card)
                 deck.set_taken()
@@ -685,7 +718,7 @@ class GoNutsGame:
         # Discard action - requires step, action state
         elif self.game_state == GoNutsGameState.PICK_DISCARD:
 
-            discard_action = GoNutsGame.translate_step_action(self.game_state, step_action)
+            discard_action = self.translate_step_action(self.game_state, self.action_player, step_action)
             self.do_pick_discard_action(self.action_player, discard_action)
             # Move to the next player to have an action
             self.move_to_next_action_player()
@@ -694,7 +727,7 @@ class GoNutsGame:
         # Pick one from two deck cards - requires step, action state
         elif self.game_state == GoNutsGameState.PICK_ONE_FROM_TWO_DECK_CARDS:
 
-            deck_action = GoNutsGame.translate_step_action(self.game_state, step_action)
+            deck_action = self.translate_step_action(self.game_state, self.action_player, step_action)
             self.do_pick_one_from_two_deck_action(self.action_player, deck_action)
             # Move to the next player to have an action
             self.move_to_next_action_player()
@@ -703,7 +736,7 @@ class GoNutsGame:
         # Give card from position - requires step, action state
         elif self.game_state == GoNutsGameState.GIVE_CARD:
 
-            give_action = GoNutsGame.translate_step_action(self.game_state, step_action)
+            give_action = self.translate_step_action(self.game_state, self.action_player, step_action)
             self.do_give_card_action(self.action_player, give_action)
             # Move to the next player to have an action
             self.move_to_next_action_player()
@@ -714,7 +747,7 @@ class GoNutsGame:
         # Do player picks card - requires step, donut state
         elif self.game_state == GoNutsGameState.PICK_DONUT:
 
-            donut_action = GoNutsGame.translate_step_action(self.game_state, step_action)
+            donut_action = self.translate_step_action(self.game_state, self.donut_player, step_action)
             self.donut_picks_action_bank.append(donut_action)
 
             # All players have picked a card, process actions
@@ -732,16 +765,42 @@ class GoNutsGame:
         logger.error(f"Unknown game state {self.game_state}")
         raise RuntimeError(f"Unknown game state {self.game_state}")
     
-    @classmethod
-    def translate_step_action(cls, game_state, step_action):
+    def translate_step_action(self, game_state, current_player_no, step_action):
         if game_state == GoNutsGameState.PICK_DONUT:
-            return step_action - actions.ACTION_DONUT
+            step_action_norm = step_action - actions.ACTION_DONUT
+            # action is a card type, so pick a random donut of that type from the available positions
+            matching_donut_positions = [ p.card.id for p in self.donut_decks if p.card.type == step_action_norm ]
+            if not matching_donut_positions:
+                logger.error(f"Can't find donut of type {step_action_norm} in positions")
+                raise RuntimeError(f"Can't find donut of type {step_action_norm} in positions")
+            card_id_to_choose = random.choice(matching_donut_positions)
+            if len(matching_donut_positions) > 1:
+                logger.info(f"More than 1 card of type {step_action_norm}, random choice of card id {card_id_to_choose}")
+            return card_id_to_choose
         elif game_state == GoNutsGameState.PICK_DISCARD:
-            return step_action - actions.ACTION_DISCARD
+            step_action_norm = step_action - actions.ACTION_DISCARD
+            # action is a card type, so pick a random donut of that type from the available discard
+            matching_discards = [ c.id for c in self.discard.cards if c.type == step_action_norm ]
+            if not matching_discards:
+                logger.error(f"Can't find donut of type {step_action_norm} in discards")
+                raise RuntimeError(f"Can't find donut of type {step_action_norm} in discards")
+            return random.choice(matching_discards)
         elif game_state == GoNutsGameState.PICK_ONE_FROM_TWO_DECK_CARDS:
-            return step_action - actions.ACTION_DECK
+            step_action_norm = step_action - actions.ACTION_DECK
+            if self.deck.peek_one().type == step_action_norm:
+                return self.deck.peek_one().id
+            elif self.deck.peek_in_nth_position(2):
+                return self.deck.peek_in_nth_position(2).id
+            else:
+                logger.error(f"Can't find donut of type {step_action_norm} in 2-from-deck-pick")
+                raise RuntimeError(f"Can't find donut of type {step_action_norm} in 2-from-deck-pick")
         elif game_state == GoNutsGameState.GIVE_CARD:
-            return step_action - actions.ACTION_GIVE_CARD
+            step_action_norm =  step_action - actions.ACTION_GIVE_CARD
+            matching_hand_cards = [ c.id for c in self.players[current_player_no].position.cards if c.type == step_action_norm ]
+            if not matching_hand_cards:
+                logger.error(f"Can't find donut of type {step_action_norm} in position of player {current_player_no}")
+                raise RuntimeError(f"Can't find donut of type {step_action_norm} in position of player {current_player_no}")
+            return random.choice(matching_hand_cards)
         else:
             logger.error(f"Can't translate action {step_action} from game state {game_state}")
             raise RuntimeError(f"Unknown game state {game_state}")
@@ -843,7 +902,7 @@ class GoNutsForDonutsEnv(gym.Env):
     def reset(self):
 
         # setup card selection to be used in simulation
-        deck_filter = GoNutsGame.teal_deck_filter()
+        deck_filter = GoNutsGame.teal_and_pink_filter_no_fc()
         self.game.reset_game(shuffle=True, deck_filter=deck_filter)
         self.game.start_game()
 
@@ -872,7 +931,7 @@ class GoNutsForDonutsEnv(gym.Env):
         # Render donuts to choose
         for i, d in enumerate(self.game.donut_decks):
             this_card = d.get_card()
-            print(f'Deck {i}: {this_card.symbol}; {this_card.id}')
+            print(f'Deck {i}: {this_card.symbol} ({this_card.type}:{this_card.id})')
 
         # Top of discard
         if self.game.discard.size():
@@ -889,10 +948,11 @@ class GoNutsForDonutsEnv(gym.Env):
             for i,o in enumerate(self.legal_actions):
                 if o:
                     if i > actions.ACTION_GIVE_CARD:
-                        real_card_id = i - actions.ACTION_GIVE_CARD
+                        real_card_type = i - actions.ACTION_GIVE_CARD
                     else:
-                        real_card_id = i
-                    card_for_action = next((c for c in self.game.deck.base_deck if c.id == real_card_id), None)
+                        real_card_type = i
+                    # TODO: Have a sensible lookup for type -> card data rather than looking for the first card of this type
+                    card_for_action = next((c for c in self.game.deck.base_deck if c.type == real_card_type), None)
                     if card_for_action:
                         legal_action_str += f"{i}:{card_for_action.symbol} "
                     else:

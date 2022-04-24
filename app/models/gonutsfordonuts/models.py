@@ -9,8 +9,8 @@ from stable_baselines.common.policies import ActorCriticPolicy
 from stable_baselines.common.distributions import CategoricalProbabilityDistribution
 
 
-ACTIONS = 140 # 2x number of card (ids) - 70 for the 5-player game
-FEATURE_SIZE = 635
+ACTIONS = 26
+FEATURE_SIZE = 94
 
 
 class CustomPolicy(ActorCriticPolicy):
