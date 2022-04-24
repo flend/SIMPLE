@@ -298,3 +298,7 @@ Doing 500 games to reduce the noise, again plotting the delta
 
 ![d814442-delta-long](./assets/images/teal-and-pink-4-long-score-diff.png)
 
+## Training run 10 - cb045aa
+
+In this training run we are just using the teal cards `teal_deck_filter_no_fc()` but using the same model params as training run 9 to see if a trained teal-and-pink model outperforms a trained teal-only model on teal-and-pink card set.
+
