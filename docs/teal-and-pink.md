@@ -302,3 +302,7 @@ Doing 500 games to reduce the noise, again plotting the delta
 
 In this training run we are just using the teal cards `teal_deck_filter_no_fc()` but using the same model params as training run 9 to see if a trained teal-and-pink model outperforms a trained teal-only model on teal-and-pink card set.
 
+Results (training teal in pink model): viz/teal_only_in_pink_model-tournament-results.csv
+
+![cb045aa](./assets/images/teal_only_in_pink_model.png)
+
