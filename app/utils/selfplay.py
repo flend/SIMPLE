@@ -7,7 +7,8 @@ from utils.agents import Agent
 
 import config
 
-from stable_baselines import logger
+import logging
+logger = logging.getLogger(__name__)
 
 def selfplay_wrapper(env):
     class SelfPlayEnv(env):

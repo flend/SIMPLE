@@ -3,15 +3,14 @@
 import os
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3' 
 
-import tensorflow as tf
-tf.get_logger().setLevel('INFO')
-tf.compat.v1.logging.set_verbosity(tf.compat.v1.logging.ERROR)
-
 import random
 import argparse
 
-from stable_baselines import logger
-from stable_baselines.common import set_global_seeds
+import logging
+import logging.config
+import traceback
+
+from stable_baselines3.common.utils import set_random_seed
 
 from utils.files import load_model, write_results
 from utils.register import get_environment
@@ -19,20 +18,18 @@ from utils.agents import Agent
 
 import config
 
-
 def main(args):
 
-  logger.configure(config.LOGDIR)
+  logging.config.fileConfig(config.LOGCONFIG, disable_existing_loggers=False)
+  logger = logging.getLogger(__name__)
 
   if args.debug:
-    logger.set_level(config.DEBUG)
-  else:
-    logger.set_level(config.INFO)
+    logger.setLevel(config.DEBUG)
     
   #make environment
   env = get_environment(args.env_name)(verbose = args.verbose, manual = args.manual)
   env.seed(args.seed)
-  set_global_seeds(args.seed)
+  set_random_seed(args.seed)
 
   total_rewards = {}
 

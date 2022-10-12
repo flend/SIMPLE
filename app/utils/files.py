@@ -8,11 +8,10 @@ import time
 import numpy as np
 import math
 
-from mpi4py import MPI
+#from mpi4py import MPI
 
 from shutil import rmtree
-from stable_baselines.ppo1 import PPO1
-from stable_baselines.common.policies import MlpPolicy
+from stable_baselines3.ppo import PPO
 
 from collections import OrderedDict
 
@@ -20,7 +19,8 @@ from utils.register import get_network_arch
 
 import config
 
-from stable_baselines import logger
+import logging
+logger = logging.getLogger(__name__)
 
 def write_tournament_results(filename, x, y, scores):
 
@@ -33,7 +33,7 @@ def write_tournament_results(filename, x, y, scores):
 
     resultsfile = f"{config.RESULTSPATH}/{filename}"
 
-    logger.info(f"Writing tournament result file: {resultsfile}")
+    logging.info(f"Writing tournament result file: {resultsfile}")
 
     if not os.path.exists(resultsfile):
         with open(resultsfile,'a') as csvfile:
@@ -70,7 +70,7 @@ def load_model(env, name):
 
     filename = os.path.join(config.MODELDIR, env.name, name)
     if os.path.exists(filename):
-        logger.info(f'Loading {name}')
+        logging.info(f'Loading {name}')
         cont = True
         while cont:
             try:
@@ -85,20 +85,21 @@ def load_model(env, name):
         while cont:
             try:
                 
-                rank = MPI.COMM_WORLD.Get_rank()
+                #rank = MPI.COMM_WORLD.Get_rank()
+                rank = 0
                 if rank == 0:
-                    ppo_model = PPO1(get_network_arch(env.name), env=env)
-                    logger.info(f'Saving base.zip PPO model...')
+                    ppo_model = PPO(get_network_arch(env.name), env=env)
+                    logging.info(f'Saving base.zip PPO model...')
                     ppo_model.save(os.path.join(config.MODELDIR, env.name, 'base.zip'))
                 else:
 
-                    ppo_model = PPO1.load(os.path.join(config.MODELDIR, env.name, 'base.zip'), env=env)
+                    ppo_model = PPO.load(os.path.join(config.MODELDIR, env.name, 'base.zip'), env=env)
 
                 cont = False
             except IOError as e:
                 sys.exit(f'Check zoo/{env.name}/ exists and read/write permission granted to user')
             except Exception as e:
-                logger.error(e)
+                logging.error(e)
                 time.sleep(2)
                 
     else:

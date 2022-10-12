@@ -8,7 +8,9 @@ import gonutsfordonuts.envs.actions as actions
 
 import config
 
-from stable_baselines import logger
+import logging
+logger = logging.getLogger(__name__)
+
 from collections import Counter, defaultdict
 
 from .classes import *

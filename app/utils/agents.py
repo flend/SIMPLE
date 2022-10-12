@@ -4,9 +4,9 @@ np.set_printoptions(threshold=sys.maxsize)
 import random
 import string
 
-import config
+import logging
+logger = logging.getLogger(__name__)
 
-from stable_baselines import logger
 
 def sample_action(action_probs):
     action = np.random.choice(len(action_probs), p = action_probs)
