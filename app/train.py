@@ -3,10 +3,6 @@
 import os
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3' 
 
-import tensorflow as tf
-tf.get_logger().setLevel('INFO')
-tf.compat.v1.logging.set_verbosity(tf.compat.v1.logging.ERROR)
-
 
 import argparse
 import time
@@ -80,10 +76,10 @@ def main(args):
 
   if args.reset or not os.path.exists(os.path.join(model_dir, 'best_model.zip')):
     logging.info('\nLoading the base PPO agent to train...')
-    model = PPO1.load(os.path.join(model_dir, 'base.zip'), env, **params)
+    model = PPO.load(os.path.join(model_dir, 'base.zip'), env, **params)
   else:
     logging.info('\nLoading the best_model.zip PPO agent to continue training...')
-    model = PPO1.load(os.path.join(model_dir, 'best_model.zip'), env, **params)
+    model = PPO.load(os.path.join(model_dir, 'best_model.zip'), env, **params)
 
   #Callbacks
   logging.info('\nSetting up the selfplay evaluation environment opponents...')

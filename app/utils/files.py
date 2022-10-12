@@ -33,7 +33,7 @@ def write_tournament_results(filename, x, y, scores):
 
     resultsfile = f"{config.RESULTSPATH}/{filename}"
 
-    logging.info(f"Writing tournament result file: {resultsfile}")
+    logger.info(f"Writing tournament result file: {resultsfile}")
 
     if not os.path.exists(resultsfile):
         with open(resultsfile,'a') as csvfile:
@@ -70,11 +70,11 @@ def load_model(env, name):
 
     filename = os.path.join(config.MODELDIR, env.name, name)
     if os.path.exists(filename):
-        logging.info(f'Loading {name}')
+        logger.info(f'Loading {name}')
         cont = True
         while cont:
             try:
-                ppo_model = PPO1.load(filename, env=env)
+                ppo_model = PPO.load(filename, env=env)
                 cont = False
             except Exception as e:
                 time.sleep(5)
@@ -89,7 +89,7 @@ def load_model(env, name):
                 rank = 0
                 if rank == 0:
                     ppo_model = PPO(get_network_arch(env.name), env=env)
-                    logging.info(f'Saving base.zip PPO model...')
+                    logger.info(f'Saving base.zip PPO model...')
                     ppo_model.save(os.path.join(config.MODELDIR, env.name, 'base.zip'))
                 else:
 
@@ -99,7 +99,7 @@ def load_model(env, name):
             except IOError as e:
                 sys.exit(f'Check zoo/{env.name}/ exists and read/write permission granted to user')
             except Exception as e:
-                logging.error(e)
+                logger.error(e)
                 time.sleep(2)
                 
     else:

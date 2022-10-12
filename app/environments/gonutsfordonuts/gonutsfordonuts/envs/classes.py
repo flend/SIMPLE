@@ -1,5 +1,5 @@
 import random
-from stable_baselines import logger
+
 import gonutsfordonuts.envs.cards as cards
 
 class Player():
